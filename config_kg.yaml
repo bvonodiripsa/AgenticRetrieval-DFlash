@@ -40,11 +40,14 @@ embedding:
 
 llm:
   endpoint: "http://localhost:8000/v1"
-  model: "Qwen/Qwen2.5-32B-Instruct"
+  model: "Qwen/Qwen3.5-27B"
   api_key: "dummy"
   temperature: 0.0
   max_tokens: 2048
   max_retries: 3
+  dflash:
+    draft_model: "z-lab/Qwen3.5-27B-DFlash"
+    num_speculative_tokens: 15
 
 build:
   extraction_rounds: 1

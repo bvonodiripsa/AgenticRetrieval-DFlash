@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 """Food KG Build via Ray cluster (20x H100 workers).
 
-Each worker loads Qwen2.5-32B-Instruct in FP8 on its GPU and extracts
-triples locally using vLLM. The head node coordinates via ray.data.
+Each worker loads Qwen3.5-27B with DFlash speculative decoding on its GPU
+and extracts triples locally using vLLM. The head node coordinates via ray.data.
+
+DFlash provides 3-4x lossless speedup via block diffusion drafting.
 
 Usage:
   # On head node (10.0.0.4):
@@ -79,16 +81,26 @@ class FoodDeepExtractor:
         _os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
         from vllm import LLM, SamplingParams
         c = _vllm_cfg
-        print(f"[FoodDeepExtractor] Loading {c['model']} (FP8)...")
+        draft = c.get("dflash_draft_model", "")
+        if draft:
+            print(f"[FoodDeepExtractor] Loading {c['model']} + DFlash ({draft})...")
+            spec_config = {
+                "method": "dflash",
+                "model": draft,
+                "num_speculative_tokens": c.get("dflash_num_speculative_tokens", 15),
+            }
+        else:
+            print(f"[FoodDeepExtractor] Loading {c['model']} (no DFlash)...")
+            spec_config = None
         self.llm = LLM(
             model=c["model"],
-            dtype="auto",
-            quantization="fp8",
+            dtype="bfloat16",
             gpu_memory_utilization=0.90,
             max_model_len=c["max_model_len"],
             enable_prefix_caching=True,
             trust_remote_code=True,
             enforce_eager=True,
+            speculative_config=spec_config,
         )
         self.tokenizer = self.llm.get_tokenizer()
         self.params = SamplingParams(temperature=0, max_tokens=c["max_tokens"])
@@ -223,12 +235,15 @@ def run_build(cfg: dict, time_limit: int | None = None):
     global _vllm_cfg
     build_llm = cfg.get("build_llm", {})
     build_cfg = cfg.get("build", {})
+    dflash_cfg = build_llm.get("dflash", {})
     _vllm_cfg = {
-        "model": build_llm.get("model", "Qwen/Qwen2.5-32B-Instruct"),
+        "model": build_llm.get("model", "Qwen/Qwen3.5-27B"),
         "max_tokens": int(build_llm.get("max_tokens", 3000)),
         "max_model_len": int(build_llm.get("max_model_len", 16384)),
         "max_gaps": int(build_cfg.get("max_gaps_per_round", 3)),
         "extraction_rounds": int(build_cfg.get("extraction_rounds", 1)),
+        "dflash_draft_model": dflash_cfg.get("draft_model", ""),
+        "dflash_num_speculative_tokens": int(dflash_cfg.get("num_speculative_tokens", 15)),
     }
 
     ray.init(address="auto", ignore_reinit_error=True, runtime_env={

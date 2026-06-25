@@ -141,7 +141,7 @@ class LLMClient:
             timeout=600.0,
             max_retries=int(llm.get("max_retries", 3)),
         )
-        self._model = llm.get("model", "Qwen/Qwen2.5-32B-Instruct")
+        self._model = llm.get("model", "Qwen/Qwen3.5-27B")
 
     async def complete(self, prompt: str) -> str:
         resp = await self._client.chat.completions.create(
@@ -150,7 +150,8 @@ class LLMClient:
             temperature=self._temperature,
             max_tokens=self._max_tokens,
         )
-        return resp.choices[0].message.content or ""
+        text = resp.choices[0].message.content or ""
+        return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
 
 
 # =============================================================================

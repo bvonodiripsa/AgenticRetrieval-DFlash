@@ -1,6 +1,6 @@
-# AgenticRetrieval-KG Progress
+# AgenticRetrieval-DFlash Progress
 
-## Status: Ready to rebuild KG with improved prompts
+## Status: Ready to test Qwen3.5-27B + DFlash speculative decoding
 
 ## What's Done
 1. **KG Builder** (`kg_builder.py`) — fully working, tested, has checkpoint/resume and `--time-limit`
@@ -51,10 +51,34 @@ Expected: ~12-15s wall time for 10 questions (parallel), better quality with sem
 - `/home/azureuser/AgenticRetrieval-KG/out_kg/` — output dir for results + checkpoints
 
 ## Infrastructure
-- **vLLM**: `sudo docker start vllm-qwen` (Qwen2.5-32B-Instruct, TP=2, port 8000)
+- **vLLM**: Qwen3.5-27B with DFlash speculative decoding (TP=2, port 8000)
+- **DFlash draft model**: `z-lab/Qwen3.5-27B-DFlash` (block diffusion drafter)
 - **Cosmos DB**: `divdet` account, `food` database, RBAC auth (tenant 43083d15...)
 - **Embedding**: in-process Qwen3-Embedding-0.6B on CPU (no external service needed)
 - **Python venv**: `/home/azureuser/AgenticRetrieval/.venv` (symlinked into this repo)
+
+## DFlash Migration Notes
+- Migrated from Qwen2.5-32B-Instruct to **Qwen3.5-27B** (5B smaller, better quality)
+- DFlash provides **3-4x lossless speedup** via block diffusion speculative decoding
+- Requires vLLM >= 0.20.1 + flash-attn backend
+- FP8 quantization replaced with bfloat16 (DFlash requires bfloat16 KV cache)
+- Qwen3.5 thinking tokens (`<think>...</think>`) stripped in both API and Ray modes
+
+### vLLM Server Launch (API mode)
+```bash
+vllm serve Qwen/Qwen3.5-27B \
+  --tensor-parallel-size 2 \
+  --speculative-config '{"method": "dflash", "model": "z-lab/Qwen3.5-27B-DFlash", "num_speculative_tokens": 15}' \
+  --attention-backend flash_attn \
+  --max-model-len 16384 \
+  --max-num-batched-tokens 32768 \
+  --dtype bfloat16
+```
+
+### Test run (validate quality on small batch)
+```bash
+python test_dflash.py --config config_kg.yaml --num-docs 20
+```
 
 ## Previous Benchmark Results
 | Approach | Wall Time | Quality |
