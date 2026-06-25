@@ -1,0 +1,192 @@
+[
+  {
+    "question_id": "food_0001",
+    "question_text": "I am searching for a high-calorie protein snack for long-distance running that fits in a running belt",
+    "answer": "For a high-calorie protein snack suitable for long-distance running that can fit in a running belt, I recommend considering the following options:\n\n### Option 1: **My Break Ham Emmental 230 g** **(product_id: 22083950)**\n- **Brand:** Ma Pause\n- **Pack Size:** 230 g\n- **Nutritional Properties:** High calorie (2140 kj / 511 kcal per 230 g), high protein\n- **Convenience:** Ready to eat, single serving\n- **Claims:** Maxi sandwiches, emmental ham\n- **Ingredients:** Contains ham and emmental cheese, which provide a good source of protein and calories.\n\nThis product is ideal because it provides a substantial amount of calories and protein, which are essential for sustained energy during long-distance running. The single-serving size makes it easy to carry in a running belt.\n\n### Option 2: **Reese's Sticks Chocolate Flavoured Coating, Peanut Butter & Crispy Wafers** **(product_id: 22082110)**\n- **Brand:** Reese's\n- **Pack Size:** Net wt 42 g\n- **Nutritional Properties:** High calorie, high sugar, fat\n- **Convenience:** Ready to eat, single serving\n- **Claims:** May contain GMOs, keep in a cool, dry place, stays fresh for 3 days after opening\n- **Ingredients:** Peanuts, enriched wheat flour, cocoa butter, sugar, and other ingredients that provide a quick burst of energy.\n\nWhile this option is higher in sugar and fat, it still offers a significant amount of calories and protein from the peanuts. It’s compact and easy to carry, making it a convenient snack for runners.\n\n### Option 3: **Cereal Surprise Bread ×50 Sandwiches, Thawed** **(product_id: 22083606)**\n- **Brand:** Excellence\n- **Pack Size:** 950 g\n- **Nutritional Properties:** High calorie, high protein\n- **Convenience:** Ready to eat, single serving\n- **Claims:** Defrosted product, packed in a protective atmosphere\n- **Ingredients:** Contains ingredients such as smoked foie gras, Atlantic salmon, green asparagus, and serrano ham, providing a variety of nutrients and flavors.\n\nAlthough this product has a larger pack size, individual sandwiches can be easily separated and carried in a running belt. It offers a balanced mix of protein and calories, making it a great choice for long-distance running.\n\n### Trade-offs:\n- **My Break Ham Emmental 230 g** is the most straightforward option for a high-protein, high-calorie snack that is easy to carry and consume during a run.\n- **Reese's Sticks** provides a quick energy boost but is higher in sugar and fat, which might not be ideal for some runners.\n- **Cereal Surprise Bread** offers a more varied nutrient profile but requires careful handling due to its defrosted state.\n\nBased on these options, **My Break Ham Emmental 230 g** would be the best choice for a high-calorie protein snack that fits well in a running belt and meets the nutritional needs of long-distance running.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.6094663143157959,
+      "entity_search": 2.441516637802124,
+      "graph_traversal": 2.9040756225585938,
+      "source_fetch": 1.7999966144561768,
+      "llm": 17.674419164657593,
+      "total": 25.47162175178528
+    },
+    "entities_found": 20,
+    "triples_found": 85
+  },
+  {
+    "question_id": "food_0002",
+    "question_text": "I am searching for a product which is a low-alcohol premium drink that still feels luxurious",
+    "answer": "Based on your search for a low-alcohol premium drink that feels luxurious, I would recommend the **Lapp Spritz Poptail Prosecco-Bitters Blood Orange** (**product_id: 22082474**). This product offers a unique and sophisticated experience with its frozen cocktail format, containing 4.5% ABV, making it a perfect choice for those looking for a low-alcohol yet premium beverage. Here’s why it matches your criteria:\n\n- **Luxurious Feel**: The Lapp Spritz Poptail is made in Holland and combines Prosecco with bitters and blood orange juice, giving it a rich and complex flavor profile that feels indulgent.\n- **Low Alcohol Content**: At 4.5% ABV, it provides a moderate alcohol level, allowing you to enjoy the drink without getting too intoxicated quickly.\n- **Premium Quality**: The product is gluten and dairy-free, and each serving is 110ml, making it a perfect portion size for a luxurious treat.\n- **Convenience**: It comes in a convenient 4-pack, allowing you to enjoy multiple servings or share with friends.\n\nAlternatively, if you're interested in a non-alcoholic option that still feels premium and luxurious, consider the **Willow Beautiful Mineral Water with Added Carbon Dioxide** (**product_id: 22083068**):\n\n- **Luxurious Feel**: Sourced from the English Lake District and filtered through limestone, this mineral water has a natural mineral content that adds depth and luxury to its taste.\n- **Premium Quality**: The brand Willow emphasizes the natural beauty and purity of the water, making it feel like a premium choice.\n- **Convenience**: Available in a 750ml bottle, it’s perfect for enjoying at home or during a picnic, and it’s best served chilled to enhance its luxurious feel.\n\nBoth options provide a luxurious drinking experience, with the Lapp Spritz offering a low-alcohol twist and the Willow mineral water providing a premium, non-alcoholic alternative.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5928356647491455,
+      "entity_search": 2.38216233253479,
+      "graph_traversal": 3.1103174686431885,
+      "source_fetch": 1.6609094142913818,
+      "llm": 13.36238169670105,
+      "total": 21.10861325263977
+    },
+    "entities_found": 20,
+    "triples_found": 48
+  },
+  {
+    "question_id": "food_0003",
+    "question_text": "I am searching for a gluten-free cinema snack for a Friday night movie",
+    "answer": "For a gluten-free cinema snack suitable for a Friday night movie, here are two great options:\n\n1. **Candy Planet FrootHies** (product_id: 22083055):\n   - **Brand:** Candy Planet\n   - **Pack Size:** 150g / 5.29 oz\n   - **Claims:** Gluten-free, peanut-free, soy-free, lactose-free, kosher pareve, chewy fruity toffees with fruit juices.\n   - **Ingredients:** Apple/apple, raspberry/raspberry.\n   - **Why It Matches:** This product is specifically labeled as gluten-free, making it safe for individuals with gluten sensitivities or celiac disease. The chewy texture and fruity flavors make it a delightful treat during a movie.\n\n2. **Soft Almond Nougat Creamy Almond Turrón** (product_id: 22082412):\n   - **Brand:** Elalmendro\n   - **Pack Size:** Net wt. 5.29 oz (150g) cont. net. 150g\n   - **Claims:** Gluten-free, selected roasted almonds 67%, honey 16.4%, sugar, stabilizer e-471, egg white, best before end, lot: see side, supreme quality.\n   - **Ingredients:** Almonds (EU and non-EU) 67%, honey 16.4%, sugar, stabilizer: mono and diglycerides of fatty acids and egg white.\n   - **Why It Matches:** This product is also labeled as gluten-free and offers a creamy, sweet, and nutty flavor that can be enjoyed during a movie. The high almond content provides a satisfying crunch and richness.\n\nBoth options are portable, easy to eat, and will complement a movie-watching experience without compromising on taste or dietary restrictions. Choose based on your preference for chewy toffee or creamy nougat.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.4299907684326172,
+      "entity_search": 2.7446393966674805,
+      "graph_traversal": 2.089195966720581,
+      "source_fetch": 2.304117441177368,
+      "llm": 13.368136644363403,
+      "total": 20.93608570098877
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0004",
+    "question_text": "I am searching for a summer BBQ meat to impress guests that I am hosting",
+    "answer": "For a summer BBQ that will impress your guests, I recommend considering the following meat options:\n\n### Option 1: Organic Ground Beef Steaks\n**Product ID:** **(product_id: 22083655)**  \n**Brand:** Socopa Viandes  \n**Pack Size:** 250 g ℮ (2× 125g)  \n**Key Features:**  \n- **Ingredients:** 100% beef (origin: France) from organic farming.  \n- **Claims:** Organic farming, origin: France, to be consumed cooked to the heart as soon as opened, vacuum packed.  \n- **Suitability:** Suitable for dinner and BBQ/grilling.  \n- **Cooking Methods:** Grill, oven, air fryer compatible.  \n- **Nutritional Properties:** High protein.  \n\n**Preparation Tips:**  \n- Preheat your grill to medium-high heat.  \n- Season the steaks with your favorite BBQ rub or marinade.  \n- Grill for about 4-5 minutes per side for medium-rare, depending on thickness.  \n- Let the steaks rest for a few minutes before slicing and serving.  \n\n### Option 2: Assortment of Marinated Pork Skewers\n**Product ID:** **(product_id: 22083438)**  \n**Brand:** QATC  \n**Pack Size:** Net weight: 1.14 kg  \n**Key Features:**  \n- **Ingredients:** Skewers: pork meat (origin: France) 61%, pork belly (origin: France), green pepper, water, salt, glucose syrup, natural flavors, vinegar extract, acerola extract. Herb chipolatas: pork meat (origin: France) 85%, water, pork fat (origin: France), salt, preservatives, dextrose, sugar, herbs of Provence 0.1%, parsley, garlic, natural flavors, antioxidant, coloring, spice, sheep casing. Merguez: beef meat (origin: France) 66%, lamb meat (origin: Ireland) 14%, water, lamb fat, glucose syrup, salt, beef fat, spices, natural flavorings.  \n- **Claims:** Assortment of 6 marinated pork skewers with green bell pepper and pork belly, 12 herb mini chipolatas, and 12 mini merguez. Store at a maximum of +4°C. Consume thoroughly cooked. Produced in France by Elivia ZI La Coudère 49220 Le Lion d'Angers - France. Packaged in a protective atmosphere.  \n- **Suitability:** Suitable for BBQ/grilling.  \n- **Allergens:** May contain traces of sheep.  \n\n**Preparation Tips:**  \n- Preheat your grill to medium heat.  \n- Place the skewers on the grill and cook for about 10-12 minutes, turning occasionally, until thoroughly cooked.  \n- Serve with a side of your favorite BBQ sauce or a fresh salad.  \n\n### Option 3: Duck Fillets Marinated with 3 Peppers\n**Product ID:** **(product_id: 22083359)**  \n**Brand:** ALDI  \n**Pack Size:** 400 g net  \n**Key Features:**  \n- **Ingredients:** Duck fillet with skin (origin: France) 90%, water, acidifiers, salt, natural flavorings, rice semolina, dehydrated peppers 0.4%, dextrose, spices, dehydrated tomatoes, aromatic plants, sugar, flavorings, olive oil, espelette pepper 0.03%, sunflower oil.  \n- **Claims:** Must be cooked thoroughly. Store between 0°C and +4°C maximum.  \n- **Suitability:** Suitable for dinner and BBQ/grilling.  \n\n**Preparation Tips:**  \n- Preheat your grill to medium heat.  \n- Place the duck fillets on the grill and cook for about 5-7 minutes per side, depending on thickness.  \n- Ensure the internal temperature reaches 165°F (74°C) for safety.  \n- Serve with a side of roasted vegetables or a fresh fruit salsa.  \n\n### Summary\nEach of these options offers a unique flavor profile and cooking experience that can elevate your summer BBQ. The organic ground beef steaks provide a classic and healthy option, while the assortment of marinated pork skewers adds variety and complexity. The duck fillets marinated with 3 peppers offer a gourmet touch with their rich, flavorful marinade. Choose based on your preference for simplicity, variety, or a more sophisticated dining experience.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.4850776195526123,
+      "entity_search": 2.567108392715454,
+      "graph_traversal": 2.8244752883911133,
+      "source_fetch": 1.910085678100586,
+      "llm": 21.343377828598022,
+      "total": 29.130131721496582
+    },
+    "entities_found": 20,
+    "triples_found": 46
+  },
+  {
+    "question_id": "food_0005",
+    "question_text": "Recommend a breakfast idea that takes under 15 minutes to make and contains eggs",
+    "answer": "For a quick and delicious breakfast that takes under 15 minutes to prepare and includes eggs, here are two great options:\n\n### Option 1: Fresh Egg Pasta with a Simple Sauce\n**Product:** **(product_id: 22084289)** Casa Morando Fresh Egg Pasta  \n**Pack Size:** Net Weight: 250 g ℮  \n**Ingredients:** Wheat flour, durum wheat semolina, fresh eggs 18%, water.  \n**Claims:** Fresh pasta with fresh eggs, product packaged in a protective atmosphere, consume within 3 days.  \n\n**Preparation Method:**\n1. Bring a large pot of water to a boil.\n2. Add the fresh egg pasta and cook for 3-4 minutes, or until al dente.\n3. While the pasta cooks, you can prepare a simple sauce. A classic option would be a garlic and olive oil sauce. Mince a few cloves of garlic and sauté them in olive oil over medium heat until fragrant.\n4. Drain the pasta and toss it with the garlic and olive oil sauce.\n5. Season with salt and pepper to taste.\n\nThis meal is quick, nutritious, and perfect for a morning where you want something satisfying but not too heavy.\n\n### Option 2: Instant Noodles with Added Eggs\n**Product:** **(product_id: 22082548)** Boni Instant Noodles  \n**Pack Size:** Net Weight 75g  \n**Ingredients:** Noodles (93%): wheat flour, vegetable oil (palm), water, potato starch, salt, thickener (guar gum), flavor enhancers (monosodium glutamate, disodium inosinate), artificial vegetable flavor (contains celery), spices (black pepper, red chili pepper, onion powder), dehydrated vegetables (onion powder), natural flavor. May contain traces of soy, dairy products, eggs, and crustaceans.  \n**Claims:** Ready to serve in 3 minutes, each 75g pack + 300ml of water contains 334 kcal.\n\n**Preparation Method:**\n1. Boil 300 ml of water in a pot.\n2. Empty the contents of the instant noodle packet into the boiling water.\n3. Cover and let it cook for 3 minutes.\n4. Crack one or two eggs into the boiling water and let them cook for another 2-3 minutes until the whites are set but the yolks are still runny.\n5. Stir gently to mix the noodles with the eggs and seasoning.\n6. Serve immediately.\n\nThis option is incredibly fast and can be customized with additional vegetables or proteins if desired. The addition of eggs makes it more filling and nutritious.\n\nBoth options provide a quick and easy breakfast solution that incorporates eggs and fits within the 15-minute preparation window. Choose based on your preference for a traditional pasta dish or a more versatile noodle-based meal.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5521395206451416,
+      "entity_search": 2.451586961746216,
+      "graph_traversal": 2.251070499420166,
+      "source_fetch": 2.5466554164886475,
+      "llm": 16.47151827812195,
+      "total": 24.27297592163086
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0006",
+    "question_text": "I want to find ingredients needed to make a traditional English strawberry trifle",
+    "answer": "To create a traditional English strawberry trifle, you would typically need layers of sponge cake, strawberries, custard, and whipped cream. While the provided products do not directly offer a trifle mix, there are some items that can be used to create a similar dessert experience. Here are a couple of options:\n\n### Option 1: Using Sponge Cake and Custard\n**Ingredients Needed:**\n- Sponge Cake: **(product_id: 22081970)** Chocolate Brioche by Le Bon Gout Des Traditions\n- Custard: You can use a custard mix or make it from scratch.\n- Strawberries: Fresh or canned strawberries.\n- Whipped Cream: You can whip heavy cream yourself or use a store-bought version.\n\n**Why This Matches:**\n- The **Chocolate Brioche** by Le Bon Gout Des Traditions provides a sweet base layer for the trifle. Although it has chocolate chips, the sweetness and texture will complement the strawberries and custard well.\n- You can easily make custard using milk, sugar, cornstarch, and vanilla extract, or purchase a custard mix.\n- Fresh or canned strawberries can be layered over the sponge cake.\n- Whipped cream adds a light and fluffy layer to the dessert.\n\n**Preparation Tips:**\n1. Cut the chocolate brioche into thin slices and arrange them at the bottom of a trifle bowl.\n2. Layer sliced strawberries over the brioche.\n3. Pour a layer of custard over the strawberries.\n4. Add a layer of whipped cream.\n5. Repeat the layers until the trifle bowl is full, ending with a layer of whipped cream on top.\n6. Chill the trifle in the refrigerator for at least an hour before serving.\n\n### Option 2: Using Shortbread Biscuits and Vanilla Skyr\n**Ingredients Needed:**\n- Shortbread Biscuits: **(product_id: 22084365)** Butter Shortbread Biscuits with Apple Filling by Les Malins Plaisirs\n- Vanilla Skyr: **(product_id: 22083582)** Vanilla Skyr by Milsa\n- Strawberries: Fresh or canned strawberries.\n- Whipped Cream: You can whip heavy cream yourself or use a store-bought version.\n\n**Why This Matches:**\n- The **Butter Shortbread Biscuits** provide a crunchy base layer for the trifle. They have a sweet and buttery flavor that pairs well with strawberries and custard-like textures.\n- **Vanilla Skyr** is a high-protein, low-fat alternative to custard, providing a creamy and tangy layer.\n- Fresh or canned strawberries can be layered over the shortbread biscuits.\n- Whipped cream adds a light and fluffy layer to the dessert.\n\n**Preparation Tips:**\n1. Crush the shortbread biscuits and spread them at the bottom of a trifle bowl.\n2. Layer sliced strawberries over the crushed biscuits.\n3. Spoon a layer of vanilla skyr over the strawberries.\n4. Add a layer of whipped cream.\n5. Repeat the layers until the trifle bowl is full, ending with a layer of whipped cream on top.\n6. Chill the trifle in the refrigerator for at least an hour before serving.\n\nBoth options provide a delightful twist on a traditional English strawberry trifle, using available products to create a layered dessert that is both visually appealing and delicious.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.3908514976501465,
+      "entity_search": 2.7718594074249268,
+      "graph_traversal": 3.1817800998687744,
+      "source_fetch": 1.9395394325256348,
+      "llm": 17.497419357299805,
+      "total": 25.781455993652344
+    },
+    "entities_found": 20,
+    "triples_found": 144
+  },
+  {
+    "question_id": "food_0007",
+    "question_text": "I need a recommendation for a 15-minute air fryer recipe using mince beef",
+    "answer": "For a quick and easy 15-minute air fryer recipe using mince beef, here are two options that fit your criteria:\n\n### Option 1: Air Fryer Beef Tacos\n**Ingredients:**\n- **(product_id: 22083655)** 2 Organic Ground Beef Steaks (Socopa Viandes)\n- Whole Wheat Flour Tortillas (not listed but commonly available)\n- Low-Fat Mayonnaise (not listed but commonly available)\n- Lettuce, Cheese, Salsa (optional toppings)\n\n**Preparation:**\n1. Preheat the air fryer to 375°F (190°C).\n2. Break down the ground beef steaks into small pieces and season with salt, pepper, and any preferred taco seasoning.\n3. Place the seasoned ground beef in the air fryer basket and cook for about 10 minutes, stirring halfway through to ensure even cooking.\n4. Warm the tortillas in the air fryer for 1-2 minutes.\n5. Assemble tacos with the cooked beef, lettuce, cheese, salsa, and a dollop of low-fat mayonnaise.\n\n**Why it matches:**\n- The ground beef steaks are air fryer compatible and can be cooked quickly.\n- The air fryer allows for a healthier cooking method compared to traditional frying.\n- This option is convenient and can be customized with various toppings.\n\n### Option 2: Air Fryer Beef Meatballs\n**Ingredients:**\n- **(product_id: 22084193)** Ground Beef 15% Fat (Aldi)\n- Bread crumbs (not listed but commonly available)\n- Egg (not listed but commonly available)\n- Parmesan cheese (not listed but commonly available)\n- Seasonings (salt, pepper, Italian herbs)\n\n**Preparation:**\n1. Preheat the air fryer to 375°F (190°C).\n2. Mix the ground beef with bread crumbs, egg, parmesan cheese, and seasonings.\n3. Form the mixture into meatballs and place them in the air fryer basket.\n4. Cook the meatballs for about 10-12 minutes, flipping halfway through to ensure even cooking.\n5. Serve with marinara sauce, pasta, or as a snack.\n\n**Why it matches:**\n- The ground beef is air fryer compatible and has a lower fat content, making it a healthier choice.\n- The air fryer cooks the meatballs quickly and evenly, ensuring they are juicy and flavorful.\n- This option is versatile and can be served in various ways.\n\nBoth options provide a quick and healthy meal using mince beef in an air fryer. The first option is more straightforward and requires fewer additional ingredients, while the second offers a bit more flexibility in terms of serving style. Choose based on your preference for tacos or meatballs!",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5488264560699463,
+      "entity_search": 2.573214292526245,
+      "graph_traversal": 2.148564338684082,
+      "source_fetch": 2.358978033065796,
+      "llm": 16.377630472183228,
+      "total": 24.0072181224823
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0008",
+    "question_text": "As a family of four, create us a dinner recommendation that costs £10 total to make that will feed a family of 4 that contains pasta",
+    "answer": "To create a dinner for a family of four that includes pasta and stays within a £10 budget, I recommend combining **(product_id: 22083480)** spaghetti and **(product_id: 22083015)** garlic and tomatoes cooking sauce. Here’s why these products are ideal:\n\n### Products and Details:\n1. **Spaghetti** *(product_id: 22083480)*\n   - **Brand:** Aldi\n   - **Pack Size:** 1000g\n   - **Nutri-Score:** D\n   - **Suitable For:** Dinner, Lunch, Families\n   - **Cooking Method:** Requires cooking\n   - **Nutritional Properties:** High calorie\n   - **Price Estimate:** £1.39 (based on the claim in the source document)\n\n2. **Garlic and Tomatoes Cooking Sauce** *(product_id: 22083015)*\n   - **Brand:** Schneider's\n   - **Pack Size:** Net Weight: 190g / 6.7 oz\n   - **Claims:** Kosher Parve, No Colorings, No Artificial Flavors\n   - **Ingredients:** Sunflower oil, tomato puree, sundried tomatoes, garlic, basil, sugar, salt, starch, acidity regulator, antioxidant\n   - **Price Estimate:** £1.50 (estimated based on similar products)\n\n### Budget Breakdown:\n- Spaghetti: £1.39\n- Garlic and Tomatoes Cooking Sauce: £1.50\n- Total: £2.89\n\nThis combination leaves room in your budget for additional sides or a dessert, such as a simple salad or fruit.\n\n### Preparation Tips:\n1. **Cook the Spaghetti:**\n   - Boil a large pot of salted water.\n   - Add the spaghetti and cook according to the package instructions (usually around 8-10 minutes).\n   - Drain and set aside.\n\n2. **Prepare the Sauce:**\n   - Heat a pan over medium heat and add a small amount of olive oil.\n   - Pour in the garlic and tomatoes cooking sauce and let it simmer for a few minutes until heated through.\n\n3. **Combine:**\n   - Toss the cooked spaghetti with the garlic and tomatoes sauce.\n   - Serve hot with grated Parmesan cheese if desired.\n\n### Additional Suggestion:\nIf you want to stretch the meal further, consider adding a side of **(product_id: 22083882)** Mediterranean Fish Soup. This soup is family-sized (950g) and can be a nutritious and filling addition to the pasta dish. It has a Nutri-Score B, indicating it is a healthier option, and it is ready to eat in under 5 minutes, making it very convenient.\n\n### Final Budget:\n- Spaghetti: £1.39\n- Garlic and Tomatoes Cooking Sauce: £1.50\n- Mediterranean Fish Soup: £3.00 (estimated based on similar products)\n- Total: £5.89\n\nThis leaves you with plenty of room in your budget for additional items like a simple green salad or a dessert.\n\nBy combining these products, you get a balanced and satisfying meal that fits within your budget and serves a family of four. Enjoy your dinner!",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.6240334510803223,
+      "entity_search": 2.3731584548950195,
+      "graph_traversal": 3.0215089321136475,
+      "source_fetch": 2.9725329875946045,
+      "llm": 16.66251826286316,
+      "total": 25.653756618499756
+    },
+    "entities_found": 20,
+    "triples_found": 51
+  },
+  {
+    "question_id": "food_0009",
+    "question_text": "Help me find a sugar free and vegan confectionery item that is individually packaged",
+    "answer": "Based on the provided knowledge graph and source documents, there isn't a direct match for a sugar-free and vegan confectionery item that is individually packaged. However, I can recommend a close alternative that meets most of these criteria:\n\n**(product_id: 22079993)** Mentos Spearmint Chewing Gum (38 pieces, Sugar Free)\n- **Brand:** Mentos\n- **Pack Size:** 53.2g\n- **Ingredients:** Gum base, sweeteners (maltitol, sorbitol, xylitol, mannitol, maltitol syrup), aspartame, acesulfame K, gelling agent, flavorings, maltodextrin, stabilizer (glycerol), emulsifier (soy lecithin), thickener (cellulose gum), glazing agent (carnauba wax), antioxidant (E321).\n- **Claims:** Sugar free, contains a source of phenylalanine, excessive consumption may have laxative effects.\n- **Allergens:** Contains a source of phenylalanine.\n\n**Why it matches:**\n- **Sugar-Free:** This product is explicitly labeled as sugar-free, using sweeteners like maltitol, sorbitol, xylitol, and mannitol instead of cane sugar.\n- **Individually Packaged:** The product comes in a pack of 38 pieces, which can be easily separated for individual consumption.\n- **Close to Vegan:** While it contains soy lecithin, which is generally considered vegan, it does not contain any animal-derived ingredients. However, it's important to note that some vegans may avoid products containing soy lecithin due to ethical concerns regarding soy production.\n\nIf you're looking for a strictly vegan option, you might consider combining this with another product that aligns more closely with vegan standards, such as:\n\n**(product_id: 22083055)** Candy Planet FrootHies\n- **Brand:** Candy Planet\n- **Pack Size:** 150g / 5.29 oz\n- **Ingredients:** Apple / apple, raspberry / raspberry\n- **Claims:** Gluten-free, peanut-free, soy-free, lactose-free, kosher pareve, chewy fruity toffees, with fruit juices.\n- **Allergens:** None listed.\n\n**Why it matches:**\n- **Vegan:** This product is made from fruit and does not contain any animal-derived ingredients.\n- **Individually Packaged:** While not individually wrapped, the pieces can be easily separated for individual consumption.\n\nBy combining these two products, you can create a sugar-free and mostly vegan confectionery experience. The Mentos provide a minty, sugar-free chewing gum option, while the Candy Planet FrootHies offer a chewy, fruity treat that is vegan-friendly.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5838353633880615,
+      "entity_search": 2.3549716472625732,
+      "graph_traversal": 2.3005411624908447,
+      "source_fetch": 2.245663642883301,
+      "llm": 16.40851616859436,
+      "total": 23.893531322479248
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0010",
+    "question_text": "I am looking for a dessert which is a healthy chocolate brownie alternative that still tastes indulgent",
+    "answer": "For a healthier chocolate brownie alternative that still tastes indulgent, we can consider combining a few products to create a unique and satisfying dessert. Here are two options that can be tailored to your preferences:\n\n### Option 1: Chocolate Chunk Crispy Cookie Brownie Alternative\n**Product:** **(product_id: 22080528)** Pepperidge Farm Chocolate Chunk Classic Dark Chocolate Crispy Cookies\n\n#### Why This Product?\n- **Ingredients:** These cookies are made with dark chocolate (23%), which provides a rich chocolate flavor while being lower in sugar compared to milk chocolate. They also include premium quality ingredients such as hazelnuts, almonds, pecan nuts, and macadamia nuts, adding a satisfying crunch and a touch of indulgence.\n- **Claims:** The product is baked with an abundance of big chunks that taste and feel like homemade, ensuring a delicious texture and flavor.\n- **Healthier Aspect:** While these aren't traditional brownies, the dark chocolate and nuts provide a healthier alternative with fewer refined sugars and added fiber.\n\n#### Preparation Tips:\n- Serve the cookies slightly warmed by microwaving them for 10-12 seconds to enhance the melting chocolate chunks, giving a brownie-like experience.\n- Pair with a scoop of dairy-free ice cream or a dollop of whipped cream for an extra indulgent touch.\n\n### Option 2: White Chocolate with Cocoa Beans and Crispy Rice\n**Product:** **(product_id: 22079966)** Chupa Chups White Chocolate with Cocoa Beans and Crispy Rice\n\n#### Why This Product?\n- **Ingredients:** This product includes sweetened and caramelized cocoa bean granules, which add a rich chocolate flavor and a hint of sweetness. The inclusion of cocoa crispy rice adds a light, airy texture that contrasts well with the dense richness of a traditional brownie.\n- **Claims:** It is suitable for both desserts and snacks, making it versatile for different occasions.\n- **Healthier Aspect:** The combination of cocoa beans and crispy rice provides a lighter option compared to a traditional brownie, with the added benefit of whole grains from the rice.\n\n#### Preparation Tips:\n- Enjoy the product as is for a quick and easy dessert.\n- Alternatively, crumble the product over a bowl of yogurt or serve with a side of fresh berries for a refreshing twist.\n\n### Budget Consideration\nBoth options are relatively affordable and can be enjoyed in small portions to make them last longer. The **Pepperidge Farm Chocolate Chunk Classic Dark Chocolate Crispy Cookies** come in a larger pack size (204g), making them a cost-effective choice for multiple servings. The **Chupa Chups White Chocolate with Cocoa Beans and Crispy Rice** comes in a smaller pack size (45g), but it is perfect for a single serving or sharing among a few people.\n\n### Conclusion\nWhile neither of these products is a direct brownie replacement, they offer a healthier and equally indulgent alternative. The **Pepperidge Farm Chocolate Chunk Classic Dark Chocolate Crispy Cookies** provide a rich chocolate experience with nuts, while the **Chupa Chups White Chocolate with Cocoa Beans and Crispy Rice** offers a lighter, airier texture with a touch of cocoa. Both options can be customized with additional toppings or pairings to enhance their indulgence factor.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5811645984649658,
+      "entity_search": 2.3801212310791016,
+      "graph_traversal": 2.270263195037842,
+      "source_fetch": 2.018683671951294,
+      "llm": 18.082605361938477,
+      "total": 25.332843780517578
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  }
+]

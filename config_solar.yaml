@@ -1,0 +1,194 @@
+# =============================================================================
+# RAG Configuration - Solar System sample dataset
+# =============================================================================
+
+paths:
+  questions_path: "data/questions-answers.json"
+  output_root: "out_solar"
+
+prune_k: 20
+hyde: false
+
+pipeline:
+  mode: decomposed
+  max_sub_questions: 5
+  subq_fanout_cap: 3
+  subq_max_concurrency: 2
+  rounds: 2
+  preliminary_prefix: ""
+  subquery_prefix: ""
+  dataset_description: "Solar system facts including planet data, temperatures, atmospheres, and physical properties."
+
+retrieval:
+  k_fulltext: 10
+  k_diverse: 0
+  eta: 0.0
+  rescale_power: 5.0
+  cache_size: 2000
+
+ranker:
+  use_ranker: false
+  rerank_multiplier: 8
+  k_ranker: 20
+  region: ""
+  account_name: ""
+  tenant_id: ""
+  token_scope: ""
+  batch_size: 16
+  max_retries: 5
+
+execution:
+  max_questions: null
+  max_workers: 4
+
+llm:
+  llm_endpoint: "https://smccullough-westus-resource.cognitiveservices.azure.com"
+  api_version: "2025-04-01-preview"
+  tenant_id: "43083d15-7273-40c1-b7db-39efd9ccc17a"
+  llm_model: "gpt-4.1"
+  temperature: 0.0
+  max_completion_tokens: 4096
+  max_retries: 5
+  premium_max_concurrency: 4
+  prompt_cache_size: 2048
+  embed_cache_size: 4096
+  use_rbac_auth: true
+  token_scope: "https://cognitiveservices.azure.com/.default"
+  azure_openai_key: ""
+
+local_llm:
+  local_fallback_endpoint: "http://localhost:11434/api/generate"
+  local_fallback_model: "qwen3:8b"
+  use_local_fallback_for_subtasks: false
+  local_max_concurrency: 8
+
+embedding:
+  embed_endpoint: "http://localhost:11434/api/embeddings"
+  api_format: "openai"
+  api_version: "2024-12-01-preview"
+  embed_model: "qwen3-embedding:0.6b"
+  embed_dimensions: 1024
+  embed_cache_size: 4096
+  use_rbac_auth: false
+  token_scope: ""
+  embed_api_key: ""
+
+cosmos:
+  uri: "https://divdet.documents.azure.com:443/"
+  key: ""
+  database_name: "solar"
+  use_rbac_auth: true
+  tenant_id: "43083d15-7273-40c1-b7db-39efd9ccc17a"
+
+  cosmos_account_name: divdet
+  cosmos_resource_group: ams-cosmos-db
+  azure_subscription_id: "b7d41fc8-d35d-41db-92ed-1f7f1d32d4d9"
+  concurrent_batches: 1
+  embedding_batch_size: 50
+
+  vector_embedding_policy_json: |
+    {
+      "vectorEmbeddings": [
+        {
+          "path": "/embedding",
+          "dataType": "float32",
+          "dimensions": 1024,
+          "distanceFunction": "cosine"
+        }
+      ]
+    }
+
+  sources:
+    - id: "solar_text"
+      container_name: "solar_text"
+      partition_key_path: "/id"
+      embedding_field: "embedding"
+      documents_root: "data/solar-system.jsonl"
+      embedding_text_fields:
+        - title
+        - content
+      retrieval:
+        search_k: 10
+        fulltext_search_k: 10
+        fulltext_fields:
+          - title
+          - content
+      indexing_policy_json: |
+        {
+          "indexingMode": "consistent",
+          "automatic": true,
+          "includedPaths": [
+            { "path": "/*" }
+          ],
+          "excludedPaths": [
+            { "path": "/\"_etag\"/?" },
+            { "path": "/embedding/*" }
+          ],
+          "fullTextIndexes": [
+            { "path": "/title" },
+            { "path": "/content" }
+          ],
+          "vectorIndexes": [
+            {
+              "path": "/embedding",
+              "type": "diskANN",
+              "quantizationByteSize": 192,
+              "indexingSearchListSize": 100
+            }
+          ]
+        }
+      full_text_policy_json: |
+        {
+          "defaultLanguage": "en-US",
+          "fullTextPaths": [
+            { "path": "/title", "language": "en-US" },
+            { "path": "/content", "language": "en-US" }
+          ]
+        }
+
+    - id: "solar_structured"
+      container_name: "solar_structured"
+      partition_key_path: "/object_type"
+      embedding_field: "embedding"
+      documents_root: "data/solar-system-structured.jsonl"
+      embedding_text_fields:
+        - object
+        - object_type
+      retrieval:
+        search_k: 10
+        fulltext_search_k: 5
+        fulltext_fields:
+          - object
+          - object_type
+      indexing_policy_json: |
+        {
+          "indexingMode": "consistent",
+          "automatic": true,
+          "includedPaths": [
+            { "path": "/*" }
+          ],
+          "excludedPaths": [
+            { "path": "/\"_etag\"/?" },
+            { "path": "/embedding/*" }
+          ],
+          "fullTextIndexes": [
+            { "path": "/object" },
+            { "path": "/object_type" }
+          ],
+          "vectorIndexes": [
+            {
+              "path": "/embedding",
+              "type": "diskANN",
+              "quantizationByteSize": 192,
+              "indexingSearchListSize": 100
+            }
+          ]
+        }
+      full_text_policy_json: |
+        {
+          "defaultLanguage": "en-US",
+          "fullTextPaths": [
+            { "path": "/object", "language": "en-US" },
+            { "path": "/object_type", "language": "en-US" }
+          ]
+        }

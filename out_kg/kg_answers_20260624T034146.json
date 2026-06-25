@@ -1,0 +1,192 @@
+[
+  {
+    "question_id": "food_0001",
+    "question_text": "I am searching for a high-calorie protein snack for long-distance running that fits in a running belt",
+    "answer": "Based on the provided information, there isn't a perfect match for a high-calorie protein snack that fits in a running belt. However, the **(product_id: 22082491)** Snickers Cookie Dough 3.1 oz by Snickers could be a suitable alternative. This product has a good mix of carbohydrates and fats which can provide energy during long-distance running. It also includes peanut granules and caramel shreds, contributing to its caloric content. The pack size of 3.1 oz (88g) makes it portable enough to fit in a running belt. \n\nIngredients: sugar, heat-treated chip (sugar, unsweetened chocolate, glaze), caramel shreds [caramel (corn syrup, sugar, milk, fructose, hydrogenated coconut oil, butter, emulsifier (e322, e471, e415), salt, flavor), wheat flour], tapioca syrup, vegetable glycerin, peanut granules, snickerstm chopped [milk chocolate (sugar, cocoa butter, cocoa mass, milk, lactose, emulsifier (soya lecithin), flavoring (vanillin)), palm oil, glucose syrup, skimmed milk powder, whey (milk), lactose (milk), emulsifier (soya lecithin), flavoring (vanillin)].\n\nPlease note that while this product does not have a high protein content, it provides a quick energy boost due to its carbohydrate and fat content, which can be beneficial for long-distance running.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5769650936126709,
+      "entity_search": 2.3021774291992188,
+      "graph_traversal": 2.251927614212036,
+      "source_fetch": 0.9671468734741211,
+      "llm": 4.776731491088867,
+      "total": 10.919876337051392
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0002",
+    "question_text": "I am searching for a product which is a low-alcohol premium drink that still feels luxurious",
+    "answer": "Based on the provided information, there isn't a product that exactly matches your criteria for a low-alcohol premium drink that feels luxurious. However, the closest alternative would be:\n\n**Lapp Spritz Poptail Prosecco-Bitters Blood Orange** (product_id: **22082518**):\n- This product is an alcoholic sorbet with a 4.5% ABV, which qualifies it as a low-alcohol drink.\n- It includes premium ingredients such as Prosecco and blood orange juice, giving it a luxurious feel.\n- The product is gluten & dairy-free, adding to its premium quality.\n- Each pack contains 4 servings of 110ml each, making it suitable for sharing or enjoying over time.\n\nWhile this product does not explicitly claim to be \"luxurious,\" its ingredients and presentation suggest a higher-end experience compared to other options listed.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.569542407989502,
+      "entity_search": 2.3268649578094482,
+      "graph_traversal": 2.2016334533691406,
+      "source_fetch": 0.8862738609313965,
+      "llm": 2.7902672290802,
+      "total": 8.774589538574219
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0003",
+    "question_text": "I am searching for a gluten-free cinema snack for a Friday night movie",
+    "answer": "Based on your request for a gluten-free cinema snack, the product that matches your criteria is:\n\n- **(product_id: 22079966)**: *Chupa Chups White Chocolate with Cocoa Beans and Crispy Rice*. This product is labeled as gluten-free and contains crunchy rice with cocoa, making it a suitable snack for a movie night. It has a pack size of 45g, which is convenient for a single serving. The ingredients include cocoa butter, skimmed milk powder, whole milk powder, lactose, sweetened and caramelized cocoa bean granules, and cocoa crispy rice. Note that it may contain peanuts and nuts, so be cautious if you have any nut allergies.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.44721531867980957,
+      "entity_search": 2.5572707653045654,
+      "graph_traversal": 2.1415014266967773,
+      "source_fetch": 0.9597632884979248,
+      "llm": 2.2665867805480957,
+      "total": 8.372343063354492
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0004",
+    "question_text": "I am searching for a summer BBQ meat to impress guests that I am hosting",
+    "answer": "For a summer BBQ that will impress your guests, you might consider the **(product_id: 22084350)** herb pork roast by Marsigny. This product is a **cooked roast pork of superior quality with herbs**, which makes it an excellent choice for a special occasion. It includes a variety of herbs and spices such as **garlic, aromatic plants including herbs of provence, leek, onion, and carrot**. The pork is cured and browned, giving it a rich flavor and texture that can be a centerpiece at any gathering. The product is packaged in a protective atmosphere and has a net weight of 160g. \n\nAnother option could be the **(product_id: 22083438)** assortment of 6 marinated pork skewers with green pepper and pork belly, 12 mini herbed chipolatas, and 12 mini merguez by QATC. This product offers a diverse selection of meats and flavors, including **pork meat from France, pork belly, green pepper, and various seasonings like vinegar extract and acerola extract**. The assortment comes in a net weight of 1.14 kg, making it suitable for a larger group. Both products are stored under protective atmospheres and should be consumed thoroughly cooked.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.41405725479125977,
+      "entity_search": 2.566354751586914,
+      "graph_traversal": 2.154561758041382,
+      "source_fetch": 0.834209680557251,
+      "llm": 4.071490287780762,
+      "total": 10.040680408477783
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0005",
+    "question_text": "Recommend a breakfast idea that takes under 15 minutes to make and contains eggs",
+    "answer": "For a quick breakfast idea that takes under 15 minutes to prepare and includes eggs, I recommend the following option:\n\n**Product:** **(product_id: 22084365)** Butter Shortbread Biscuits with a Filling (22%) of Apple, Flavored by Les Malins Plaisirs\n- **Brand:** Les Malins Plaisirs\n- **Pack Size:** Net Weight: 100g ℮. This box contains 4 servings.\n- **Ingredients:** Wheat flour, apple puree 22%, pastry butter 21.7%, sugar, glucose-fructose syrup, stabilizer: glycerol, eggs 3.8%, salt, flavorings, skimmed milk powder, butter 0.4%, aromatic caramel (water, sugar), raising agent: ammonium carbonates, acidity regulator: citric acid, acidity corrector: sodium citrate.\n- **Claims:** From free-range hens, store in a cool, dry place, this box contains 4 servings, 1 serving = 2 filled shortbread biscuits (approximately 25 g).\n\nThis product meets the criteria because it contains eggs and can be prepared in less than 15 minutes as it is ready-to-eat. It's a convenient and quick breakfast option that includes eggs as one of its ingredients.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5548481941223145,
+      "entity_search": 2.331664562225342,
+      "graph_traversal": 2.270894765853882,
+      "source_fetch": 0.8807082176208496,
+      "llm": 4.156332969665527,
+      "total": 10.194453716278076
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0006",
+    "question_text": "I want to find ingredients needed to make a traditional English strawberry trifle",
+    "answer": "Based on the provided knowledge graph and source documents, there isn't a direct product that matches the ingredients needed to make a traditional English strawberry trifle. However, I can suggest some products that might be useful components for creating a trifle:\n\n1. **Cane Sugar**: Cane sugar is a common ingredient used in trifles for sweetness. It is found in many products, including **(product_id: 22083657)** mini briochettes filled with duck foie gras preparation and **(product_id: 22084365)** butter shortbread biscuits with a filling (22%) of apple, flavored.\n\n2. **Raising Agents**: Raising agents like sodium bicarbonate and ammonium bicarbonate are used in baking, which could be useful if you're making sponge cake for the trifle. These are found in **(product_id: 22084365)** butter shortbread biscuits with a filling (22%) of apple, flavored.\n\n3. **Sunflower Oil**: Sunflower oil is often used in baking and can be part of the ingredients for making sponge cake. It is listed in **(product_id: 22083164)** cassoulet with duck confit and **(product_id: 22083319)** flammekueche with smoked bacon and onions (2×400g) 800g.\n\nWhile these products provide some of the ingredients you might need, a traditional trifle typically requires sponge cake, custard, fruit (strawberries), and whipped cream, none of which are directly available as single products in the provided data. You would likely need to combine several of these ingredients with additional purchases to make a trifle.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.453505277633667,
+      "entity_search": 2.437387704849243,
+      "graph_traversal": 2.400437593460083,
+      "source_fetch": 0.9317495822906494,
+      "llm": 5.331192255020142,
+      "total": 11.554278135299683
+    },
+    "entities_found": 20,
+    "triples_found": 42
+  },
+  {
+    "question_id": "food_0007",
+    "question_text": "I need a recommendation for a 15-minute air fryer recipe using mince beef",
+    "answer": "Based on the provided data, there is no direct recommendation for a 15-minute air fryer recipe using minced beef. However, I can suggest a close alternative that involves cooked minced beef:\n\n**Product Recommendation:**\n- **Brand:** La Toque Angevine\n- **Product Name:** Hamburger Bun Sandwich Filled with Cooked Minced Beef, Raclette Cheese, and Cooked Smoked Bacon\n- **Product ID:** **(product_id: 22084337)**\n- **Pack Size:** Net Weight: 220g\n- **Key Ingredients:** Special hamburger bread, cooked pure beef minced steak, raclette cheese, and cooked smoked bacon.\n\nThis product includes cooked minced beef and could potentially be adapted for an air fryer recipe. Although it does not come with explicit air fryer instructions, you could consider reheating or slightly cooking this sandwich in an air fryer for a quick meal. The product is designed to be consumed as is, so adapting it for an air fryer might involve adjusting the temperature and time to ensure the sandwich is heated through without drying out. \n\nPlease note that this suggestion is based on the closest match available in the provided data and may require some experimentation to achieve the desired result.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5753536224365234,
+      "entity_search": 2.312147617340088,
+      "graph_traversal": 2.253866672515869,
+      "source_fetch": 1.105086326599121,
+      "llm": 3.847189426422119,
+      "total": 10.09364914894104
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0008",
+    "question_text": "As a family of four, create us a dinner recommendation that costs £10 total to make that will feed a family of 4 that contains pasta",
+    "answer": "Based on the provided data, there is no pasta product listed that would fit the criteria of costing £10 total to make and feeding a family of four. However, I can suggest a combination of products that could form a balanced meal for your family:\n\n**Dinner Recommendation:**\n\n1. **Rustic Italian Vegetable Soup** **(product_id: 22080644)** - This soup is vegetarian, gluten-free, and low in fat, making it a healthy option. It contains vegetables such as celery and carrots, and it's suitable for vegetarians. The pack size isn't specified, but it should serve a small group well.\n\n2. **Chicken with Caponata and Twists 580 g** **(product_id: 22084246)** - This dish includes chicken, eggplant, tomatoes, and other vegetables, providing a good mix of proteins and vegetables. It comes in a 580g pack, which should be enough for a family of four if served alongside the soup.\n\nWhile this combination does not include pasta, it offers a nutritious and filling meal. The soup can act as a starter or side dish, while the chicken with caponata serves as the main course. Both products are from reputable brands and have clear preparation instructions, ensuring ease of use for a family dinner. \n\nIf you're looking specifically for pasta, you might need to look beyond the provided products or consider adding a separate pasta dish to complement these items.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.627159833908081,
+      "entity_search": 2.2335617542266846,
+      "graph_traversal": 2.2280919551849365,
+      "source_fetch": 1.0059282779693604,
+      "llm": 4.564453840255737,
+      "total": 10.65920376777649
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0009",
+    "question_text": "Help me find a sugar free and vegan confectionery item that is individually packaged",
+    "answer": "Based on the provided data, there isn't a perfectly matching product that is both sugar-free and vegan while also being individually packaged. However, I can suggest a close alternative:\n\n**Mentos Spearmint Chewing Gum 38 Pieces Sugar Free (product_id: 22079993)**\n\n- **Brand:** Mentos\n- **Pack Size:** 53.2g\n- **Ingredients:** This product is sugar-free and includes sweeteners such as maltitol, sorbitol, xylitol, mannitol, and maltitol syrup. It also contains aspartame and acesulfame K as sweeteners.\n- **Claims:** The product is labeled as sugar-free and contains a source of phenylalanine.\n- **Allergens:** Contains a source of phenylalanine.\n\nWhile this product is sugar-free and does not contain any animal-derived ingredients, it is not strictly vegan due to the presence of emulsifiers and other additives that might not be considered vegan by all standards. Additionally, it is not individually wrapped but comes in a pack of 38 pieces. \n\nIf you require a strictly vegan product, you may need to look beyond the provided dataset for a more suitable option.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.533442497253418,
+      "entity_search": 2.330078601837158,
+      "graph_traversal": 2.250295877456665,
+      "source_fetch": 0.8810873031616211,
+      "llm": 3.8113014698028564,
+      "total": 9.806212902069092
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0010",
+    "question_text": "I am looking for a dessert which is a healthy chocolate brownie alternative that still tastes indulgent",
+    "answer": "Based on the provided information, there isn't a direct healthy chocolate brownie alternative available. However, the closest option that might suit your needs is the **(product_id: 22080107)** sponge cake filled with cream (39%) and coated with alpine milk chocolate (36%) by Choco Snack. This product is not a brownie but offers a chocolate-coated sponge cake that can be enjoyed directly from the fridge, providing a refreshing and indulgent treat. It includes milk chocolate and has a creamy filling, which could mimic the indulgence of a brownie. The pack size is **32g**. \n\nWhile this product does not claim to be particularly healthy, it does offer a different texture and temperature experience compared to traditional brownies, which might make it a suitable alternative for those seeking variety.",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen2.5-32B-Instruct",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.601149320602417,
+      "entity_search": 2.2923128604888916,
+      "graph_traversal": 2.223336696624756,
+      "source_fetch": 0.7292017936706543,
+      "llm": 2.74348783493042,
+      "total": 8.5894935131073
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  }
+]

@@ -1,0 +1,144 @@
+# =============================================================================
+# QA_CLI sample configuration
+#
+# Copy this file to `config.yaml` (same folder) and fill in the values for your
+# Azure Cosmos DB account, Azure OpenAI / Foundry deployments, and the source
+# container(s) you ingested with `cosmos_db_upload.py`.
+#
+# QA_CLI reads the SAME schema as the root `config.yaml.example`; it only uses
+# the subset of keys needed to answer a single interactive question. Pick the
+# strategy at runtime with `--strategy {tool-use,decomposed,vector,compare}`
+# (or the interactive startup menu). The plain `vector` strategy reuses the same
+# embedding model and Cosmos `sources` to run single-shot KNN searches.
+# =============================================================================
+
+# [shared] Output paths. QA_CLI does not read a questions file or write
+# results, but these keys must exist so the shared loader is happy.
+paths:
+  questions_path: ""
+  output_root: "out"
+
+# [tool-use only] Max docs to keep after a `prune` / auto-prune.
+prune_k: 20
+# [tool-use only] Enable HyDE passage generation before embedding the query.
+hyde: false
+
+# [shared] Default agentic paradigm. QA_CLI selects the strategy explicitly via
+# --strategy, so this key is informational here (tool-use / decomposed are both
+# offered directly).
+pipeline:
+  mode: tool-use            # {tool-use, decomposed}
+  # [decomposed only]
+  max_sub_questions: 5
+  subq_fanout_cap: 3
+  subq_max_concurrency: 2
+  rounds: 2
+  preliminary_prefix: ""
+  subquery_prefix: ""
+  dataset_description: ""
+
+# [decomposed only] Diversity / log-det selection parameters.
+retrieval:
+  k_fulltext: 10
+  k_diverse: 0              # 0 = disabled
+  eta: 0.0
+  rescale_power: 5.0
+  cache_size: 2000
+
+# [decomposed only] Concurrency limits used by the shared pipeline.
+execution:
+  max_questions: null
+  max_workers: 8
+
+# Azure OpenAI / LLM settings ([shared]).
+llm:
+  llm_endpoint: "https://<foundry-resource-name>.cognitiveservices.azure.com/"
+  api_version: "2024-12-01-preview"
+  llm_model: "<deployment-name>"
+  temperature: 0.0
+  max_completion_tokens: 2048
+  max_retries: 2
+  premium_max_concurrency: 8
+  prompt_cache_size: 4096
+  use_rbac_auth: true
+  token_scope: "https://cognitiveservices.azure.com/.default"
+  llm_api_key: ""
+  context_limit: 270000     # [tool-use only] explicit context window hint
+
+# Embedding settings ([shared]). Used by BOTH the agentic and vector strategies.
+embedding:
+  embed_endpoint: "https://<foundry-resource-name>.openai.azure.com/"
+  api_version: "2024-12-01-preview"
+  embed_model: "<deployment-name>"
+  embed_dimensions: 1024
+  embed_cache_size: 4096
+  use_rbac_auth: true
+  token_scope: "https://ai.azure.com/.default"
+  embed_api_key: ""
+
+# Semantic ranker ([shared]). Set use_ranker: false to skip reranking. The
+# 'vector' strategy never reranks regardless of this setting.
+ranker:
+  use_ranker: true
+  rerank_multiplier: 8      # [tool-use only]
+  k_ranker: 20              # [decomposed only]
+  region: ""
+  account_name: ""
+  tenant_id: ""
+  token_scope: ""
+  batch_size: 16
+  max_retries: 5
+
+# Cosmos DB settings.
+cosmos:
+  uri: ""
+  key: ""
+  database_name: ""
+  use_rbac_auth: false
+
+  # Configure each source/container independently.
+  sources:
+    - id: "source_1"
+      container_name: "container_1"
+      partition_key_path: "/pk"
+      embedding_field: "embedding"
+      documents_root: ""
+      embedding_text_fields:
+        - title
+        - summary
+        - content
+      retrieval:
+        search_k: 10           # also the default top-k for the 'vector' strategy
+        fulltext_search_k: 10
+        fulltext_fields:
+          - title
+      indexing_policy_json: |
+        {
+          "indexingMode": "consistent",
+          "automatic": true,
+          "includedPaths": [
+            { "path": "/*" }
+          ],
+          "excludedPaths": [
+            { "path": "/\"_etag\"/?" },
+            { "path": "/embedding/*" }
+          ],
+          "fullTextIndexes": [
+            { "path": "/title" }
+          ],
+          "vectorIndexes": [
+            {
+              "path": "/embedding",
+              "type": "diskANN",
+              "quantizationByteSize": 192,
+              "indexingSearchListSize": 100
+            }
+          ]
+        }
+      full_text_policy_json: |
+        {
+          "defaultLanguage": "en-US",
+          "fullTextPaths": [
+            { "path": "/title", "language": "en-US" }
+          ]
+        }

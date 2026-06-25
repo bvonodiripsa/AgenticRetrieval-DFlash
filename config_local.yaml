@@ -1,0 +1,130 @@
+paths:
+  questions_path: data/food.json
+  output_root: out
+prune_k: 20
+hyde: false
+pipeline:
+  mode: decomposed
+  max_sub_questions: 3
+  subq_fanout_cap: 3
+  subq_max_concurrency: 8
+  rounds: 2
+  preliminary_prefix: If needed, check designation field.
+  subquery_prefix: If needed, check designation field.
+  dataset_description: ''
+retrieval:
+  k_fulltext: 10
+  k_diverse: 100
+  eta: 0.0
+  rescale_power: 5.0
+  cache_size: 2000
+ranker:
+  use_ranker: false
+  rerank_multiplier: 8
+  k_ranker: 20
+  region: ''
+  account_name: ''
+  tenant_id: ''
+  token_scope: ''
+  batch_size: 32
+  max_retries: 5
+execution:
+  max_questions: null
+  max_workers: 10
+llm:
+  llm_endpoint: http://localhost:8000/v1
+  api_version: 2025-04-01-preview
+  tenant_id: ''
+  llm_model: Qwen/Qwen2.5-32B-Instruct
+  temperature: 0.0
+  max_completion_tokens: 1024
+  max_retries: 5
+  use_local_fallback_for_subtasks: false
+  premium_max_concurrency: 20
+  local_max_concurrency: 16
+  prompt_cache_size: 2048
+  embed_cache_size: 4096
+  use_rbac_auth: false
+  token_scope: ''
+  azure_openai_key: dummy-key-for-local
+local_llm:
+  local_fallback_endpoint: http://localhost:8000/v1
+  local_fallback_model: nvidia/Llama-3.1-Nemotron-70B-Instruct-HF
+  use_local_fallback_for_subtasks: false
+  local_max_concurrency: 16
+embedding:
+  embed_endpoint: ''
+  api_format: openai
+  api_version: 2024-12-01-preview
+  embed_model: qwen3-embedding:0.6b
+  embed_dimensions: 1024
+  embed_cache_size: 4096
+  use_rbac_auth: false
+  token_scope: ''
+  embed_api_key: ''
+  use_embed_in_process: true
+  in_process_embed_model: Qwen/Qwen3-Embedding-0.6B
+cosmos:
+  uri: https://divdet.documents.azure.com:443/
+  key: ''
+  database_name: food
+  use_rbac_auth: true
+  tenant_id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+  cosmos_account_name: divdet
+  cosmos_resource_group: ams-cosmos-db
+  azure_subscription_id: b7d41fc8-d35d-41db-92ed-1f7f1d32d4d9
+  concurrent_batches: 1
+  embedding_batch_size: 50
+  vector_embedding_policy_json: "{\n  \"vectorEmbeddings\": [\n    {\n      \"path\"\
+    : \"/e\",\n      \"dataType\": \"float32\",\n      \"dimensions\": 1024,\n   \
+    \   \"distanceFunction\": \"cosine\"\n    }\n  ]\n}\n"
+  sources:
+  - id: food
+    container_name: food
+    partition_key_path: /country_code
+    embedding_field: e
+    documents_root: data/food/fr_caas.jsonl
+    context_fields:
+    - product_id
+    embedding_text_fields:
+    - product_title
+    - product_title_translated
+    - brand
+    - claims
+    - claims_translated
+    - ingredients
+    - ingredients_translated
+    - allergens
+    - allergens_translated
+    - pack_size
+    - pack_size_translated
+    - country_code
+    retrieval:
+      search_k: 35
+      fulltext_search_k: 15
+      fulltext_fields:
+      - product_title
+      - product_title_translated
+      - brand
+      - claims
+      - claims_translated
+      - ingredients_translated
+      - country_code
+    indexing_policy_json: "{\n  \"indexingMode\": \"consistent\",\n  \"automatic\"\
+      : true,\n  \"includedPaths\": [\n    { \"path\": \"/*\" }\n  ],\n  \"excludedPaths\"\
+      : [\n    { \"path\": \"/\\\"_etag\\\"/?\" },\n    { \"path\": \"/e/*\" }\n \
+      \ ],\n  \"fullTextIndexes\": [\n    { \"path\": \"/product_title\" },\n    {\
+      \ \"path\": \"/product_title_translated\" },\n    { \"path\": \"/brand\" },\n\
+      \    { \"path\": \"/claims\" },\n    { \"path\": \"/claims_translated\" },\n\
+      \    { \"path\": \"/ingredients_translated\" },\n    { \"path\": \"/country_code\"\
+      \ }\n  ],\n  \"vectorIndexes\": [\n    {\n      \"path\": \"/e\",\n      \"\
+      type\": \"diskANN\",\n      \"quantizationByteSize\": 192,\n      \"indexingSearchListSize\"\
+      : 100\n    }\n  ]\n}\n"
+    full_text_policy_json: "{\n  \"defaultLanguage\": \"en-US\",\n  \"fullTextPaths\"\
+      : [\n    { \"path\": \"/product_title\", \"language\": \"it-IT\" },\n    { \"\
+      path\": \"/product_title_translated\", \"language\": \"en-US\" },\n    { \"\
+      path\": \"/brand\", \"language\": \"en-US\" },\n    { \"path\": \"/claims\"\
+      , \"language\": \"it-IT\" },\n    { \"path\": \"/claims_translated\", \"language\"\
+      : \"en-US\" },\n    { \"path\": \"/ingredients_translated\", \"language\": \"\
+      en-US\" },\n    { \"path\": \"/country_code\", \"language\": \"en-US\" }\n \
+      \ ]\n}\n"

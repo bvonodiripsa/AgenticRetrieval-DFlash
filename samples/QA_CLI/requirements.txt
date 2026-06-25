@@ -1,0 +1,10 @@
+# QA_CLI sample dependencies.
+#
+# QA_CLI reuses the root project modules (dynamic_retriever.py, utils/), so you
+# must ALSO have the root requirements installed in the same environment:
+#
+#   pip install -r ../../requirements.txt
+#   pip install -r requirements.txt
+#
+# The only extra dependency for the sample is the terminal UI library.
+rich>=13.7

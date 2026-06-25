@@ -1,0 +1,224 @@
+# =============================================================================
+# Unified RAG configuration template for dynamic_retriever.py
+#
+# This template supports BOTH paradigms exposed by dynamic_retriever.py:
+#   - tool-use     : agentic LLM-driven tool-calling loop (default)
+#   - decomposed   : multi-round decomposed RAG (DecomposedRAGPipeline)
+#
+# Select via `pipeline.mode` below or `--mode {tool-use,decomposed}` on the CLI
+# (CLI overrides config).
+#
+# Section comments mark each block as [shared], [tool-use only], or [decomposed only].
+# =============================================================================
+
+# [shared] Paths (relative to working directory)
+paths:
+  questions_path: ""
+  output_root: ""
+
+# [tool-use only] Max docs to keep after a `prune` tool call / auto-prune
+prune_k: 20
+# [tool-use only] Enable HyDE passage generation before embedding the query
+hyde: false
+
+# [shared] Default pipeline paradigm; CLI `--mode` overrides this value.
+pipeline:
+  mode: tool-use            # {tool-use, decomposed}
+  # [decomposed only] Sub-question decomposition + rounds (DecomposedRAGPipeline)
+  max_sub_questions: 5
+  subq_fanout_cap: 3
+  subq_max_concurrency: 2
+  rounds: 2
+  preliminary_prefix: ""
+  subquery_prefix: ""
+  dataset_description: ""
+
+# [decomposed only] Retrieval parameters for diversity/log-det selection
+retrieval:
+  k_fulltext: 10
+  k_diverse: 0              # 0 = disabled; >0 = select this many diverse chunks via log-det
+  eta: 0.0
+  rescale_power: 5.0
+  cache_size: 2000
+
+# [decomposed only] Concurrency / question-count limits for main_async()
+execution:
+  max_questions: null       # null = process all questions
+  max_workers: 8
+
+# Azure OpenAI / LLM settings ([shared]).
+llm:
+  llm_endpoint: "https://<foundry-resource-name>.cognitiveservices.azure.com/"
+  api_version: "2024-12-01-preview"
+  llm_model: "<deployment-name>"
+  temperature: 0.0
+  max_completion_tokens: 2048
+  max_retries: 2
+  premium_max_concurrency: 8
+  prompt_cache_size: 4096
+  use_rbac_auth: true
+  token_scope: "https://cognitiveservices.azure.com/.default"
+  llm_api_key: ""
+  context_limit: 270000     # [tool-use only] explicit context window hint
+
+# [decomposed only] Optional separate LLM endpoint for regeneration steps in efficient pipeline
+llm_regen:
+  use_llm_regen: false
+  llm_endpoint: ""
+  api_version: ""
+  llm_model: ""
+  temperature: 0.0
+  max_completion_tokens: 4096
+  max_retries: 5
+  premium_max_concurrency: 4
+  use_rbac_auth: false
+  token_scope: ""
+  llm_api_key: ""
+
+# [decomposed only] Ollama (or other local) fallback for sub-tasks
+local_llm:
+  local_fallback_endpoint: "http://localhost:11434/api/generate"
+  local_fallback_model: ""
+  use_local_fallback_for_subtasks: false
+  local_max_concurrency: 8
+
+# Embedding settings ([shared])
+embedding:
+  embed_endpoint: "https://<foundry-resource-name>.openai.azure.com/"
+  api_version: "2024-12-01-preview"
+  embed_model: "<deployment-name>"
+  embed_dimensions: 1024
+  embed_cache_size: 4096
+  use_rbac_auth: true
+  token_scope: "https://ai.azure.com/.default"
+  embed_api_key: ""
+
+
+# Semantic ranker ([shared] for use_ranker/region/account_name/tenant_id/token_scope/batch_size/max_retries)
+# - rerank_multiplier : [tool-use only] proportional reranking
+# - k_ranker          : [decomposed only] absolute reranking (after diversity selection)
+ranker:
+  use_ranker: true
+  rerank_multiplier: 8      # [tool-use only]
+  k_ranker: 20              # [decomposed only]
+  region: ""
+  account_name: ""
+  tenant_id: ""
+  token_scope: ""
+  batch_size: 16
+  max_retries: 5
+
+# Cosmos DB settings
+cosmos:
+  uri: ""
+  key: ""
+  database_name: ""
+  use_rbac_auth: false
+
+  # Upload settings
+  cosmos_account_name: ""
+  cosmos_resource_group: ""
+  azure_subscription_id: ""
+  embedding_batch_size: 20
+
+  vector_embedding_policy_json: |
+    {
+      "vectorEmbeddings": [
+        {
+          "path": "/embedding",
+          "dataType": "float32",
+          "dimensions": 1024,
+          "distanceFunction": "cosine"
+        }
+      ]
+    }
+
+  # Configure each source/container independently
+  sources:
+    - id: "source_1"
+      container_name: "container_1"
+      partition_key_path: "/pk"
+      embedding_field: "embedding"
+      documents_root: ""
+      embedding_text_fields:
+        - title
+        - summary
+        - content
+      retrieval:
+        search_k: 10
+        fulltext_search_k: 10
+        fulltext_fields:
+          - title
+      indexing_policy_json: |
+        {
+          "indexingMode": "consistent",
+          "automatic": true,
+          "includedPaths": [
+            { "path": "/*" }
+          ],
+          "excludedPaths": [
+            { "path": "/\"_etag\"/?" },
+            { "path": "/embedding/*" }
+          ],
+          "fullTextIndexes": [
+            { "path": "/title" }
+          ],
+          "vectorIndexes": [
+            {
+              "path": "/embedding",
+              "type": "diskANN",
+              "quantizationByteSize": 192,
+              "indexingSearchListSize": 100
+            }
+          ]
+        }
+      full_text_policy_json: |
+        {
+          "defaultLanguage": "en-US",
+          "fullTextPaths": [
+            { "path": "/title", "language": "en-US" }
+          ]
+        }
+
+    - id: "source_2"
+      container_name: "container_2"
+      partition_key_path: "/pk"
+      embedding_field: "embedding"
+      documents_root: ""
+      embedding_text_fields:
+        - text
+      retrieval:
+        search_k: 25
+        fulltext_search_k: 0
+        fulltext_fields: 
+          - text
+      indexing_policy_json: |
+        {
+          "indexingMode": "consistent",
+          "automatic": true,
+          "includedPaths": [
+            { "path": "/*" }
+          ],
+          "excludedPaths": [
+            { "path": "/\"_etag\"/?" },
+            { "path": "/embedding/*" }
+          ],
+          "fullTextIndexes": [
+            { "path": "/text" }
+          ],
+          "vectorIndexes": [
+            {
+              "path": "/embedding",
+              "type": "diskANN",
+              "quantizationByteSize": 192,
+              "indexingSearchListSize": 100
+            }
+          ]
+        }
+      full_text_policy_json: |
+        {
+          "defaultLanguage": "en-US",
+          "fullTextPaths": [
+            { "path": "/text", "language": "en-US" }
+          ]
+        }

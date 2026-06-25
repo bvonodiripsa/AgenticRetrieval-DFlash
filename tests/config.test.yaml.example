@@ -1,0 +1,194 @@
+# =============================================================================
+# RAG Test Configuration
+# =============================================================================
+
+# Retrieval parameters
+retrieval:
+  k_fulltext: 5
+  k_diverse: 10       # 0 = disabled; >0 = select this many diverse chunks via log-det
+  eta: 0.0            # Gram matrix regularization
+  rescale_power: 5.0  # Query-similarity rescale power
+  cache_size: 20
+
+# Semantic ranker (reranking after diversity selection)
+ranker:
+  use_ranker: true
+  k_ranker: 30
+  region: ""
+  account_name: ""
+  read_token_from_path: true
+  access_token_path: ""
+  tenant_id: "a" # this is needed when read_token_from_path = false
+  token_scope: "b" # this is needed when read_token_from_path = false
+  register_account_path: "c" # this is needed when read_token_from_path = false
+  url_suffix: ""
+  batch_size: 64
+  max_retries: 10
+
+# Pipeline parameters
+pipeline:
+  max_sub_questions: 2
+  subq_fanout_cap: 1
+  subq_max_concurrency: 2
+  rounds: 2
+
+# Execution parameters
+execution:
+  max_questions: null  # null = process all questions
+  max_workers: 1
+
+# Paths (relative to working directory)
+paths:
+  questions_path: ""
+  output_root: ""
+
+# Azure OpenAI / LLM settings
+llm:
+  llm_endpoint: ""
+  api_version: "2024-05-01-preview"
+  llm_model: ""
+  temperature: 0.0
+  max_completion_tokens: 4096
+  max_retries: 2
+  premium_max_concurrency: 4
+  prompt_cache_size: 2048
+  use_rbac_auth: false
+  token_scope: ""
+  llm_api_key: ""
+
+# Local LLM fallback settings (used for sub-tasks when use_local_fallback_for_subtasks is true)
+local_llm:
+  local_fallback_endpoint: "http://localhost:11434/api/generate"
+  local_fallback_model: ""
+  use_local_fallback_for_subtasks: false
+  local_max_concurrency: 8
+
+# Embedding settings
+embedding:
+  embed_endpoint: "xyz.cognitiveservices.azure.com"
+  api_version: "2024-05-01-preview"
+  embed_model: "text-embedding-3-small"
+  embed_dimensions: 1536
+  embed_cache_size: 4096
+  use_rbac_auth: false
+  token_scope: ""
+  embed_api_key: ""
+
+# Cosmos DB settings
+cosmos:
+  uri: "https://xyz.documents.azure.com:443/"
+  database_name: "agentic-retrieval-test-db"
+  use_rbac_auth: true
+  cosmos_account_name: "agentic-retrieval-test-account"
+  cosmos_resource_group: "agentic-retrieval-test"
+  azure_subscription_id: ""
+
+  
+  embedding_batch_size: 20
+
+  vector_embedding_policy_json: |
+    {
+      "vectorEmbeddings": [
+        {
+          "path": "/e",
+          "dataType": "float32",
+          "dimensions": 1536,
+          "distanceFunction": "cosine"
+        }
+      ]
+    }
+
+  sources:
+    - id: "solar-system"
+      container_name: "solar-system"
+      partition_key_path: "/id"
+      embedding_field: "e"
+      documents_root: "data/solar-system.jsonl"
+      embedding_text_fields:
+        - title
+        - content
+      retrieval:
+        vector_k: 4
+        fulltext_k: 2
+        fulltext_fields:
+          - title
+          - content
+      indexing_policy_json: |
+        {
+          "indexingMode": "consistent",
+          "automatic": true,
+          "includedPaths": [
+            { "path": "/*" }
+          ],
+          "excludedPaths": [
+            { "path": "/\"_etag\"/?" },
+            { "path": "/e/*" }
+          ],
+          "fullTextIndexes": [
+            { "path": "/title" },
+            { "path": "/content" }
+          ],
+          "vectorIndexes": [
+            {
+              "path": "/e",
+              "type": "diskANN",
+              "quantizationByteSize": 192,
+              "indexingSearchListSize": 100
+            }
+          ]
+        }
+      full_text_policy_json: |
+        {
+          "defaultLanguage": "en-US",
+          "fullTextPaths": [
+            { "path": "/title", "language": "en-US" },
+            { "path": "/content", "language": "en-US" }
+          ]
+        }
+
+    - id: "solar-system-structured"
+      container_name: "solar-system-structured"
+      partition_key_path: "/id"
+      embedding_field: "e"
+      documents_root: "data/solar-system-structured.jsonl"
+      embedding_text_fields:
+        - object
+        - object_type
+      retrieval:
+        vector_k: 4
+        fulltext_k: 2
+        fulltext_fields:
+          - object
+          - object_type
+      indexing_policy_json: |
+        {
+          "indexingMode": "consistent",
+          "automatic": true,
+          "includedPaths": [
+            { "path": "/*" }
+          ],
+          "excludedPaths": [
+            { "path": "/\"_etag\"/?" },
+            { "path": "/e/*" }
+          ],
+          "fullTextIndexes": [
+            { "path": "/object" },
+            { "path": "/object_type" }
+          ],
+          "vectorIndexes": [
+            {
+              "path": "/e",
+              "type": "diskANN",
+              "quantizationByteSize": 192,
+              "indexingSearchListSize": 100
+            }
+          ]
+        }
+      full_text_policy_json: |
+        {
+          "defaultLanguage": "en-US",
+          "fullTextPaths": [
+            { "path": "/object", "language": "en-US" },
+            { "path": "/object_type", "language": "en-US" }
+          ]
+        }
