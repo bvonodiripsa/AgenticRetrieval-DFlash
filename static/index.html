@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Food KG-RAG – DFlash Knowledge Assistant</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --surface: #fff; --border: #d1d5db;
+    --text: #1f2937; --text2: #6b7280; --accent: #059669;
+    --accent-hover: #047857; --green: #059669; --amber: #d97706;
+    --red: #dc2626; --code-bg: #f0f1f3; --radius: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+         background: var(--bg); color: var(--text); line-height: 1.5; }
+  .header { background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
+            color: #fff; padding: 20px 32px; }
+  .header h1 { font-size: 1.4rem; font-weight: 600; }
+  .header p { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; }
+  .header .badge { display: inline-block; background: rgba(255,255,255,0.2);
+                   border-radius: 12px; padding: 2px 10px; font-size: 0.75rem;
+                   margin-left: 8px; vertical-align: middle; }
+  .container { max-width: 960px; margin: 24px auto; padding: 0 16px; }
+  .card { background: var(--surface); border: 1px solid var(--border);
+          border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 0.8rem; font-weight: 600; text-transform: uppercase;
+                letter-spacing: 0.05em; color: var(--text2); margin-bottom: 10px; }
+  label { font-size: 0.875rem; font-weight: 500; display: block; margin-bottom: 6px; }
+  select, textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 12px; font-size: 0.9rem; font-family: inherit;
+    background: var(--surface); color: var(--text); transition: border 0.15s;
+  }
+  select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 60px; }
+  .row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+         background: var(--accent); color: #fff; border: none; border-radius: 6px;
+         padding: 10px 28px; font-size: 0.9rem; font-weight: 500; cursor: pointer;
+         transition: background 0.15s; white-space: nowrap; }
+  .btn:hover { background: var(--accent-hover); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-stop { background: var(--red); }
+  .btn-stop:hover { background: #b91c1c; }
+  .btn-secondary { background: var(--text2); }
+  .btn-secondary:hover { background: #4b5563; }
+
+  .progress-log { background: #1e293b; color: #e2e8f0; font-family: 'SF Mono', 'Fira Code', monospace;
+                  font-size: 0.78rem; border-radius: 6px; padding: 14px 16px;
+                  max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }
+  .progress-log:empty::before { content: 'Progress will appear here...';
+                                 color: #64748b; font-style: italic; }
+  .progress-line { margin-bottom: 2px; }
+  .progress-line .ts { color: #94a3b8; }
+  .progress-line .stage { color: #6ee7b7; font-weight: 500; }
+  .progress-line.error .stage { color: #f87171; }
+  .progress-line.done .stage { color: #4ade80; }
+
+  .answer-box { background: var(--code-bg); border-radius: 6px; padding: 16px;
+                font-size: 0.9rem; white-space: pre-wrap; word-break: break-word;
+                max-height: 500px; overflow-y: auto; line-height: 1.65; }
+  .answer-box:empty::before { content: '\2014'; color: var(--text2); }
+
+  .stats-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .stat-chip { background: #d1fae5; color: #065f46; border-radius: 20px; padding: 4px 14px;
+               font-size: 0.8rem; font-weight: 500; }
+
+  .timing-bar { display: flex; flex-wrap: wrap; gap: 8px; }
+  .timing-chip { background: var(--code-bg); border-radius: 20px; padding: 4px 14px;
+                 font-size: 0.8rem; font-weight: 500; }
+  .timing-chip.total { background: var(--accent); color: #fff; }
+
+  .bench-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  .bench-table th, .bench-table td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; }
+  .bench-table th { background: var(--code-bg); font-weight: 600; }
+  .bench-table tr:nth-child(even) { background: #fafafa; }
+  .bench-summary-line { font-size: 0.85rem; margin-bottom: 10px; color: var(--text2); }
+
+  .hidden { display: none !important; }
+  .spinner { width: 16px; height: 16px; border: 2px solid #fff4;
+             border-top-color: #fff; border-radius: 50%;
+             animation: spin 0.6s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .model-badge { display: inline-block; background: #d1fae5; color: #065f46;
+                 border-radius: 12px; padding: 2px 10px; font-size: 0.72rem;
+                 font-weight: 600; margin-left: 8px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Food Product Knowledge Assistant <span class="badge">DFlash</span></h1>
+  <p>KG-RAG over 58K food products &middot; 892K knowledge graph triples &middot; Qwen3.5-27B + DFlash speculative decoding</p>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="card-title">Question</div>
+    <label for="q-select">Select a predefined question or type your own below</label>
+    <select id="q-select">
+      <option value="">-- Loading questions... --</option>
+    </select>
+    <div style="margin-top: 10px;">
+      <label for="q-input">Question text (editable)</label>
+      <textarea id="q-input" rows="2" placeholder="Ask about food products, recipes, dietary needs..."></textarea>
+    </div>
+    <div class="row" style="margin-top: 12px;">
+      <div style="flex: 1;"></div>
+      <button type="button" class="btn btn-secondary hidden" id="btn-run-all" disabled>Run all questions</button>
+      <button class="btn" id="btn-ask" disabled>Ask</button>
+      <button class="btn btn-stop hidden" id="btn-stop">Stop</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Progress</div>
+    <div class="progress-log" id="progress-log"></div>
+  </div>
+
+  <div class="card hidden" id="stats-card">
+    <div class="card-title">Retrieval Stats</div>
+    <div class="stats-bar" id="stats-bar"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Answer <span id="answer-model-badge" class="model-badge hidden">Qwen3.5-27B + DFlash</span></div>
+    <div class="answer-box" id="answer-box"></div>
+  </div>
+
+  <div class="card hidden" id="timing-card">
+    <div class="card-title">Timing</div>
+    <div class="timing-bar" id="timing-bar"></div>
+  </div>
+
+  <div class="card hidden" id="benchmark-card">
+    <div class="card-title">Batch run (all questions)</div>
+    <p class="bench-summary-line" id="benchmark-headline"></p>
+    <div style="overflow-x: auto; max-height: 360px; overflow-y: auto;">
+      <table class="bench-table" id="benchmark-table">
+        <thead><tr>
+          <th>#</th><th>ID</th><th>Total s</th><th>HTTP wall s</th><th>embed</th><th>Cosmos</th><th>LLM</th><th>Status</th>
+        </tr></thead>
+        <tbody id="benchmark-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const qSelect    = document.getElementById('q-select');
+const qInput     = document.getElementById('q-input');
+const btnAsk     = document.getElementById('btn-ask');
+const btnRunAll  = document.getElementById('btn-run-all');
+const btnStop    = document.getElementById('btn-stop');
+const logEl      = document.getElementById('progress-log');
+const answerEl   = document.getElementById('answer-box');
+const statsCard  = document.getElementById('stats-card');
+const statsBar   = document.getElementById('stats-bar');
+const timingCard = document.getElementById('timing-card');
+const timingBar  = document.getElementById('timing-bar');
+const benchmarkCard    = document.getElementById('benchmark-card');
+const benchmarkHeadline = document.getElementById('benchmark-headline');
+const benchmarkTbody   = document.getElementById('benchmark-tbody');
+const answerModelBadge = document.getElementById('answer-model-badge');
+
+let questions = [];
+let abortCtrl = null;
+let startTime = null;
+let batchRunning = false;
+
+fetch('/v1/questions').then(r => r.json()).then(data => {
+  questions = data;
+  qSelect.innerHTML = '<option value="">-- Type your own question --</option>';
+  data.forEach((q, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = q.question_text;
+    qSelect.appendChild(opt);
+  });
+  btnAsk.disabled = false;
+  btnRunAll.disabled = false;
+  btnRunAll.classList.remove('hidden');
+}).catch(() => {
+  qSelect.innerHTML = '<option value="">-- Could not load questions --</option>';
+  btnAsk.disabled = false;
+});
+
+qSelect.addEventListener('change', () => {
+  const idx = qSelect.value;
+  if (idx !== '') {
+    qInput.value = questions[parseInt(idx)].question_text;
+  }
+});
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function addProgress(text, cls, serverTs) {
+  const now = serverTs != null ? Number(serverTs).toFixed(1) : ((performance.now() - startTime) / 1000).toFixed(1);
+  const div = document.createElement('div');
+  div.className = 'progress-line' + (cls ? ' ' + cls : '');
+  div.innerHTML = '<span class="ts">[' + now + 's]</span> <span class="stage">' + esc(text) + '</span>';
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function showStats(ev) {
+  statsBar.innerHTML = '';
+  const chip = (label, val) => {
+    const el = document.createElement('span');
+    el.className = 'stat-chip';
+    el.textContent = label + ': ' + val;
+    statsBar.appendChild(el);
+  };
+  if (ev.seed_entities) chip('Seed entities', ev.seed_entities);
+  if (ev.triples_found) chip('Triples', ev.triples_found);
+  chip('Source chunks', ev.source_chunks || 0);
+  if (ev.entity_names && ev.entity_names.length > 0) {
+    chip('Top entities', ev.entity_names.slice(0, 5).join(', '));
+  }
+  statsCard.classList.remove('hidden');
+}
+
+function cosmosSum(t) {
+  if (!t) return null;
+  const keys = ['entity_search', 'graph_traversal', 'source_fetch'];
+  let s = 0;
+  for (const k of keys) { if (typeof t[k] === 'number') s += t[k]; }
+  return s;
+}
+
+async function doStream(question) {
+  let answer = '';
+  try {
+    const resp = await fetch('/v1/ask/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question }),
+      signal: abortCtrl.signal,
+    });
+    if (!resp.ok) {
+      addProgress('Error: ' + await resp.text(), 'error');
+      return;
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const payload = line.slice(6);
+        if (payload === '[DONE]') continue;
+        try {
+          const ev = JSON.parse(payload);
+
+          if (ev.stage === 'progress') {
+            addProgress(ev.message || '', null, ev._ts);
+          } else if (ev.stage === 'stats') {
+            showStats(ev);
+            if (ev.triples_found) {
+              addProgress('KG: ' + ev.triples_found + ' triples from ' + ev.seed_entities + ' entities', null, ev._ts);
+            }
+            addProgress('Retrieval done — streaming answer...', '', ev._ts);
+          } else if (ev.stage === 'token') {
+            answer += ev.text || '';
+            answerEl.textContent = answer;
+            answerModelBadge.classList.remove('hidden');
+          } else if (ev.stage === 'done') {
+            const wall = (performance.now() - startTime) / 1000;
+            timingBar.innerHTML = '';
+            const mk = function(label, val, cls) {
+              const c = document.createElement('span');
+              c.className = 'timing-chip' + (cls ? ' ' + cls : '');
+              c.textContent = label + ': ' + val + 's';
+              timingBar.appendChild(c);
+            };
+            const tm = ev.timings || {};
+            if (tm.embed != null) mk('Embed', Number(tm.embed).toFixed(2));
+            if (tm.entity_search != null) mk('Entity', Number(tm.entity_search).toFixed(2));
+            if (tm.graph_traversal != null) mk('Graph', Number(tm.graph_traversal).toFixed(2));
+            if (tm.source_fetch != null) mk('Source', Number(tm.source_fetch).toFixed(2));
+            if (tm.llm != null) mk('LLM', Number(tm.llm).toFixed(2));
+            mk('Wall', wall.toFixed(1), 'total');
+            timingCard.classList.remove('hidden');
+            addProgress('Done in ' + wall.toFixed(1) + 's (LLM: ' + (tm.llm ? Number(tm.llm).toFixed(1) : '?') + 's)', 'done');
+          } else if (ev.stage === 'error') {
+            addProgress('Error: ' + (ev.message || ''), 'error');
+          }
+        } catch (parseErr) {}
+      }
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      addProgress('Connection error: ' + e.message, 'error');
+    }
+  }
+}
+
+async function doAsk() {
+  const question = qInput.value.trim();
+  if (!question) { qInput.focus(); return; }
+
+  btnAsk.disabled = true;
+  btnRunAll.disabled = true;
+  btnAsk.innerHTML = '<span class="spinner"></span> Running...';
+  btnStop.classList.remove('hidden');
+
+  logEl.innerHTML = '';
+  answerEl.textContent = '';
+  statsCard.classList.add('hidden');
+  timingCard.classList.add('hidden');
+  answerModelBadge.classList.add('hidden');
+
+  startTime = performance.now();
+  abortCtrl = new AbortController();
+
+  await doStream(question);
+
+  btnAsk.disabled = false;
+  btnRunAll.disabled = questions.length === 0;
+  btnAsk.innerHTML = 'Ask';
+  btnStop.classList.add('hidden');
+  abortCtrl = null;
+}
+
+async function runAllQuestions() {
+  if (!questions.length || batchRunning) return;
+  batchRunning = true;
+  btnAsk.disabled = true;
+  btnRunAll.disabled = true;
+  btnStop.classList.remove('hidden');
+  logEl.innerHTML = '';
+  answerEl.textContent = '\u2014';
+  statsCard.classList.add('hidden');
+  timingCard.classList.add('hidden');
+  benchmarkCard.classList.add('hidden');
+  benchmarkTbody.innerHTML = '';
+  startTime = performance.now();
+  abortCtrl = new AbortController();
+
+  const rows = [];
+  let errors = 0;
+
+  addProgress('Starting batch: ' + questions.length + ' questions via POST /v1/ask...');
+
+  try {
+    for (let i = 0; i < questions.length; i++) {
+      if (abortCtrl.signal.aborted) { addProgress('Stopped by user.', 'error'); break; }
+      const q = questions[i];
+      const qid = q.question_id != null ? String(q.question_id) : String(i);
+      addProgress('[' + (i + 1) + '/' + questions.length + '] ' + qid + '...');
+
+      let data = null;
+      let errMsg = null;
+      try {
+        const resp = await fetch('/v1/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q.question_text }),
+          signal: abortCtrl.signal,
+        });
+        const raw = await resp.text();
+        try { data = raw ? JSON.parse(raw) : {}; } catch (pe) { data = { message: raw.slice(0, 200) }; }
+        if (!resp.ok) {
+          errMsg = data.detail || data.message || ('HTTP ' + resp.status);
+          errors++;
+        }
+      } catch (e) {
+        if (e.name === 'AbortError') { addProgress('Stopped by user.', 'error'); break; }
+        errMsg = e.message;
+        errors++;
+      }
+
+      const t = (data && data.timings) || {};
+      rows.push({ idx: i + 1, qid: qid, total: t.total, wall: data && data.http_wall_s, embed: t.embed, cosmos: cosmosSum(t), llm: t.llm, err: errMsg });
+      if (errMsg) { addProgress('  \u2717 ' + qid + ': ' + errMsg, 'error'); }
+      else { addProgress('  \u2713 ' + qid + ': ' + (t.total != null ? t.total.toFixed(2) : '?') + 's total', 'done'); }
+    }
+  } finally {
+    batchRunning = false;
+    btnAsk.disabled = false;
+    btnRunAll.disabled = false;
+    btnStop.classList.add('hidden');
+    abortCtrl = null;
+  }
+
+  const ok = rows.filter(r => !r.err);
+  const totals = ok.map(r => r.total).filter(x => typeof x === 'number');
+  const avg = totals.length ? totals.reduce((a, b) => a + b, 0) / totals.length : 0;
+  const wallVals = ok.map(r => r.wall).filter(x => typeof x === 'number');
+  const avgWall = wallVals.length ? wallVals.reduce((a, b) => a + b, 0) / wallVals.length : 0;
+
+  benchmarkHeadline.textContent =
+    'Completed ' + rows.length + ' requests (' + ok.length + ' OK, ' + errors + ' errors). ' +
+    'Avg engine total: ' + avg.toFixed(2) + 's \u00b7 Avg HTTP wall: ' + avgWall.toFixed(2) + 's \u00b7 ' +
+    'Batch wall: ' + ((performance.now() - startTime) / 1000).toFixed(1) + 's';
+
+  for (const r of rows) {
+    const tr = document.createElement('tr');
+    const fmt = x => (x != null && typeof x === 'number' ? x.toFixed(2) : '\u2014');
+    tr.innerHTML = '<td>' + r.idx + '</td><td>' + esc(r.qid) + '</td><td>' + fmt(r.total) + '</td><td>' + fmt(r.wall) + '</td>' +
+      '<td>' + fmt(r.embed) + '</td><td>' + fmt(r.cosmos) + '</td><td>' + fmt(r.llm) + '</td>' +
+      '<td>' + (r.err ? esc(r.err.slice(0, 80)) : 'OK') + '</td>';
+    benchmarkTbody.appendChild(tr);
+  }
+  benchmarkCard.classList.remove('hidden');
+}
+
+btnAsk.addEventListener('click', doAsk);
+btnRunAll.addEventListener('click', runAllQuestions);
+btnStop.addEventListener('click', () => { if (abortCtrl) abortCtrl.abort(); });
+qInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doAsk(); } });
+</script>
+</body>
+</html>

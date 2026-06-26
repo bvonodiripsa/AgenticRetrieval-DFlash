@@ -1,0 +1,16 @@
+# Dependencies for the Food KG-RAG Web UI (no torch/vLLM needed)
+# LLM served by vLLM on localhost:8000
+
+openai>=1.30
+azure-cosmos>=4.7
+azure-identity>=1.17
+pyyaml>=6.0
+numpy>=1.26
+
+# Embedding model (in-process)
+sentence-transformers>=3.0
+transformers>=4.40
+
+# API server
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
