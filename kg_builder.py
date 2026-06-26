@@ -149,6 +149,7 @@ class LLMClient:
             messages=[{"role": "user", "content": prompt}],
             temperature=self._temperature,
             max_tokens=self._max_tokens,
+            extra_body={"chat_template_kwargs": {"enable_thinking": False}},
         )
         text = resp.choices[0].message.content or ""
         return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
@@ -372,7 +373,7 @@ async def extract_triples_decomposed(
 ) -> list[dict]:
     """Multi-round triple extraction with gap analysis."""
     resp = await llm.complete(INITIAL_EXTRACTION_PROMPT.format(json_doc=json_doc))
-    triples = parse_json_array(resp)
+    triples = [t for t in parse_json_array(resp) if isinstance(t, dict)]
     for t in triples:
         t.setdefault("confidence", 0.9)
 
@@ -410,7 +411,7 @@ async def extract_triples_decomposed(
                 existing_triples=triples_to_json(triples),
                 json_doc=json_doc,
             ))
-            new_triples = parse_json_array(targeted_resp)
+            new_triples = [t for t in parse_json_array(targeted_resp) if isinstance(t, dict)]
             for t in new_triples:
                 t.setdefault("confidence", 0.85)
                 t["extraction_round"] = rnd

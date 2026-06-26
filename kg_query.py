@@ -258,6 +258,7 @@ class KGQueryEngine:
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
             max_tokens=self._max_tokens,
+            extra_body={"chat_template_kwargs": {"enable_thinking": False}},
         )
         answer = resp.choices[0].message.content or ""
         timings["llm"] = time.time() - t0
