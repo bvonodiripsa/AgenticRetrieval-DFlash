@@ -1,0 +1,192 @@
+[
+  {
+    "question_id": "food_0001",
+    "question_text": "I am searching for a high-calorie protein snack for long-distance running that fits in a running belt",
+    "answer": "Based on your need for a **high-calorie, protein-rich snack** that is **portable enough for a running belt** during long-distance running, I have analyzed the available products.\n\n**Important Note on Protein:** The available inventory is heavily skewed towards **carbohydrate and fat-based energy** (sugars, chips, pastries) rather than high-protein sources. True \"high-protein\" bars or jerky are not in the current dataset. However, for long-distance running, **carbohydrates are the primary fuel source** to prevent \"hitting the wall,\" and the products below offer the necessary caloric density and portability.\n\nHere are the best 3 options from the available inventory, ranked by suitability for a running belt:\n\n### 1. The Best \"Ready-to-Eat\" Energy Boost: Red Bull® The Summer Edition\nThis is the most practical option for a running belt due to its compact, single-serving can size. While it is not a \"protein\" snack, it is a **high-calorie, high-sugar** energy drink designed specifically to \"vitalize body and mind\" and reduce fatigue during exertion.\n\n*   **Product:** Red Bull® The Summer Edition Energy Drink\n*   **ID:** **(product_id: 22080273)**\n*   **Why it fits:**\n    *   **Portability:** It comes in a **250 ml** single-serving can, which is \"pocket sized\" and fits easily into a running belt pocket.\n    *   **Energy Profile:** It is **high calorie** and **high sugar** (sucrose, glucose, dextrose), providing immediate energy for long runs.\n    *   **Performance Claims:** Contains **caffeine (0.03%)**, **taurine**, and **B-vitamins** (Niacin, B6) which contribute to the reduction of tiredness and normal energy metabolism.\n    *   **Convenience:** It is **ready to eat** (drink) instantly with no preparation.\n*   **Trade-off:** It contains **no protein** and is high in caffeine (32 mg/100 ml), so consume moderately. It is not suitable for children or pregnant women.\n\n### 2. The High-Calorie Solid Snack: Pringles Island Paprika\nIf you prefer a solid food item over a liquid, this is the most portable option. While it is a",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5841386318206787,
+      "entity_search": 2.458141326904297,
+      "graph_traversal": 3.3096773624420166,
+      "source_fetch": 1.758681058883667,
+      "llm": 14.318870306015015,
+      "total": 22.47417426109314
+    },
+    "entities_found": 20,
+    "triples_found": 80
+  },
+  {
+    "question_id": "food_0002",
+    "question_text": "I am searching for a product which is a low-alcohol premium drink that still feels luxurious",
+    "answer": "Based on your request for a **low-alcohol premium drink** that feels **luxurious**, I have analyzed the available product knowledge graph and source documents.\n\n**Important Clarification:**\nThe current inventory does not contain any products explicitly labeled as \"low-alcohol\" (e.g., 0.5% - 4% ABV) or containing alcohol. However, I can offer you the **closest premium alternatives** that deliver a \"luxurious\" experience through high-end branding, sophisticated flavor profiles, and artisanal claims. These are perfect for a sophisticated palate that wants to avoid high sugar or artificial tastes, even if they are non-alcoholic.\n\nHere are the best options to create that premium feel:\n\n### 1. The Sophisticated \"Cocktail\" Experience\n**Product:** **co-lab' lemonade the quintessence of cocktails**\n*   **Product ID:** **(product_id: 22082727)**\n*   **Why it fits:** This product is explicitly marketed as \"the quintessence of cocktails,\" designed to mimic the complexity of a premium mixed drink without the alcohol.\n    *   **Luxury Factor:** It uses **natural lemon flavors** and **cane sugar** (or zero sugar variants depending on the specific batch claim) rather than artificial sweeteners, offering a refined taste profile.\n    *   **Convenience:** It is **ready to eat** and comes in a **single serving** (330g), making it perfect for an immediate, high-end refreshment.\n    *   **Note:** The graph indicates a claim of \"consume responsibly,\" which often aligns with premium beverage culture, though this specific item is a lemonade.\n\n### 2. The Artisanal & Natural Hydration\n**Product:** **willow beautiful mineral water with added carbon dioxide**\n*   **Product ID:** **(product_id: 22083068)**\n*   **Why it fits:** If your definition of luxury is purity and origin, this is the top choice.\n    *   **Luxury Factor:** Sourced from the **unspoilt natural beauty of Cartmel Fell** in the English Lake District and filtered through **limestone**. The branding emphasizes \"beautiful mineral water,\" positioning it as a premium, spa-like experience.\n    *   **Taste:** The added carbon dioxide provides a crisp, effervescent mouthfeel similar to high-end sparkling waters or",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5675346851348877,
+      "entity_search": 2.349606513977051,
+      "graph_traversal": 3.140794515609741,
+      "source_fetch": 1.6024620532989502,
+      "llm": 12.50399899482727,
+      "total": 20.16440463066101
+    },
+    "entities_found": 20,
+    "triples_found": 58
+  },
+  {
+    "question_id": "food_0003",
+    "question_text": "I am searching for a gluten-free cinema snack for a Friday night movie",
+    "answer": "Based on your request for a **gluten-free cinema snack**, I have analyzed the available products in our knowledge graph and source documents.\n\n**Important Finding:**\nAfter a thorough review of the ingredients and allergen information for all available cinema-style snacks and bread products, **none of the products in the current inventory are certified or confirmed to be gluten-free.**\n\nMost of the \"cinema snack\" candidates (like Reese's Sticks) and bread-based items explicitly contain **wheat flour** or **wheat gluten**, which are sources of gluten. Additionally, many products carry warnings about \"traces of wheat\" or \"gluten.\"\n\nHowever, as a creative meal planner, I can offer you the **closest alternatives** that might work depending on your specific sensitivity level, along with a **DIY combination** using available ingredients to create a safe experience.\n\n### Option 1: The \"Lowest Risk\" Pre-Packaged Snack (Proceed with Caution)\n**Product:** **Reese's Sticks Chocolate Flavoured Coating, Peanut Butter & Crispy Wafers**\n*   **Product ID:** **(product_id: 22082110)**\n*   **Why consider it:** This is the only product explicitly tagged as suitable for a **\"cinema snack\"** and **\"children\"** in our database. It is ready-to-eat and comes in a convenient 42g pack.\n*   **The Gluten Issue:** The ingredients list explicitly states: **\"enriched wheat flour 10%\"**.\n*   **Verdict:** **NOT Gluten-Free.** This contains wheat flour. If you have Celiac disease or a severe gluten intolerance, **do not consume this**.\n*   **Trade-off:** It offers the classic \"movie theater\" experience (chocolate, peanut butter, wafer) but fails the gluten-free requirement.\n\n### Option 2: The \"Gluten-Free\" Ingredient Hack (DIY Cinema Snack)\nSince no pre-packaged snack is safe, the best creative solution is to build your own snack using ingredients that are naturally gluten-free or have a lower risk profile, combined with a safe base.\n\n**The \"Safe\" Base:**\n*   **Product:** **Hazelnut and Cocoa Spread (Nutella)**\n    *   **Product ID:** **(product_id: 22083482)**\n    *   **Why it works:** The claims explicitly state **\"gluten free.\"**",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.43494486808776855,
+      "entity_search": 2.4858155250549316,
+      "graph_traversal": 1.9582102298736572,
+      "source_fetch": 2.064227819442749,
+      "llm": 13.074870109558105,
+      "total": 20.018075942993164
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0004",
+    "question_text": "I am searching for a summer BBQ meat to impress guests that I am hosting",
+    "answer": "To impress your guests at a summer BBQ, you need a menu that balances **premium quality**, **visual appeal**, and **flavor variety**. Based on the available products, I have curated three distinct options ranging from a classic French steak to a vibrant mixed skewer platter.\n\nHere are the best recommendations to elevate your BBQ:\n\n### 1. The Premium \"Chef's Choice\": Organic Ground Beef Steaks\nIf you want to serve a high-end, simple dish that highlights quality ingredients, this is your best bet. These are not just generic burgers; they are formed steaks made from 100% organic beef, perfect for a sophisticated summer dinner.\n\n*   **Product:** **2 organic ground beef steaks** **(product_id: 22083655)**\n*   **Brand:** Socopa Viandes\n*   **Why it impresses:**\n    *   **Quality Claim:** Made from **100% organic beef** from France. This is a strong selling point for health-conscious or foodie guests.\n    *   **Convenience:** They are vacuum-packed and ready to grill. The graph indicates they are **air fryer compatible** and suitable for **grilling**, making them versatile.\n    *   **Nutrition:** High protein content.\n    *   **Preparation:** The product must be **cooked thoroughly** (cooked to the heart) as soon as opened. Grill them for a few minutes per side until well-done to ensure safety and a nice crust.\n*   **Serving Tip:** Serve these with a side of fresh arugula and a balsamic glaze to cut through the richness of the beef.\n\n### 2. The \"Showstopper\" Platter: Mixed Marinated Skewers & Sausages\nFor a BBQ, nothing impresses more than a colorful, ready-to-grill assortment. This product offers a variety of textures and flavors (pork, beef, lamb) in one package, eliminating the need for you to marinate anything yourself.\n\n*   **Product:** **Assortment of 6 marinated pork skewers, with green pepper and pork belly, 12 mini herbed chipolatas and 12 mini merguez** **(product_id: 22083438)**\n*   **Brand:** Qatc\n*   **Why it impresses:**\n    *   **Variety:** You get three distinct items:",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.47035694122314453,
+      "entity_search": 2.4545371532440186,
+      "graph_traversal": 2.983632802963257,
+      "source_fetch": 1.9585680961608887,
+      "llm": 15.727304935455322,
+      "total": 23.59440541267395
+    },
+    "entities_found": 20,
+    "triples_found": 57
+  },
+  {
+    "question_id": "food_0005",
+    "question_text": "Recommend a breakfast idea that takes under 15 minutes to make and contains eggs",
+    "answer": "Here are three creative breakfast ideas that meet your criteria: **under 15 minutes to prepare** and **containing eggs**. I have selected products that offer different flavor profiles (savory, sweet, and a quick warm option) while leveraging the specific preparation times and ingredients found in the source documents.\n\n### Option 1: The \"Gourmet Savory\" Breakfast (Savory & Rich)\n**Perfect for:** A hearty, restaurant-quality start to the day without the cooking time.\n\n*   **Main Item:** **Cereal Surprise Bread ×50 Sandwiches, Thawed** **(product_id: 22083606)**\n    *   **Why it matches:** This is a premium, ready-to-eat option that already contains **eggs** (listed in allergens and implied in the bread/cheese mix), **fresh cream**, **fresh cheese**, **smoked foie gras**, and **serrano ham**.\n    *   **Preparation Time:** **0 minutes** (Ready to serve). The claim states to take the bread out 30 minutes before tasting for best enjoyment, but if you are in a rush, it can be eaten immediately after thawing.\n    *   **Nutritional Note:** It is a \"defrosted product\" and must be consumed within 4 hours of opening.\n    *   **Allergen Alert:** Contains eggs, soy, sesame, and traces of crustaceans.\n\n*   **Side Pairing:** **Green Olive Cream** **(product_id: 22079933)**\n    *   **Why it matches:** While the sandwich is rich, this adds a fresh, salty kick. The brand claims it is perfect for \"tempting canapés\" and \"tasty bruschetta.\" You can spread a small amount on the side of the sandwich or use it as a dip for extra flavor.\n    *   **Preparation Time:** **0 minutes** (Ready to use).\n\n**Total Time:** < 2 minutes (just opening and serving).\n\n---\n\n### Option 2: The \"Sweet & Flaky\" Breakfast (Sweet & Comforting)\n**Perfect for:** A quick, sweet treat that feels like a homemade pastry.\n\n*   **Main Item:** **Butter Shortbread Biscuits with Apple Filling** **(product_id: 22084365)**\n    *   **Why it",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.521369218826294,
+      "entity_search": 2.402665376663208,
+      "graph_traversal": 2.0491292476654053,
+      "source_fetch": 2.0340259075164795,
+      "llm": 12.567341089248657,
+      "total": 19.574536085128784
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0006",
+    "question_text": "I want to find ingredients needed to make a traditional English strawberry trifle",
+    "answer": "As a creative food product expert, I must clarify that **none of the products in the current knowledge graph are specifically designed to make a traditional English Strawberry Trifle** from scratch. A traditional trifle requires specific components: sponge cake (often soaked in sherry or fruit juice), fresh strawberries, custard, whipped cream, and sometimes jelly.\n\nHowever, I can help you **construct a \"Trifle-Style\" dessert** using the closest available ingredients from our inventory. We will need to improvise the custard and fresh fruit, but we can use high-quality pre-made components for the cake and cream base.\n\nHere are the best product combinations to create a **Modern Trifle Alternative**, along with the missing ingredients you will need to source separately.\n\n### 🍰 The \"Modern Trifle\" Assembly Plan\n\nTo build this, we will layer a rich sponge base, a creamy filling, and a chocolate topping (as a substitute for the traditional jelly/fruit layer).\n\n#### 1. The Sponge Base: **(product_id: 22080107)**\n*   **Product:** Sponge cake filled with cream (39%) and coated with alpine milk chocolate (36%)\n*   **Brand:** Choco Snack\n*   **Why it works:** This is the closest match to the sponge cake layer. While a traditional trifle uses plain sponge soaked in sherry, this product provides a moist, pre-filled sponge with a chocolate coating.\n*   **Preparation Tip:** Break these cakes into bite-sized chunks. Since they are already filled with cream and coated in chocolate, they will add a rich, decadent texture. You can skip the \"soaking\" step or lightly brush them with a little fruit juice (like the mango drink below) to mimic the traditional soak.\n*   **Pack Size:** 32g (You will need multiple packs to fill a trifle bowl).\n\n#### 2. The Creamy Layer: **(product_id: 22083582)**\n*   **Product:** Vanilla Skyr\n*   **Brand:** Milsa\n*   **Why it works:** Traditional trifle uses custard. **Vanilla Skyr** is an excellent, high-protein, low-fat alternative that provides a thick, creamy, vanilla-flavored base similar to custard but lighter.\n*   **Preparation Tip:** Whip the Skyr with a little extra sugar or honey to sweeten it further,",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.4221484661102295,
+      "entity_search": 2.5685341358184814,
+      "graph_traversal": 3.3466389179229736,
+      "source_fetch": 1.8375449180603027,
+      "llm": 17.0904324054718,
+      "total": 25.265307188034058
+    },
+    "entities_found": 20,
+    "triples_found": 80
+  },
+  {
+    "question_id": "food_0007",
+    "question_text": "I need a recommendation for a 15-minute air fryer recipe using mince beef",
+    "answer": "Here are three creative and efficient **15-minute air fryer meal ideas** using minced beef, tailored to your request. These options leverage the **air fryer compatible** claims found in our product database to ensure perfect results with minimal effort.\n\n### Option 1: The \"Quick & Crispy\" Beef Patties (Best for a Classic Burger Feel)\nThis is the most direct approach. You get two ready-to-cook organic steaks that are explicitly recommended for air frying. The air fryer will crisp the edges while keeping the center juicy in under 15 minutes.\n\n*   **Main Product:** **2 organic ground beef steaks** **(product_id: 22083655)**\n    *   **Why it matches:** This product is explicitly tagged as **[recommended_for] (air fryer compatible)**. It is 100% organic beef from France, vacuum-packed for freshness.\n    *   **Preparation:**\n        1.  Preheat your air fryer to **200°C (400°F)**.\n        2.  Place the two steaks in the basket (do not overlap).\n        3.  Cook for **6-7 minutes**, flipping halfway through.\n        4.  *Tip:* Since the claim says \"to be consumed cooked to the heart as soon as opened,\" ensure they reach an internal temperature of 71°C (160°F) for safety.\n    *   **Serving Suggestion:** Serve immediately on a bun or with a side salad.\n\n### Option 2: The \"Flavor Bomb\" Beef & Bacon Skewers (Best for a Hearty Meal)\nIf you want to elevate the minced beef with smoky flavors, combine the ground beef with our precooked smoked sausages. The air fryer renders the fat from the beef and crisps the sausage skin simultaneously.\n\n*   **Main Product:** **ground beef 15% fat** **(product_id: 22084193)**\n    *   **Why it matches:** Tagged as **[has_cooking_method] (air fryer compatible)**. The 15% fat content is ideal for air frying as it prevents the meat from drying out.\n*   **Flavor Booster:** **epicurillades maxi format 10 smoked sausages precooked** **(product_id: 22084031)**\n",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5477261543273926,
+      "entity_search": 2.333627223968506,
+      "graph_traversal": 2.053863048553467,
+      "source_fetch": 2.2433536052703857,
+      "llm": 13.643232345581055,
+      "total": 20.821807622909546
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0008",
+    "question_text": "As a family of four, create us a dinner recommendation that costs £10 total to make that will feed a family of 4 that contains pasta",
+    "answer": "Here is a creative, budget-friendly, and family-sized dinner plan featuring pasta that fits your **£10** budget for a family of four.\n\nThis meal combines a high-quality base pasta with a quick, flavorful sauce and a fresh side to create a complete \"Mediterranean Family Night.\"\n\n### 🍝 The \"Mediterranean Family Feast\" Plan\n\n**Total Estimated Cost:** ~£8.50 - £9.50 (Well under your £10 limit)\n**Serves:** 4 People\n**Prep Time:** 15 Minutes\n\n#### 1. The Base: Aldi Spaghetti\n*   **Product:** **(product_id: 22083480)**\n*   **Brand:** Aldi\n*   **Pack Size:** 1000g (Family Size)\n*   **Why this works:** This is the cornerstone of your budget. A 1kg bag is perfect for a family of four (approx. 250g per person). It is explicitly marked as **\"family size\"** and suitable for **dinner**.\n*   **Cost Estimate:** The source documents list claims of **€3.20** (approx. **£2.75**).\n*   **Preparation:** Boil in salted water for 9-10 minutes.\n\n#### 2. The Sauce: Schneider's Cooked Tomato Sauce with Basil\n*   **Product:** **(product_id: 22081665)**\n*   **Brand:** Schneider's\n*   **Pack Size:** 400g\n*   **Why this works:** Instead of buying expensive fresh ingredients, this jar provides a rich, authentic base. It contains **diced tomatoes (86%)** and **basil (2%)**, offering a fresh Italian flavor profile without the prep work. It is **Kosher** and made in Italy.\n*   **Cost Estimate:** Typically around **£1.50 - £1.80** for a 400g jar.\n*   **Preparation:** Pour the entire jar into a pan and simmer while the pasta cooks.\n\n#### 3. The Flavor Boost & Protein: Doris Mediterranean Fish Soup (Used as a Sauce Base)\n*   **Product:** **(product_id: 22083882)**\n*   **Brand:** Doris\n*  ",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5957138538360596,
+      "entity_search": 2.276491165161133,
+      "graph_traversal": 2.9577836990356445,
+      "source_fetch": 1.9632046222686768,
+      "llm": 14.483442306518555,
+      "total": 22.27664089202881
+    },
+    "entities_found": 20,
+    "triples_found": 71
+  },
+  {
+    "question_id": "food_0009",
+    "question_text": "Help me find a sugar free and vegan confectionery item that is individually packaged",
+    "answer": "Based on the provided knowledge graph and source documents, I have analyzed the available inventory to find a **sugar-free** and **vegan** confectionery that is **individually packaged**.\n\n### **The Challenge**\nAfter a thorough review of all 12 products in the database, **no single product currently meets all three criteria simultaneously** (Sugar-Free + Vegan + Individually Packaged).\n\nHere is the breakdown of why the closest matches fall short:\n1.  **Sugar-Free Options:**\n    *   **Mentos Spearmint Chewing Gum (product_id: 22079993)** is sugar-free but contains **soy lecithin** (often acceptable for vegans, but the gum base composition is proprietary and often non-vegan) and is a **pack of 38 pieces**, not individually wrapped per piece.\n    *   **Red Bull The Pink Edition (product_id: 22080121)** is sugar-free but is a **drink**, not a confectionery, and contains **vitamins** derived from animal sources in some formulations (though the ingredient list here doesn't explicitly state animal derivatives, it's not a solid confection).\n    *   **Tropick Refreshing Drink (product_id: 22082534)** is a drink with sweeteners, not a confectionery.\n\n2.  **Vegan Options:**\n    *   **Cocoa-based Confectioneries (product_id: 22084045)** contains **whey permeate powder**, **milk powder**, and **whole milk powder**. It is **not vegan**.\n    *   **White Chocolate with Cocoa Beans (product_id: 22079966)** contains **skimmed milk powder**, **whole milk powder**, and **lactose**. It is **not vegan**.\n    *   **Reese's Sticks (product_id: 22082110)** contains **skimmed milk powder** and **whey powder**. It is **not vegan**.\n    *   **Sponge Cake (product_id: 22080107)** contains **whole milk**, **eggs**, and **milk proteins**. It is **not vegan**.\n\n3.  **Individually Packaged Options:**\n    *   **Cocoa-based Confectioneries (product_id:",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5286180973052979,
+      "entity_search": 2.318091869354248,
+      "graph_traversal": 2.0201706886291504,
+      "source_fetch": 2.0908679962158203,
+      "llm": 9.392506837844849,
+      "total": 16.350261449813843
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0010",
+    "question_text": "I am looking for a dessert which is a healthy chocolate brownie alternative that still tastes indulgent",
+    "answer": "Finding a \"healthy\" brownie alternative that still feels indulgent is a balancing act. While true brownies are often high in sugar and fat, we can create a satisfying dessert experience by selecting products that offer **premium ingredients**, **real chocolate chunks**, and **nutty textures** to mimic that dense, rich brownie mouthfeel without the need for baking from scratch.\n\nHere are three creative dessert options using the available products, ranging from a \"deconstructed brownie\" to a chilled chocolate treat.\n\n### Option 1: The \"Deconstructed Brownie\" Crunch\n**Best for:** Mimicking the texture of a brownie with nuts and chocolate chunks.\n\nThis option uses the **Chocolate Chunk Classic Dark Chocolate Crispy Cookies** as the base. While technically a cookie, the claim \"baked with an abundance of big chunks that taste and feel like homemade\" and the inclusion of **45% minimum cocoa solids** in the dark chocolate makes it a rich, fudgy alternative. The mix of **hazelnut, almond, pecan, and macadamia nuts** provides the dense, nutty texture often found in high-end brownies.\n\n*   **Product:** **(product_id: 22080528)** - *Chocolate Chunk Classic Dark Chocolate Crispy Cookies* (Pepperidge Farm)\n*   **Why it works:**\n    *   **Indulgent Flavor:** Contains real dark chocolate (23%) and vanilla flavoring.\n    *   **Texture:** The \"crispy\" nature combined with big chunks offers a satisfying crunch similar to a brownie's crust.\n    *   **Premium Feel:** Made with butter (cow's milk) and premium nuts, avoiding the \"waxy\" feel of cheap chocolate.\n*   **Preparation Tip:** For a true brownie experience, microwave a single cookie for **10-12 seconds**. This melts the dark chocolate chunks, creating a warm, gooey center that closely resembles a freshly baked brownie.\n\n### Option 2: The \"Chilled Chocolate Mousse\" Alternative\n**Best for:** A lighter, dairy-rich dessert that feels like a cold brownie or chocolate cake.\n\nIf you prefer a dessert that is served cold (like a brownie straight from the fridge), the **Sponge Cake filled with cream** is an excellent alternative. It offers a high percentage of filling (39% cream) and a substantial chocolate coating (36",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5668022632598877,
+      "entity_search": 2.3092291355133057,
+      "graph_traversal": 2.0314013957977295,
+      "source_fetch": 1.913512945175171,
+      "llm": 13.262791872024536,
+      "total": 20.083741664886475
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  }
+]

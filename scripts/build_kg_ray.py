@@ -81,26 +81,16 @@ class FoodDeepExtractor:
         _os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
         from vllm import LLM, SamplingParams
         c = _vllm_cfg
-        draft = c.get("dflash_draft_model", "")
-        if draft:
-            print(f"[FoodDeepExtractor] Loading {c['model']} + DFlash ({draft})...")
-            spec_config = {
-                "method": "dflash",
-                "model": draft,
-                "num_speculative_tokens": c.get("dflash_num_speculative_tokens", 15),
-            }
-        else:
-            print(f"[FoodDeepExtractor] Loading {c['model']} (no DFlash)...")
-            spec_config = None
+        print(f"[FoodDeepExtractor] Loading {c['model']} (FP8)...")
         self.llm = LLM(
             model=c["model"],
-            dtype="bfloat16",
+            dtype="auto",
+            quantization="fp8",
             gpu_memory_utilization=0.90,
             max_model_len=c["max_model_len"],
             enable_prefix_caching=True,
             trust_remote_code=True,
             enforce_eager=True,
-            speculative_config=spec_config,
         )
         self.tokenizer = self.llm.get_tokenizer()
         self.params = SamplingParams(temperature=0, max_tokens=c["max_tokens"])
@@ -114,7 +104,10 @@ class FoodDeepExtractor:
     def _make_prompt(self, template, **kwargs):
         text = template.format(**kwargs)
         messages = [{"role": "system", "content": SYSTEM_MSG}, {"role": "user", "content": text}]
-        formatted = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        formatted = self.tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True,
+            enable_thinking=False,
+        )
         return formatted if len(self.tokenizer.encode(formatted)) <= self._max_prompt_tokens else None
 
     def _generate(self, prompts):
@@ -123,68 +116,101 @@ class FoodDeepExtractor:
     def _clean(self, text):
         return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
 
-    def _extract_one(self, json_doc):
-        prompt = self._make_prompt(INITIAL_EXTRACTION_PROMPT, json_doc=json_doc)
-        if not prompt:
-            return []
-        results = self._generate([prompt])
-        if not results:
-            return []
-        triples = parse_json_array(self._clean(results[0]))
-        for t in triples:
-            t.setdefault("confidence", 0.8)
+    def _extract_batch(self, json_docs: list[str]) -> list[list[dict]]:
+        """Extract triples from multiple docs in a single batched generate() call."""
+        prompts = []
+        doc_indices = []
+        for i, doc in enumerate(json_docs):
+            p = self._make_prompt(INITIAL_EXTRACTION_PROMPT, json_doc=doc)
+            if p:
+                prompts.append(p)
+                doc_indices.append(i)
 
-        for rnd in range(2, self._rounds + 1):
-            gap_prompt = self._make_prompt(GAP_ANALYSIS_PROMPT,
-                                           json_doc=json_doc,
-                                           existing_triples=triples_to_json(triples))
-            if not gap_prompt:
-                break
-            gap_results = self._generate([gap_prompt])
-            if not gap_results:
-                break
-            gap_resp = self._clean(gap_results[0])
-            gap_instructions: list = []
-            m = re.search(r"\[[\s\S]*\]", gap_resp)
-            if m:
-                try:
-                    raw = json.loads(m.group())
-                    if isinstance(raw, list):
-                        gap_instructions = raw
-                except json.JSONDecodeError:
-                    pass
-            if not gap_instructions:
-                gap_instructions = parse_json_array(gap_resp)
-            if not gap_instructions:
-                break
-            gap_strings = []
-            for g in gap_instructions[:self._max_gaps]:
-                gap_strings.append(g if isinstance(g, str) else g.get("instruction", g.get("gap", str(g))))
-            targeted_prompts = [p for gap in gap_strings if (p := self._make_prompt(
-                TARGETED_EXTRACTION_PROMPT, gap_instruction=gap,
-                existing_triples=triples_to_json(triples), json_doc=json_doc)) is not None]
-            if targeted_prompts:
-                for resp in self._generate(targeted_prompts):
+        per_doc_triples: list[list[dict]] = [[] for _ in json_docs]
+        if not prompts:
+            return per_doc_triples
+
+        results = self._generate(prompts)
+        for idx, resp in zip(doc_indices, results):
+            triples = parse_json_array(self._clean(resp))
+            for t in triples:
+                t.setdefault("confidence", 0.8)
+            per_doc_triples[idx] = triples
+
+        if self._rounds <= 1:
+            for doc_triples in per_doc_triples:
+                for t in doc_triples:
+                    for f in ("subject", "predicate", "object"):
+                        t[f] = str(t.get(f, "")).strip()
+            return per_doc_triples
+
+        # Multi-round: batch gap analysis across all docs that got triples
+        gap_prompts = []
+        gap_doc_indices = []
+        for i, doc in enumerate(json_docs):
+            if not per_doc_triples[i]:
+                continue
+            p = self._make_prompt(GAP_ANALYSIS_PROMPT, json_doc=doc,
+                                  existing_triples=triples_to_json(per_doc_triples[i]))
+            if p:
+                gap_prompts.append(p)
+                gap_doc_indices.append(i)
+
+        if gap_prompts:
+            gap_results = self._generate(gap_prompts)
+            all_targeted = []
+            targeted_doc_indices = []
+            for idx, gap_resp in zip(gap_doc_indices, gap_results):
+                gap_resp = self._clean(gap_resp)
+                gap_instructions = []
+                m = re.search(r"\[[\s\S]*\]", gap_resp)
+                if m:
+                    try:
+                        raw = json.loads(m.group())
+                        if isinstance(raw, list):
+                            gap_instructions = raw
+                    except json.JSONDecodeError:
+                        pass
+                if not gap_instructions:
+                    gap_instructions = parse_json_array(gap_resp)
+                if not gap_instructions:
+                    continue
+                for g in gap_instructions[:self._max_gaps]:
+                    gap_str = g if isinstance(g, str) else g.get("instruction", g.get("gap", str(g)))
+                    p = self._make_prompt(TARGETED_EXTRACTION_PROMPT, gap_instruction=gap_str,
+                                          existing_triples=triples_to_json(per_doc_triples[idx]),
+                                          json_doc=json_docs[idx])
+                    if p:
+                        all_targeted.append(p)
+                        targeted_doc_indices.append(idx)
+
+            if all_targeted:
+                targeted_results = self._generate(all_targeted)
+                for idx, resp in zip(targeted_doc_indices, targeted_results):
                     for t in parse_json_array(self._clean(resp)):
                         t.setdefault("confidence", 0.85)
-                        t["extraction_round"] = rnd
-                        triples.append(t)
+                        t["extraction_round"] = 2
+                        per_doc_triples[idx].append(t)
 
-        for t in triples:
-            for f in ("subject", "predicate", "object"):
-                t[f] = str(t.get(f, "")).strip()
-        return triples
+        for doc_triples in per_doc_triples:
+            for t in doc_triples:
+                for f in ("subject", "predicate", "object"):
+                    t[f] = str(t.get(f, "")).strip()
+        return per_doc_triples
 
     def __call__(self, batch):
         chunk_ids = batch["chunk_id"].tolist()
         json_docs = batch["json_doc"].tolist()
+
+        per_doc_triples = self._extract_batch(json_docs)
+
         all_results = []
-        for i in range(len(chunk_ids)):
-            triples = self._extract_one(json_docs[i])
+        for i, triples in enumerate(per_doc_triples):
             for t in triples:
                 t["source_chunks"] = [chunk_ids[i]]
             all_results.append(json.dumps(triples, ensure_ascii=False))
             self._total_triples += len(triples)
+
         self._batch_count += 1
         print(f"[FoodDeepExtractor] batch {self._batch_count}: {len(chunk_ids)} docs, "
               f"{self._total_triples:,} triples total")
@@ -293,11 +319,11 @@ def run_build(cfg: dict, time_limit: int | None = None):
     # Run extraction via Ray
     actors = min(num_gpus, len(remaining))
     print(f"\n  Launching extraction: {len(remaining):,} docs, {actors} GPU actors, "
-          f"batch_size=8")
+          f"batch_size=32")
 
     t0 = time.time()
     ds = ray.data.from_items(remaining)
-    ds = ds.map_batches(FoodDeepExtractor, concurrency=actors, num_gpus=1, batch_size=8)
+    ds = ds.map_batches(FoodDeepExtractor, concurrency=actors, num_gpus=1, batch_size=32)
 
     all_triples = list(existing)
     batch_count = 0

@@ -1,0 +1,192 @@
+[
+  {
+    "question_id": "food_0001",
+    "question_text": "I am searching for a high-calorie protein snack for long-distance running that fits in a running belt",
+    "answer": "For a long-distance runner needing a **high-calorie, high-energy snack** that is compact enough to fit in a running belt or small pocket, I recommend focusing on products that are **energy-dense and easy to carry**.\n\nBased on your inventory, here are the best options for a high-performance running belt snack, along with a creative alternative if you need a specific texture.\n\n### Top Recommendation: The \"Endurance Fuel\" Combo\n**Best For:** Sustained energy release during long runs (10k+ miles) without the \"sugar crash.\"\n\nSince you are looking for a snack that fits in a running belt (or is easily portable) and provides sustained energy, here is the breakdown of the best options available in your inventory:\n\n#### 1. The Primary Recommendation: **Snickers-Style Bar (High-Energy Dense)**\n*   **Product:** **Snickers-Style Bar** (or similar high-calorie bar)\n*   **Why it works:** This is the gold standard for runners. It provides a perfect balance of **simple carbs** (for quick energy) and **fats/proteins** (for sustained release).\n*   **Why it fits your run:**\n    *   **Portability:** It's a single, compact bar that fits easily in a running belt.\n    *   **Caloric Density:** It provides a massive amount of calories in a small package, perfect for long-distance runners who need to replenish glycogen stores without carrying a heavy pack.\n    *   **Flavor Profile:** The combination of chocolate and caramel (if available in your specific brand) or just the rich chocolate flavor is a great morale booster on a long run.\n\n#### 2. The \"Protein Power\" Option (If you need more protein)\n*   **Product:** **Snickers-Style Bar** (if available in your inventory)\n*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.6193490028381348,
+      "entity_search": 2.261049747467041,
+      "graph_traversal": 2.217831611633301,
+      "source_fetch": 2.1851248741149902,
+      "llm": 22.773618698120117,
+      "total": 30.05736017227173
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0002",
+    "question_text": "I am searching for a product which is a low-alcohol premium drink that still feels luxurious",
+    "answer": "Based on your search for a **low-alcohol premium drink** that delivers a **luxurious experience**, I have analyzed the available product data to find the best fit.\n\nWhile there is no single \"zero-proof\" non-alcoholic option that is 100% alcohol-free in the traditional sense of a mock-up, the data points to a specific **premium spirit-forward** option that balances **luxury** and **luxury** with a **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury** and **luxury",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5961744785308838,
+      "entity_search": 2.2312941551208496,
+      "graph_traversal": 2.210494041442871,
+      "source_fetch": 2.2294347286224365,
+      "llm": 7.337980031967163,
+      "total": 14.605382442474365
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0003",
+    "question_text": "I am searching for a gluten-free cinema snack for a Friday night movie",
+    "answer": "For a Friday night movie night, you want snacks that are satisfying, easy to eat while watching the screen, and free from gluten concerns. Based on your request for a **gluten-free cinema snack**, here are the best options available in the database, along with a creative alternative if you want to get creative with the ingredients.\n\n### 🍿 Top Recommendation: The \"Cinema Night\" Trio\nSince you are looking for a reliable movie snack, here are the best gluten-free, gluten-free-friendly options that are **naturally gluten-free** and safe for a movie night:\n\n#### 🍿 **Option 1: The Classic Movie Snack (Best for Movie Night)**\n*   **Product:** **Hershey's Cookies 'n' Cream Bar** (or similar chocolate bar)\n*   **Why it works:** This is a classic, high-quality chocolate bar that is **gluten-free** and perfect for a movie night. It’s a great choice if you want a sweet treat without the guilt of a full meal.\n*   **Why it works:** It’s a classic, high-quality chocolate bar that’s perfect for a movie night. It’s a great choice for a movie night snack!\n\n#### 🍿 **Option 2: The \"Cinema Snack\" (Gluten-Free & Fun)**\n*   **Product:** **Hershey's Cookies 'n' Cream Bar** (or similar)\n*   **Why it works:** It’s a classic, high-quality chocolate bar that’s perfect for a movie night. It’s a great choice for a movie night snack!\n\n### 🍿 **Final Recommendation:**\nFor the **best movie night experience**, grab a **Hershey's Cookies 'n' Cream Bar** (or a similar chocolate bar) and enjoy it with your favorite movie! It’s the perfect balance of sweet and satisfying for a movie night.\n\nEnjoy your movie night! 🍿🎬\n\n---\n\n### 🎬 **Your Movie Night Snack Plan:**\n1.  **Popcorn:** Pop some popcorn (or buy some) and enjoy it with your movie.\n2.  **Chocolate!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5137796401977539,
+      "entity_search": 2.3151652812957764,
+      "graph_traversal": 2.3010027408599854,
+      "source_fetch": 2.2438488006591797,
+      "llm": 21.66078782081604,
+      "total": 29.034590482711792
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0004",
+    "question_text": "I am searching for a summer BBQ meat to impress guests that I am hosting",
+    "answer": "To impress your guests at a summer BBQ, you need a main course that balances high-quality protein with impressive presentation and flavor. Based on your request, I have curated the best options from the available inventory that focus on **premium quality, distinct flavor profiles, and impressive presentation**.\n\nHere are the top 3 recommendations for your BBQ spread, ranging from elegant appetizers to hearty mains:\n\n### 1. The Elegant Showstopper: Premium Roasted Pork\n*Best for: A sophisticated main course that feels like a gourmet steakhouse experience.*\n\n*   **Why it works:** This is a premium cut of pork (likely a shoulder or loin cut) that has been slow-roasted or smoked to perfection. Unlike standard fast-food burgers, this cut focuses on the **Maillard reaction** (the browning of the meat) which creates a deep, savory crust while keeping the inside juicy.\n*   **Why it impresses:** It transforms a standard side dish into a centerpiece. The meat is cooked to a \"pull-apart\" tenderness, making it perfect for slicing over a bed of greens or serving with crusty bread.\n*   **Why it's special:** The \"herb-crusted\" finish (if using the specific herb rub) or the natural smokiness of the wood-fired grill adds a layer of complexity that plain burgers lack.\n\n### 2. The \"Gourmet\" Alternative: The \"Côte de Bœuf\" Style\n*If you want to impress with a \"steakhouse\" vibe without the full steakhouse price tag:*\n\n*   **The Play:** Use the **\"Kerbs\" (Kerbs)** brand of beef (if available in your specific region's rotation) or a high-quality **beef fillet** (like the one mentioned in the \"Kerbs\" line).\n*   **Why it works:** The \"Kerbs\" brand is known for its **high-quality, grass-fed beef** that is often used in high-end restaurants. The \"Kerbs\" brand is known for its **rich, beefy flavor** and **tender texture**.\n*   **Why it's special:** The \"Kerbs\" brand is known for its **rich, beefy flavor** and **tender texture**. It's a great choice for a **summer BBQ** because it's **easy to cook** and **easy to eat**.\n\n### 3. The \"Gourmet\" Option: The \"Kerbs\" Brand\n*   **The \"Kerbs\" Brand:** The \"Kerbs\" brand is known for its **high-quality, grass-fed beef** that is **tender, juicy, and flavorful**.\n*   **Why it's special:** The \"Kerbs\" brand is known for its **high-quality, grass-fed beef** that is **tender, juicy, and flavorful**.\n\n### **Final Recommendation:**\nFor the **ultimate summer BBQ**, I recommend the **\"Kerbs\" brand** of beef. It's **tender, juicy, and and!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.498274564743042,
+      "entity_search": 2.390747308731079,
+      "graph_traversal": 2.5501997470855713,
+      "source_fetch": 1.9566361904144287,
+      "llm": 19.86446738243103,
+      "total": 27.26033091545105
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0005",
+    "question_text": "Recommend a breakfast idea that takes under 15 minutes to make and contains eggs",
+    "answer": "Here are three excellent breakfast options that feature eggs or egg-based products, designed to be quick and nutritious. Since you asked for a breakfast idea, I have selected options that prioritize speed and protein content to keep you full until lunch.\n\nHere are the best options for a quick, protein-rich breakfast under 15 minutes of total prep time:\n\n### Option 1: The \"Powerhouse\" Savory Breakfast (Best for Sustained Energy)\n**Best for:** A high-protein, savory start to the day.\n*   **The Concept:** If you are looking for a savory, protein-packed start without the hassle of cooking an omelet from scratch, this is the ideal route.\n*   **The Plan:**\n    *   **Main Item:** **Scrambled Eggs or Omelet base.** If you have pre-cooked eggs or a specific egg-based product, this is the core.\n    *   **Why it works:** This is a classic, high-protein start. The eggs provide the protein, and the bread (if you have it) or the eggs themselves provide the energy.\n*   **Prep Time:** < 2 minutes (just pour and heat if using a microwave-safe bowl, or just eat the pre-cooked eggs).\n*   **Why it fits:** It's the fastest way to get a high-protein, savory start.\n\n### Option 2: The \"Classic & Creamy\" Breakfast (Best for a Hearty, Creamy Start)\n*   **The Idea:** A classic, creamy breakfast with a side of fruit or fruit juice.\n*   **The Plan:**\n    *   **Main:** Scrambled eggs (or a quick omelet) with a side of fresh fruit (like berries or a banana).\n    *   **Why it works:** The eggs provide the protein, and the fruit adds a touch!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5785949230194092,
+      "entity_search": 2.3766283988952637,
+      "graph_traversal": 2.210836887359619,
+      "source_fetch": 2.842156410217285,
+      "llm": 22.12555456161499,
+      "total": 30.133776903152466
+    },
+    "entities_found": 20,
+    "triples_found": 32
+  },
+  {
+    "question_id": "food_0006",
+    "question_text": "I want to find ingredients needed to make a traditional English strawberry trifle",
+    "answer": "As a creative food product expert, I must clarify a key distinction before we begin: **None of the items in your current database are \"Strawberries\" or \"Sponge Cake\" in the traditional sense of a pre-made dessert.**\n\nHowever, looking at your request for a **Traditional English Trifle** (which is the star of British dessert tables), I can see you are likely looking to build a **Classic English Trifle**.\n\nHere is the most important thing to know: **You cannot make a traditional English Trifle with just the ingredients you have.** You need to buy the **Sponge Cake** (or make your own) and the **Custard** (or use a pre-made one).\n\nHowever, since you asked for the **ingredients** to make a **Traditional English Trifle**, here is the most important thing:\n\n**You need to buy the Sponge Cake (or the Cake Mix) and the Custard.**\n\nHere is the best way to make a **Traditional English Trifle**:\n\n### **The Best Way to Make a Traditional English Trifle (The \"Real\" Deal)**\n\n**1. The Sponge Cake (The Base):**\n*   **What you need:** A **sponge cake** (or a **sponge cake**).\n*   **Why?** Because a **sponge cake** is the **base** of a **trifle**.\n*   **How to make it:**\n    *   **Preheat** your oven to **350°F (175°C)**.\n    *   **Mix** the **sponge cake** (or **sponge cake**).\n    *   **Bake** for **30-40 minutes** (or until a toothpick comes out clean).\n    *   **Cool** completely.\n\n**2. The Custard (The \"Soul\" of the Trifle):**\n*   **What you need:** A **custard** (or **crème anglaise**).\n*   **How to make it:**\n    *   **Heat** the **milk** (or **cream**) in a **saucepan** over **medium heat**.\n    *   **Whisk** the **sugar** and **sugar** (or **sugar** and **sugar**) into the **milk**.\n    *   **Cook** until the **mixture** is **thick** and **creamy**.\n    *   **Strain** the **mixture** through a **fine-mesh sieve** to remove any **lumps**.\n\n**3. The Final Touch:**\n*   **Top** the **trifle** with **whipped cream** (or **whipped cream**).\n*   **Garnish** with **fresh berries** (or **strawberries**).\n\n**Why this is the best way:**\n*   **Flavor:** The **sponge cake** is **light** and **fluffy**, while the **custard** is **rich** and **creamy**.\n*   **Texture:** The **sponge cake** is **light** and **fluffy**, while the **custard** is **rich** and **creamy**.\n*   **Presentation:** The **sponge cake** is **light** and **fluffy**, while the **custard** is **rich** and **creamy**.\n\n**Final Tip:**\n*   **Serve**!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.46080756187438965,
+      "entity_search": 2.3740227222442627,
+      "graph_traversal": 2.328080177307129,
+      "source_fetch": 2.6990463733673096,
+      "llm": 17.591570615768433,
+      "total": 25.453532934188843
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0007",
+    "question_text": "I need a recommendation for a 15-minute air fryer recipe using mince beef",
+    "answer": "Here is a creative and efficient **15-Minute Air Fryer Meal Plan** designed to get you a delicious, protein-packed meal on the table in under 20 minutes total.\n\nSince you asked for a recipe using **minced beef** (or ground beef) as a base, I have selected the best combination of products and methods to create a **\"Speedy Beef & Veggie Bowl\"** that fits your 15-minute air fryer constraint.\n\n### 🍽️ The \"Powerhouse\" Beef & Veggie Bowl\n**Total Active Cook Time:** ~15 Minutes | **Total Time:** ~15-18 Minutes\n\nThis meal plan combines a high-protein beef base with a quick-cook vegetable medley. Since you are using a **meat-based protein** (beef) as the base, we will focus on the **beef** as the primary protein source.\n\n#### **Option 1: The \"Powerhouse\" Beef & Veggie Bowl (Recommended)**\n*Best for: A complete, balanced meal in under 20 minutes.*\n\n*   **Base:** **200g of 80/20 Ground Beef** (or 85/15 if you prefer leaner).\n*   **Veggie Mix:** 1 cup of **frozen mixed vegetables** (peas, carrots, corn) or **frozen diced bell peppers**.\n*   **Sauce:** 1 tbsp of **soy sauce** + 1 tsp of **honey** (or 1 tsp of **honey** + 1 tsp of **soy sauce**).\n*   **Cooking Method:**\n    1.  **Prep:** In a large bowl, mix **1 lb (450g) of 80/20 ground beef** with **1 tsp of salt** and **1/2 tsp of black pepper**.\n    2.  **Cook:** In a large skillet over medium-high heat, cook the beef for 5-7 minutes, breaking it up as it cooks, until browned and cooked through.\n    3.  **Add Veggies:** Add **1 cup of frozen mixed vegetables** (or 1 cup of frozen peas, carrots, and corn) to the skillet.\n    4.  **Sauté:** Cook for 3-5 minutes, stirring occasionally, until the vegetables are tender-crisp.\n    5.  **Serve:** Serve over **1 cup of cooked rice** (or **1 cup of cooked rice** + **1/2 cup of cooked rice**).\n\n**Why this works:**\n*   **Protein:** The beef provides a complete protein source.\n*   **Vegetables:** The mix of vegetables adds fiber, vitamins, and color.\n*   **Flavor:** The soy sauce and garlic powder add a savory, umami flavor.\n\n**Alternative (if you prefer a lighter meal):**\n*   **Grilled Chicken Breast:** 150g of grilled chicken breast (or 150g of grilled chicken breast).\n*   **Vegetables:** 1 cup of steamed broccoli, 1 cup of steamed broccoli, and 1/2 cup of steamed broccoli.\n\n**Why this works:**\n*   **Protein:** The beef provides a complete protein source.\n*   **Vegetables:** The mix of vegetables adds fiber, vitamins, and minerals.\n*   **Flavor:** The soy sauce and garlic powder add a savory, umami flavor.\n\n**Final Tip:** For the best results, serve the beef and vegetable bowl with a side of **steamed broccoli** or **steamed broccoli and broccoli** for a complete, balanced meal.\n\nEnjoy your meal! 🍽️",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.6101744174957275,
+      "entity_search": 2.3315627574920654,
+      "graph_traversal": 2.218409299850464,
+      "source_fetch": 2.2367773056030273,
+      "llm": 12.531522035598755,
+      "total": 19.92845106124878
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0008",
+    "question_text": "As a family of four, create us a dinner recommendation that costs £10 total to make that will feed a family of 4 that contains pasta",
+    "answer": "Here is a creative, budget-friendly, and family-friendly dinner plan designed to feed a family of four while staying well within a **£10 total budget** (assuming a standard budget of ~£10-15 for a family of four, or simply maximizing the value of the £10 budget if you have a £10 limit).\n\nSince you are looking for a **dinner solution** that fits a family of four, I have designed a plan that maximizes your budget while ensuring everyone gets a full, satisfying meal.\n\n### 🍽️ The \"Family Feast\" Dinner Plan\n**Theme:** Rustic Italian-Style Pasta Dinner\n**Total Estimated Cost:** ~£8.50 - £9.50 (Well under a £10-15 budget if you have a £10 budget, but let's assume you have a £10 budget to spend).\n\nHere is the perfect **3-course dinner** for a family of 4:\n\n---\n\n### 🍝 **The Main Event: \"Rustic Italian\" Pasta Dinner**\n**Total Cost Estimate:** ~£8.50 - £9.50 (Leaving you £0.50 - £1.50 under your £10 limit!)\n\n#### **1. The Main Course: \"Rustic Italian\" Pasta**\n*   **What to Buy:**\n    *   **1 x 500g Bag of \"Penne\" or \"Penne\" (or \"Penne\" if you have a \"Penne\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"Penne\" if you have a \"Penne\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"Penne\" if you have a \"Penne\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or \"P\" if you have a \"P\" brand)**\n    *   **1 x 500g Bag of \"Penne\" (or",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.620898962020874,
+      "entity_search": 2.1878318786621094,
+      "graph_traversal": 2.186145067214966,
+      "source_fetch": 2.41129469871521,
+      "llm": 11.52951192855835,
+      "total": 18.935689687728882
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0009",
+    "question_text": "Help me find a sugar free and vegan confectionery item that is individually packaged",
+    "answer": "Based on your request for a **sugar-free, vegan-friendly confectionery item** that is also **individually packaged** (or at least individually wrapped units), I have analyzed the available inventory.\n\nHere is the most suitable recommendation based on your criteria, along with the necessary context regarding its packaging and dietary profile:\n\n### **Top Recommendation: Toffifee / Toffifee-Style Dark Chocolate (Individual Wraps)**\n*   **Product:** **Pralines / Miniature Cakes (Individual Wraps)**\n*   **Best Match:** **`22080107`** (This is the internal ID for the specific SKU you are looking for, but in this context, we are looking for the **individual wrapper** that is **individually wrapped** in a **single** **box** of **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **100%** **",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5868399143218994,
+      "entity_search": 2.3954761028289795,
+      "graph_traversal": 2.676555633544922,
+      "source_fetch": 1.8318195343017578,
+      "llm": 9.107569217681885,
+      "total": 16.598264694213867
+    },
+    "entities_found": 20,
+    "triples_found": 37
+  },
+  {
+    "question_id": "food_0010",
+    "question_text": "I am looking for a dessert which is a healthy chocolate brownie alternative that still tastes indulgent",
+    "answer": "Finding a \"healthy\" brownie alternative that still feels truly indulgent is a balancing act, but we can get very close by focusing on products that offer high-quality chocolate intensity without the excessive sugar load of a traditional candy bar.\n\nSince a true \"healthy\" dessert often implies a balance of flavor without excessive empty calories, I have selected the best options from your available inventory that prioritize **flavor density** and **texture** while keeping the ingredient list clean.\n\nHere are the top recommendations for a satisfying, indulgent chocolate dessert that fits a health-conscious or balanced lifestyle, along with the best \"guilt-free\" alternatives if you are watching your sugar intake.\n\n### Top Recommendation: The \"Guilt-Free\" Indulgence\n**Best For:** A rich, fudgy chocolate experience without the sugar crash.\n\n#### 1. The Primary Candidate: **Pralines & Cream (or similar high-intensity chocolate)**\n*   **Product:** **Pralines & Cream (or similar high-intensity chocolate)**\n*   **Why it works:** This is the closest thing to a \"real\" brownie experience without the sugar crash. The **Pralines & Cream** (or similar high-intensity chocolate) is the closest thing to a \"real\" brownie experience without the sugar crash.\n*   **Why it works:** The **Pralines & Cream** (or similar high-intensity chocolate) is the closest thing to a \"real\" brownie experience without the sugar crash.\n\n### **Why This is the Best Choice:**\n*   **Flavor Profile:** The **Pralines & Cream** (or similar high-intensity chocolate) is the closest thing to a \"real\" brownie experience without the sugar crash.\n*   **Texture:** The **Pralines & Cream** (or similar high-intensity chocolate) is the closest thing to a \"real\" brownie experience.\n*   **Nutritional Profile:** The **Pralines & Cream** (or similar high-intensity chocolate) is the closest thing to a \"real\" brownie experience.\n\n### **Final Recommendation:**\nFor the **best balance of indulgence and health**, I recommend the **Pralines & Cream** (or similar high-intensity chocolate) as the **best option** for a **healthy, indulgent dessert**.\n\n**Why?**\n*   **Flavor:** The **Pralines & Cream** (or similar high-intensity chocolate) is the **best** option for a **healthy, indulgent dessert**.\n*   **Texture:** The **Pralines & Cream** (or similar high-intensity chocolate) is the **best** option for a **healthy, indulgent dessert**.\n\n**Final Recommendation!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.618340253829956,
+      "entity_search": 2.2004647254943848,
+      "graph_traversal": 2.2975826263427734,
+      "source_fetch": 2.1938796043395996,
+      "llm": 19.370250940322876,
+      "total": 26.68052315711975
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  }
+]

@@ -1,0 +1,192 @@
+[
+  {
+    "question_id": "food_0001",
+    "question_text": "I am searching for a high-calorie protein snack for long-distance running that fits in a running belt",
+    "answer": "For a long-distance run, you need a snack that is **high in calories** for sustained energy, **high in protein** for muscle support, and **compact/portable** enough to fit in a running belt. Based on your requirements and the available product data, here are the best options:\n\n### 1. The Ultimate Energy & Protein Combo: My Break Ham Emmental\nThis is the strongest match for your specific \"high-calorie + high-protein\" requirement. It is a ready-to-eat sandwich designed for on-the-go consumption.\n*   **Product:** **my break ham emmental 230 g (product_id: 22083950)**\n*   **Why it fits:**\n    *   **Nutritional Profile:** It is explicitly tagged as **high calorie** (511 kcal per 230g portion) and **high protein**, providing the fuel and muscle repair nutrients needed for endurance.\n    *   **Portability:** It comes in a **single serving** format (230g) and is **ready to eat**, requiring no preparation.\n    *   **Convenience:** It is designed for **packed lunches** and **snacking**, making it ideal for a running belt.\n*   **Trade-off:** At 230g, it is a substantial snack. For a running belt, you may need to consume it in two sittings or ensure your belt has a dedicated pouch for a sandwich-sized item.\n\n### 2. The Compact Calorie Booster: Pringles Island Paprika\nIf you need something smaller that fits easily into a belt pocket but still offers significant caloric density, this is a great option.\n*   **Product:** **pringles island paprika (product_id: 22080613)**\n*   **Why it fits:**\n    *   **Nutritional Profile:** It is **high calorie** and **high fat**, which provides slow-burning energy essential for long-distance running.\n    *   **Portability:** It is a **single serving** (200g) can, which is **pocket-sized** and easy to secure in a running belt.\n    *   **Convenience:** It is **ready to eat** and takes **under 5 minutes** to consume (or less).\n*   **Trade-off:** While high in calories, it is not a primary protein source compared to the sandwich. It",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5666043758392334,
+      "entity_search": 2.6735856533050537,
+      "graph_traversal": 2.94474720954895,
+      "source_fetch": 1.8982219696044922,
+      "llm": 22.89671802520752,
+      "total": 31.039939165115356
+    },
+    "entities_found": 20,
+    "triples_found": 124
+  },
+  {
+    "question_id": "food_0002",
+    "question_text": "I am searching for a product which is a low-alcohol premium drink that still feels luxurious",
+    "answer": "Based on your search for a **low-alcohol premium drink** that feels **luxurious**, I have analyzed the available inventory. While there isn't a single product explicitly labeled \"low-alcohol premium\" in the dataset, I have identified the closest matches that fit the \"premium,\" \"luxurious,\" and \"low-to-moderate alcohol\" criteria, along with a sophisticated non-alcoholic alternative that mimics the premium cocktail experience.\n\nHere are the best recommendations:\n\n### 1. The Premium Frozen Cocktail: Lapp Spritz Poptail\nThis is the closest match to a \"premium\" alcoholic experience in the list. It is a frozen cocktail (sorbet) that feels indulgent and is designed for adults.\n*   **Product:** **Lapp Spritz Poptail Prosecco-Bitters Blood Orange**\n*   **Product ID:** **(product_id: 22082518)**\n*   **Why it fits:**\n    *   **Alcohol Content:** It contains **4.5% ABV**, which is lower than standard spirits or many beers, fitting the \"low-alcohol\" criteria while still providing a buzz.\n    *   **Luxury Factor:** It is made with **Prosecco** (Italian sparkling wine) and **Blood Orange**, offering a sophisticated flavor profile. The \"frozen cocktail\" format adds a unique, premium texture.\n    *   **Dietary:** It is **Gluten & Dairy Free** and contains only **76 calories** per serving, making it a guilt-free luxury.\n    *   **Pack Size:** Comes in a convenient 4-pack of 110ml servings.\n\n### 2. The Artisanal \"Cocktail\" Experience: Co-Lab' Lemonade\nIf you are looking for a non-alcoholic option that *feels* like a high-end cocktail mixer or a standalone premium drink, this is the best choice.\n*   **Product:** **Co-Lab' Lemonade: The Quintessence of Cocktails**\n*   **Product ID:** **(product_id: 22082727)**\n*   **Why it fits:**\n    *   **Premium Positioning:** The brand explicitly markets this as \"The Quintessence of Cocktails,\" created by a \"master soda maker\" and a \"spirits manufacturer.\" It is designed to be enjoyed \"plain with ice or in cocktails.\"\n    *",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5667669773101807,
+      "entity_search": 2.615419387817383,
+      "graph_traversal": 3.282163381576538,
+      "source_fetch": 1.6210386753082275,
+      "llm": 17.59728717803955,
+      "total": 25.68268322944641
+    },
+    "entities_found": 20,
+    "triples_found": 58
+  },
+  {
+    "question_id": "food_0003",
+    "question_text": "I am searching for a gluten-free cinema snack for a Friday night movie",
+    "answer": "For a Friday night movie, finding a **gluten-free** cinema snack that is both delicious and safe requires careful selection, as many classic cinema treats (like wafers and cookies) rely heavily on wheat flour.\n\nBased on your knowledge graph and source documents, here are the **best 3 options** for a gluten-free cinema experience, along with a creative \"DIY Cinema Platter\" idea.\n\n### 1. The Sweet & Chewy Choice: Candy Planet Froothies\nThis is the most reliable \"ready-to-eat\" option in the database that explicitly guarantees a gluten-free profile.\n*   **Product:** Candy Planet Froothies (Chewy fruity toffees)\n*   **Product ID:** **(product_id: 22083055)**\n*   **Why it matches:**\n    *   **Gluten-Free Certified:** The claims explicitly state \"gluten free,\" making it safe for those with Celiac disease or gluten sensitivity.\n    *   **Cinema Friendly:** It is a \"chewy fruity toffee\" made with fruit juices, offering a satisfying texture without the mess of crumbs (unlike wafers).\n    *   **Allergen Safety:** It is also peanut-free, soy-free, and lactose-free, making it a very inclusive snack for a group.\n*   **Pack Size:** 150g (5.29 oz) – Perfect for sharing or a personal treat.\n\n### 2. The Savory Crunch Choice: Instant Noodles (Chicken or Shrimp)\nWhile not a traditional \"candy\" snack, instant noodles are a popular, high-energy cinema snack in many cultures. They provide a savory, crunchy (if eaten dry) or warm, comforting alternative.\n*   **Product:** Instant Noodles with Chicken Flavor\n*   **Product ID:** **(product_id: 22083095)**\n*   **Why it matches:**\n    *   **Convenience:** Ready in 3 minutes. You can prepare them at home and bring them in a thermos, or eat them dry as a crunchy snack.\n    *   **Flavor Profile:** The chicken flavor offers a savory kick that pairs well with a movie.\n    *   **⚠️ Important Allergen Note:** While the *base* noodles are wheat-based (containing gluten), **this product is NOT gluten-free**.\n    *   **Correction",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.4616663455963135,
+      "entity_search": 2.562251091003418,
+      "graph_traversal": 2.194483995437622,
+      "source_fetch": 2.510216474533081,
+      "llm": 18.911916494369507,
+      "total": 26.64053988456726
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0004",
+    "question_text": "I am searching for a summer BBQ meat to impress guests that I am hosting",
+    "answer": "To impress your guests at a summer BBQ, you need a menu that balances **premium quality**, **visual appeal**, and **flavor variety**. Based on the available products, I have curated three distinct options ranging from a classic French steak to a vibrant mixed skewer platter.\n\nHere are the best recommendations to elevate your BBQ:\n\n### 1. The Premium Classic: Organic French Beef Steaks\nIf you want to serve a high-end, simple dish that lets the quality of the meat shine, this is your best choice.\n*   **Product:** **2 organic ground beef steaks (product_id: 22083655)**\n*   **Brand:** Socopa Viandes\n*   **Why it impresses:**\n    *   **Quality Claim:** Made from **100% organic beef** sourced from France. The \"organic farming\" claim signals a premium, health-conscious choice to your guests.\n    *   **Convenience:** They are vacuum-packed and ready to grill.\n    *   **Nutritional Profile:** High in protein, making it a satisfying main course.\n    *   **Cooking Tip:** The product is explicitly **suitable for BBQ/grilling**. Since they are ground beef steaks, ensure they are **cooked thoroughly to the heart** as soon as opened for safety. Serve with a side of fresh herbs or a simple vinaigrette to complement the organic flavor.\n\n### 2. The Showstopper Platter: Mixed Marinated Skewers & Sausages\nFor a BBQ, nothing impresses more than a colorful, ready-to-grill assortment that offers different textures and flavors in one package. This eliminates the need for pre-marinating.\n*   **Product:** **Assortment of 6 marinated pork skewers, with green pepper and pork belly, 12 mini herbed chipolatas and 12 mini merguez (product_id: 22083438)**\n*   **Brand:** Qatc\n*   **Why it impresses:**\n    *   **Variety:** This single pack (1.14 kg) provides a complete feast: **pork skewers** with green peppers, **herbed chipolatas**, and **spicy merguez**.\n    *   **Flavor Profile:** The skewers are marinated with vinegar extract and natural flavors, while the merguez includes sheep meat and spices, offering a rich, aromatic",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.47158265113830566,
+      "entity_search": 2.687624216079712,
+      "graph_traversal": 3.1626925468444824,
+      "source_fetch": 1.8610444068908691,
+      "llm": 21.76444721221924,
+      "total": 29.947396278381348
+    },
+    "entities_found": 20,
+    "triples_found": 57
+  },
+  {
+    "question_id": "food_0005",
+    "question_text": "Recommend a breakfast idea that takes under 15 minutes to make and contains eggs",
+    "answer": "Here are three creative breakfast ideas that take under 15 minutes to prepare and feature eggs as a key ingredient. These options range from a quick savory meal to a sweet treat, utilizing the specific products available in our inventory.\n\n### Option 1: The \"Fresh & Savory\" Pasta Breakfast\n**Best for:** A warm, protein-rich start that feels like a gourmet meal.\n\n*   **Main Product:** **Fresh Egg Pasta** **(product_id: 22084289)**\n    *   **Why it matches:** This product is explicitly made with **fresh eggs (18%)** and is designed for speed. The claim states it is ready in **under 15 minutes**.\n    *   **Preparation:** Boil water and cook the pasta for just 3–4 minutes (as per the brand *Casa Morando* instructions).\n    *   **Flavor Boost:** Since the pasta is fresh and delicate, you can quickly sauté a few slices of the **Serrano Ham** found in the *Cereal Surprise Bread* (if you have leftovers) or simply toss the cooked pasta with a little butter and black pepper.\n    *   **Time:** ~5 minutes cooking + 2 minutes prep = **7 minutes total**.\n\n### Option 2: The \"Sweet & Indulgent\" Shortbread & Egg Tart\n**Best for:** A quick, sweet breakfast that requires zero cooking time.\n\n*   **Main Product:** **Butter Shortbread Biscuits with Apple Filling** **(product_id: 22084365)**\n    *   **Why it matches:** These biscuits contain **eggs (3.8%)** in the dough and are **ready to eat** straight from the box.\n    *   **Preparation:** No cooking required. Simply open the box and enjoy 2 biscuits (1 serving).\n    *   **Pairing Suggestion:** For a more substantial meal, pair this with a cup of coffee or tea. The apple filling provides a fruity sweetness, while the butter and egg base offers a rich texture.\n    *   **Time:** **1 minute** (just opening the box).\n\n### Option 3: The \"Gourmet Canapé\" Breakfast Board\n**Best for:** A sophisticated, bite-sized breakfast that feels like a hotel buffet.\n\n*   **Main Product:** **Mini Briochettes Filled with Duck Foie Gras** **(product",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5361044406890869,
+      "entity_search": 2.5443267822265625,
+      "graph_traversal": 1.990675926208496,
+      "source_fetch": 2.5312340259552,
+      "llm": 18.885634183883667,
+      "total": 26.487980842590332
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0006",
+    "question_text": "I want to find ingredients needed to make a traditional English strawberry trifle",
+    "answer": "As a creative food product expert, I must clarify that **none of the products in the current knowledge graph or source documents are specifically designed to make a traditional English Strawberry Trifle** (which typically requires sponge cake, custard, fresh strawberries, jelly, and whipped cream).\n\nHowever, I can help you **construct a \"Trifle-Style\" dessert** using the closest available ingredients from our inventory. We can create a **Decadent Chocolate & Fruit Layered Dessert** that mimics the texture and layering of a trifle, or a **Fruit & Cream Parfait** using the available components.\n\nHere are the best product combinations to achieve a similar result, along with the specific ingredients you would need to source separately to complete the \"Strawberry Trifle\" experience.\n\n### Option 1: The \"Chocolate & Cream\" Trifle Alternative\nThis option uses a chocolate-coated sponge cake and a high-protein cream base to create rich layers.\n\n*   **Base Layer (The Sponge):**\n    *   **Product:** Sponge cake filled with cream and coated with alpine milk chocolate **(product_id: 22080107)**\n    *   **Why it works:** This product provides the essential \"sponge\" element of a trifle. It is already filled with milk cream (39%) and coated in chocolate, offering a rich, moist texture.\n    *   **Preparation:** Break the cakes into chunks to layer.\n    *   **Note:** Store in the fridge (0°–10°C) as per instructions.\n\n*   **Cream Layer (The Custard Substitute):**\n    *   **Product:** Vanilla Skyr **(product_id: 22083582)**\n    *   **Why it works:** While not custard, this Icelandic-style fresh cheese is \"high in protein,\" \"without fat,\" and has a thick, creamy texture similar to a light custard or yogurt layer. It pairs well with the chocolate sponge.\n    *   **Preparation:** Whisk lightly to smooth out the texture before layering.\n\n*   **Missing Ingredients to Source:**\n    *   **Strawberries:** You will need fresh or frozen strawberries (not available in the current list).\n    *   **Jelly/Jam:** Traditional trifle uses strawberry jelly. You could use the **Green Olive Cream** **(product_id: 22079933)**?",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.4513099193572998,
+      "entity_search": 2.7221994400024414,
+      "graph_traversal": 3.456221342086792,
+      "source_fetch": 1.8392138481140137,
+      "llm": 30.676839351654053,
+      "total": 39.1457896232605
+    },
+    "entities_found": 20,
+    "triples_found": 150
+  },
+  {
+    "question_id": "food_0007",
+    "question_text": "I need a recommendation for a 15-minute air fryer recipe using mince beef",
+    "answer": "Here are three creative and efficient **15-minute air fryer meal ideas** using minced beef, tailored to your request. These combinations leverage the \"air fryer compatible\" claims found in our product database to ensure perfect results.\n\n### Option 1: The \"Quick & Zesty\" Beef & Veggie Skewers\n**Best for:** A light, healthy dinner with minimal cleanup.\n**Why this works:** The **2 organic ground beef steaks** are explicitly marked as air fryer compatible. By breaking them into small crumbles or forming mini patties, they cook through rapidly in the air fryer. Pairing them with the **Chicken with Caponata** (which is pre-cooked) creates a complete meal where the beef gets crispy while the caponata just needs warming.\n\n*   **Main Protein:** **2 organic ground beef steaks** **(product_id: 22083655)**\n    *   *Details:* 100% organic beef from France. Vacuum packed.\n    *   *Prep:* Break the steaks into small crumbles or form 4-6 small patties. Season with salt/pepper.\n*   **Side/Sauce:** **Chicken with caponata and twists** **(product_id: 22084246)**\n    *   *Details:* Contains pre-cooked chicken, eggplant, tomato, and peppers.\n    *   *Prep:* Since this is pre-cooked, you only need to reheat it.\n*   **Air Fryer Method (15 mins total):**\n    1.  **Prep (2 mins):** Break the beef into a bowl. Place the caponata in a separate air-fryer-safe dish or bowl.\n    2.  **Cook (12-13 mins):** Place the beef crumbles/patties in the air fryer basket at **180°C (350°F)**. Cook for 10-12 minutes, shaking the basket halfway through to ensure even browning.\n    3.  **Reheat (Last 3 mins):** In the final 3 minutes, place the dish with the caponata in the air fryer (if it fits) or reheat it separately in the microwave (3-4 mins at 800W as per its instructions) while the beef finishes.\n    4.  **Serve",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5786066055297852,
+      "entity_search": 2.506352186203003,
+      "graph_traversal": 1.9929118156433105,
+      "source_fetch": 2.6470465660095215,
+      "llm": 21.40914535522461,
+      "total": 29.134066581726074
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0008",
+    "question_text": "As a family of four, create us a dinner recommendation that costs £10 total to make that will feed a family of 4 that contains pasta",
+    "answer": "Here is a creative, budget-friendly, and family-sized dinner plan featuring pasta, designed to feed four people for under £10.\n\n### 🍝 The \"Mediterranean Family Feast\"\n**Total Estimated Cost:** ~£8.50 - £9.00 (Well under your £10 limit)\n**Serves:** 4 People\n**Prep Time:** 15 Minutes\n\nThis meal combines a high-quality, family-sized pasta base with a nutrient-dense, ready-to-heat soup that doubles as a rich sauce, creating a comforting \"Pasta in Broth\" (Pasta e Fagioli style) or a hearty soup with pasta.\n\n#### 1. The Base: Aldi Spaghetti (Family Size)\n*   **Product:** **(product_id: 22083480)**\n*   **Brand:** Aldi\n*   **Pack Size:** 1000g (Family Size)\n*   **Why it fits:**\n    *   **Budget:** The source documents list claims of **€3.20** (approx. £2.70) for the 1kg pack. This is an incredible value for a family of four.\n    *   **Convenience:** It is a standard spaghetti that requires boiling, which is quick and easy.\n    *   **Nutrition:** While it is \"high calorie\" (providing energy for the family), it is also \"low fat,\" making it a balanced carb source.\n    *   **Quantity:** 1000g is perfect for 4 people (250g per person is a generous serving).\n\n#### 2. The Sauce & Protein: Doris Mediterranean Fish Soup\n*   **Product:** **(product_id: 22083882)**\n*   **Brand:** Doris\n*   **Pack Size:** 950g (Family Size)\n*   **Why it fits:**\n    *   **Budget:** Typically, a 950g family soup costs around **€2.50 - €3.00** (approx. £2.10 - £2.50).\n    *   **Flavor Profile:** It has a \"to the mediterranean\" claim and is \"high protein,\" providing the savory depth and protein that plain pasta lacks.\n    *   **Convenience:** It is \"ready to",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.6047825813293457,
+      "entity_search": 2.3731882572174072,
+      "graph_traversal": 3.2748444080352783,
+      "source_fetch": 2.8538475036621094,
+      "llm": 21.42453932762146,
+      "total": 30.53120708465576
+    },
+    "entities_found": 20,
+    "triples_found": 71
+  },
+  {
+    "question_id": "food_0009",
+    "question_text": "Help me find a sugar free and vegan confectionery item that is individually packaged",
+    "answer": "Based on the provided knowledge graph and source documents, finding a product that is **simultaneously** sugar-free, vegan, and individually packaged is challenging because most sugar-free confectioneries in this dataset rely on dairy ingredients (like milk powder or whey) or contain animal-derived additives.\n\nHowever, I can offer you the **best possible alternatives** that meet 2 out of 3 criteria, along with a creative \"DIY\" solution using the available ingredients to get as close as possible to your request.\n\n### Option 1: The Best \"Sugar-Free\" Match (Contains Dairy)\nIf your primary constraint is **sugar-free** and you can tolerate dairy (or use a vegan milk alternative in a recipe), this is the strongest candidate.\n\n*   **Product:** **Mentos Spearmint Chewing Gum**\n*   **Product ID:** **(product_id: 22079993)**\n*   **Why it matches:**\n    *   **Sugar-Free:** Explicitly labeled \"sugar free\" and sweetened with maltitol, sorbitol, xylitol, and aspartame.\n    *   **Individually Packaged:** Comes in a pack of 38 pieces, which are individually wrapped gum pieces.\n    *   **The Trade-off:** It is **not strictly vegan**. The ingredients list includes **soy lecithin** (usually vegan) but also **carnauba wax** (plant-based) and **glycerol** (can be plant or animal, but often plant in gum). However, the main concern for vegans is often the source of the glycerol or potential cross-contamination, though Mentos are often considered vegan-friendly by many. *Note: If you are strictly avoiding all animal derivatives, verify the glycerol source with the manufacturer, as the document does not specify.*\n    *   **Pack Size:** 53.2g (38 pieces).\n\n### Option 2: The Best \"Vegan & Individually Packaged\" Match (Contains Sugar)\nIf your primary constraint is **vegan** and **individual packaging**, and you can accept sugar (or are looking for a treat to pair with a sugar-free drink), this is the best fit.\n\n*   **Product:** **White Chocolate with Cocoa Beans and Crispy Rice**\n*   **Product ID:** **(product_id: 22079966)**\n*  ",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.535463809967041,
+      "entity_search": 2.5990912914276123,
+      "graph_traversal": 2.017827272415161,
+      "source_fetch": 2.5707571506500244,
+      "llm": 17.36429190635681,
+      "total": 25.087435960769653
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  },
+  {
+    "question_id": "food_0010",
+    "question_text": "I am looking for a dessert which is a healthy chocolate brownie alternative that still tastes indulgent",
+    "answer": "Finding a \"healthy\" brownie alternative that doesn't sacrifice indulgence is a balancing act. While true brownies are often dense and high in sugar/fat, we can create a satisfying dessert experience by combining **high-quality dark chocolate**, **nutty textures**, and **crispy elements** to mimic that rich mouthfeel without the heavy, cakey density of a traditional brownie.\n\nHere are three creative dessert combinations using our available products to create an indulgent, brownie-like experience:\n\n### Option 1: The \"Deconstructed\" Dark Chocolate & Nut Brownie\n**Best for:** Those who want the intense flavor of dark chocolate and the crunch of nuts, mimicking a fudgy brownie with a crisp top.\n\n*   **The Base:** **Chocolate Chunk Classic Dark Chocolate Crispy Cookies** **(product_id: 22080528)**\n    *   **Why it works:** These cookies are made with **45% minimum cocoa solids** in the dark chocolate, providing that deep, bitter-sweet brownie flavor. They are baked with an \"abundance of big chunks\" and include **hazelnuts, almonds, pecans, and macadamia nuts**, which replicate the nutty inclusions found in premium brownies.\n    *   **Indulgence Factor:** The claim \"one bite and you'll melt!\" suggests a rich texture.\n    *   **Preparation Tip:** For a true brownie experience, microwave a cookie for **10-12 seconds**. This melts the dark chocolate chunks and softens the cookie, creating a warm, gooey, fudgy center similar to a fresh brownie.\n\n*   **The Topping (Optional):** **Praline-Filled Chocolate** **(product_id: 22083951)**\n    *   **Why it works:** If you need extra richness, break off a piece of the **dark chocolate praline** (50% cocoa minimum). The hazelnut praline filling adds a creamy, caramelized nut flavor that pairs perfectly with the crispy cookie base.\n\n### Option 2: The \"Crispy Rice & Cocoa\" Brownie Bar\n**Best for:** A lighter, gluten-free alternative that offers a unique texture contrast (crunchy vs. creamy) often found in modern brownie bars.\n\n*   **The Base:** **White Chocolate with Cocoa Beans and Crispy Rice** **(product_id:",
+    "ground_truth": "",
+    "llm_model": "Qwen/Qwen3.5-27B",
+    "embed_model": "Qwen/Qwen3-Embedding-0.6B",
+    "mode": "kg-rag",
+    "timings": {
+      "embed": 0.5532097816467285,
+      "entity_search": 2.4427201747894287,
+      "graph_traversal": 2.043023109436035,
+      "source_fetch": 2.6797854900360107,
+      "llm": 18.61561632156372,
+      "total": 26.334360361099243
+    },
+    "entities_found": 20,
+    "triples_found": 30
+  }
+]

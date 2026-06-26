@@ -1,13 +1,15 @@
 # =============================================================================
-# Food KG Build — Ray Cluster (20x H100 workers)
+# Food-DFlash KG Build — Ray Cluster (20x H100 workers) + DFlash
 # =============================================================================
 
 cosmos:
   uri: "https://divdet.documents.azure.com:443/"
   key: ""
-  database_name: "food"
+  database_name: "food-dflash"
   use_rbac_auth: true
   tenant_id: "43083d15-7273-40c1-b7db-39efd9ccc17a"
+  cosmos_account_name: "divdet"
+  cosmos_resource_group: "ams-cosmos-db"
 
   sources:
     - id: "food"
@@ -27,32 +29,29 @@ cosmos:
         - pack_size
 
 kg:
-  triples_container: "kg_triples_food"
-  entities_container: "kg_entities_food"
+  triples_container: "kg_triples"
+  entities_container: "kg_entities"
   partition_key_path: "/pk"
 
 embedding:
   dimensions: 1024
   in_process_model: "Qwen/Qwen3-Embedding-0.6B"
 
-# LLM for post-processing (API mode on head node — calls our H100 vLLM)
+# LLM for post-processing (vLLM on dev VM 10.0.0.29)
 llm:
-  endpoint: "http://10.0.0.4:8000/v1"
+  endpoint: "http://10.0.0.29:8000/v1"
   model: "Qwen/Qwen3.5-27B"
   api_key: "dummy"
   temperature: 0.0
   max_tokens: 2048
   max_retries: 3
 
-# Ray vLLM build — each worker loads model directly on GPU with DFlash
+# Ray vLLM build — Qwen2.5-32B FP8 for max offline throughput (proven fast)
 build_llm:
   backend: "ray_vllm"
-  model: "Qwen/Qwen3.5-27B"
+  model: "Qwen/Qwen2.5-32B-Instruct"
   max_tokens: 3000
   max_model_len: 16384
-  dflash:
-    draft_model: "z-lab/Qwen3.5-27B-DFlash"
-    num_speculative_tokens: 15
 
 build:
   extraction_rounds: 1
@@ -71,5 +70,5 @@ query:
 
 paths:
   questions_file: "data/food.json"
-  output_root: "out_kg"
-  checkpoint_dir: "out_kg/ray_build"
+  output_root: "out_kg_dflash"
+  checkpoint_dir: "out_kg_dflash/ray_build"

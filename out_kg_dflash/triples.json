@@ -1,0 +1,5953 @@
+[
+  {
+    "subject": "my break ham emmental 230 g",
+    "predicate": "has_product_id",
+    "object": "22083950",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-81d33eea012253eadf779ba47af1a0ce43ab0879"
+    ]
+  },
+  {
+    "subject": "sliced country bread 250g (product_id: 22081942)",
+    "predicate": "brand_is",
+    "object": "dinette",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-627ae1e48e41c72acd51a97cb2bc0e5bc671ae8e"
+    ]
+  },
+  {
+    "subject": "sliced country bread 250g",
+    "predicate": "brand_is",
+    "object": "dinette",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-627ae1e48e41c72acd51a97cb2bc0e5bc671ae8e"
+    ]
+  },
+  {
+    "subject": "sliced country bread 250g",
+    "predicate": "has_pack_size",
+    "object": "250g",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-627ae1e48e41c72acd51a97cb2bc0e5bc671ae8e"
+    ]
+  },
+  {
+    "subject": "Chicken with caponata and twists 580 g (product_id: 22084246)",
+    "predicate": "brand_is",
+    "object": "d'antelli",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5f79ef22e77fb0bd2e443b3cb47933940605fbb4"
+    ]
+  },
+  {
+    "subject": "Chicken with caponata and twists 580 g",
+    "predicate": "brand_is",
+    "object": "d'antelli",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5f79ef22e77fb0bd2e443b3cb47933940605fbb4"
+    ]
+  },
+  {
+    "subject": "wheat flour t65",
+    "predicate": "is_type_of",
+    "object": "food product",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7cf7813450a25528e84d4f9c8e272f18cc7e834e"
+    ]
+  },
+  {
+    "subject": "wheat flour t65",
+    "predicate": "has_ingredient",
+    "object": "wheat flour t65",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7cf7813450a25528e84d4f9c8e272f18cc7e834e"
+    ]
+  },
+  {
+    "subject": "co-lab' lemonade the quintessence of cocktails (product_id: 22082727)",
+    "predicate": "has_brand",
+    "object": "co-lab'",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-91127550e9448226c19e1211816619c6f1913c7f"
+    ]
+  },
+  {
+    "subject": "co-lab' lemonade the quintessence of cocktails",
+    "predicate": "has_brand",
+    "object": "co-lab'",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-91127550e9448226c19e1211816619c6f1913c7f"
+    ]
+  },
+  {
+    "subject": "craisins® cranberries séchées et sucrées (product_id: 22080568)",
+    "predicate": "is_type_of",
+    "object": "dried fruit snack",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8f0cc7a85bc3bf60a6398130734ad61987e10e2e"
+    ]
+  },
+  {
+    "subject": "craisins® cranberries séchées et sucrées",
+    "predicate": "is_type_of",
+    "object": "dried fruit snack",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8f0cc7a85bc3bf60a6398130734ad61987e10e2e"
+    ]
+  },
+  {
+    "subject": "roasted and flavored peanuts (product_id: 22083947)",
+    "predicate": "has_ingredient",
+    "object": "peanuts",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ce9681f2e7efea6a4ec4306ea32c72b80dd11aba"
+    ]
+  },
+  {
+    "subject": "roasted and flavored peanuts",
+    "predicate": "has_ingredient",
+    "object": "salt",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ce9681f2e7efea6a4ec4306ea32c72b80dd11aba"
+    ]
+  },
+  {
+    "subject": "sliced cereal bread (product_id: 22081985)",
+    "predicate": "is a type of",
+    "object": "bread product",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-17a8802dbf992d9a60dedd48aa5fa4dea9b63671"
+    ]
+  },
+  {
+    "subject": "sliced cereal bread",
+    "predicate": "has ingredient",
+    "object": "wheat flour",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-17a8802dbf992d9a60dedd48aa5fa4dea9b63671"
+    ]
+  },
+  {
+    "subject": "sliced cereal bread",
+    "predicate": "has ingredient",
+    "object": "water",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-17a8802dbf992d9a60dedd48aa5fa4dea9b63671"
+    ]
+  },
+  {
+    "subject": "sliced cereal bread",
+    "predicate": "has ingredient",
+    "object": "yeast",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-17a8802dbf992d9a60dedd48aa5fa4dea9b63671"
+    ]
+  },
+  {
+    "subject": "sliced cereal bread",
+    "predicate": "has ingredient",
+    "object": "salt",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-17a8802dbf992d9a60dedd48aa5fa4dea9b63671"
+    ]
+  },
+  {
+    "subject": "garlic and tomatoes cooking sauce (product_id: 22083015)",
+    "predicate": "is a type of",
+    "object": "cooking sauce",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5a7804bea845ff8b66d16228f9a767896f39acfc"
+    ]
+  },
+  {
+    "subject": "garlic and tomatoes cooking sauce",
+    "predicate": "has ingredient",
+    "object": "sunflower oil",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5a7804bea845ff8b66d16228f9a767896f39acfc"
+    ]
+  },
+  {
+    "subject": "garlic and tomatoes cooking sauce",
+    "predicate": "has ingredient",
+    "object": "tomato puree",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5a7804bea845ff8b66d16228f9a767896f39acfc"
+    ]
+  },
+  {
+    "subject": "garlic and tomatoes cooking sauce",
+    "predicate": "has ingredient",
+    "object": "garlic",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5a7804bea845ff8b66d16228f9a767896f39acfc"
+    ]
+  },
+  {
+    "subject": "garlic and tomatoes cooking sauce",
+    "predicate": "has ingredient",
+    "object": "sugar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5a7804bea845ff8b66d16228f9a767896f39acfc"
+    ]
+  },
+  {
+    "subject": "garlic and tomatoes cooking sauce",
+    "predicate": "has ingredient",
+    "object": "salt",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5a7804bea845ff8b66d16228f9a767896f39acfc"
+    ]
+  },
+  {
+    "subject": "truffle-flavored tagliolini (product_id: 22083640)",
+    "predicate": "is a type of",
+    "object": "pasta",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3a92ab4bff84c5a47970069ab92505ee65e2af2f"
+    ]
+  },
+  {
+    "subject": "truffle-flavored tagliolini",
+    "predicate": "has ingredient",
+    "object": "durum wheat semolina",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3a92ab4bff84c5a47970069ab92505ee65e2af2f"
+    ]
+  },
+  {
+    "subject": "truffle-flavored tagliolini",
+    "predicate": "has ingredient",
+    "object": "water",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3a92ab4bff84c5a47970069ab92505ee65e2af2f"
+    ]
+  },
+  {
+    "subject": "truffle-flavored taglioli",
+    "predicate": "has ingredient",
+    "object": "salt",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3a92ab4bff84c5a47970069ab92505ee65e2af2f"
+    ]
+  },
+  {
+    "subject": "praline-filled chocolate (praline-filled chocolate)",
+    "predicate": "has_brand",
+    "object": "praline-filled chocolate",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8babbc49bb63970042febda838fa58ffc8e42e59"
+    ]
+  },
+  {
+    "subject": "chocolate",
+    "predicate": "has_brand",
+    "object": "praline-filled chocolate",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8babbc49bb63970042febda838fa58ffc8e42e59"
+    ]
+  },
+  {
+    "subject": "chocolate",
+    "predicate": "has_brand",
+    "object": "chocolate",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8babbc49bb63970042febda838fa58ffc8e42e59"
+    ]
+  },
+  {
+    "subject": "white chocolate with cocoa beans and crispy rice (product_id: 22079966)",
+    "predicate": "is a",
+    "object": "white chocolate with cocoa beans and crispy rice",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3a7ec5dff613961ab5505196be68d32814ff3310"
+    ]
+  },
+  {
+    "subject": "white chocolate with cocoa beans and crispy rice",
+    "predicate": "is a",
+    "object": "white chocolate with cocoa beans and crispy rice",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3a7ec5dff613961ab5505196be68d32814ff3310"
+    ]
+  },
+  {
+    "subject": "white chocolate with cocoa beans and crispy rice",
+    "predicate": "has ingredient",
+    "object": "cocoa butter",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3a7ec5dff613961ab5505196be68d32814ff3310"
+    ]
+  },
+  {
+    "subject": "economic (product_id: 22080690)",
+    "predicate": "has_brand",
+    "object": "plainemaison",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ab95cb8afd1dedff9dc722e8dbdae0ef7b99bc27"
+    ]
+  },
+  {
+    "subject": "economic",
+    "predicate": "has_brand",
+    "object": "plainemaison",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ab95cb8afd1dedff9dc722e8dbdae0ef7b99bc27"
+    ]
+  },
+  {
+    "subject": "economic",
+    "predicate": "has_product_type",
+    "object": "ground meat",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ab95cb8afd1dedff9dc722e8dbdae0ef7b99bc27"
+    ]
+  },
+  {
+    "subject": "economic",
+    "predicate": "has_protein_content",
+    "object": "high",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ab95cb8afd1dedff9dc722e8dbdae0ef7b99bc27"
+    ]
+  },
+  {
+    "subject": "economic",
+    "predicate": "has_fat_content",
+    "object": "low",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ab95cb8afd1dedff9dc722e8dbdae0ef7b99bc27"
+    ]
+  },
+  {
+    "subject": "scallop, girolle and paris mushroom bites (product_id: 22083622)",
+    "predicate": "is a type of",
+    "object": "frozen seafood appetizer",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-41aeb295cea5b36c7df9540316db587ed984c243"
+    ]
+  },
+  {
+    "subject": "scallop, girolle and paris mushroom bites",
+    "predicate": "has_brand",
+    "object": "extraction_error",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-41aeb295cea5b36c7df9540316db587ed984c243"
+    ]
+  },
+  {
+    "subject": "vanilla skyr (product_id: 22083582)",
+    "predicate": "brand_is",
+    "object": "milsa",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-0ea6e97513a319634c28e8a29e4f435b79d86fc5"
+    ]
+  },
+  {
+    "subject": "Chocolate-Caramel Spread (product_id: 22083881)",
+    "predicate": "has_brand",
+    "object": "Trader Joe's",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f005a2490699d7086f1ac4c0953df0f88e49e667"
+    ]
+  },
+  {
+    "subject": "Chocolate-Caramel Spread (product_id: 22083881)",
+    "predicate": "has_ingredient",
+    "object": "sugar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f005a2490699d7086f1ac4c0953df0f88e49e667"
+    ]
+  },
+  {
+    "subject": "Chocolate-Camel Spread (product_id: 22083881)",
+    "predicate": "has_ingredient",
+    "object": "sugar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f005a2490699d7086f1ac4c0953df0f88e49e667"
+    ]
+  },
+  {
+    "subject": "willow beautiful mineral water with added carbon dioxide (product_id: 22083068)",
+    "predicate": "has_brand",
+    "object": "willow",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-71d03b1dfdb988407b40265e22260e303775b648"
+    ]
+  },
+  {
+    "subject": "willow",
+    "predicate": "is_brand_of",
+    "object": "willow",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-71d03b1dfdb988407b40265e22260e303775b648"
+    ]
+  },
+  {
+    "subject": "co-labi ginger beer",
+    "predicate": "has_pack_size",
+    "object": "33cl",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-31d27a70cdb8e7704e0c0f48661f409269fc63fb"
+    ]
+  },
+  {
+    "subject": "3 organic toulouse sausages (product_id: 22083656)",
+    "predicate": "has_brand",
+    "object": "saucisse de toulouse bio",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-832dbb8ab3e99e165d785ac219083bcc8011181d"
+    ]
+  },
+  {
+    "subject": "3 organic to Toulouse sausages",
+    "predicate": "has_brand",
+    "object": "saucisse de toulouse bio",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-832dbb8ab3e99e165d785ac219083bcc8011181d"
+    ]
+  },
+  {
+    "subject": "white almond crisps (product_id: 22080425)",
+    "predicate": "has_brand",
+    "object": "klick",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-922a0f5b4ea8769925d5dc80e3fc04e4cb0c5e7f"
+    ]
+  },
+  {
+    "subject": "mayonnaise (product_id: 22080845)",
+    "predicate": "has_brand",
+    "object": "rimex",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3b653ebf61a2efb8f73eeedc66a498c3192d5ecb"
+    ]
+  },
+  {
+    "subject": "mayonnaise (product_id: 22080845)",
+    "predicate": "has_pack_size",
+    "object": "net 946ml",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3b653ebf61a2efb8f73eeedc66a498c3192d5ecb"
+    ]
+  },
+  {
+    "subject": "mayonnaise (product_id: 22080845)",
+    "predicate": "is_type_of",
+    "object": "condiment",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3b653ebf61a2efb8f73eeedc66a498c3192d5ecb"
+    ]
+  },
+  {
+    "subject": "mayonnaise (product_id: 22080845)",
+    "predicate": "has_ingredient",
+    "object": "soybean oil",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3b653ebf61a2efb8f73eeedc66a498c3192d5ecb"
+    ]
+  },
+  {
+    "subject": "mayonnaise (product_id: 22080845)",
+    "predicate": "has_ingredient",
+    "object": "egg",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3b653ebf61a2efb8f73eeedc66a498c3192d5ecb"
+    ]
+  },
+  {
+    "subject": "mayonnaise (product_id: 22080845)",
+    "predicate": "has_ingredient",
+    "object": "egg yolk",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3b653ebf61a2efb8f73eeedc66a498c3192d5ecb"
+    ]
+  },
+  {
+    "subject": "mayonnaise (product_id: 22080845)",
+    "predicate": "has_ingredient",
+    "object": "egg white",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3b653ebf61a2efb8f73eeedc66a498c3192d5ecb"
+    ]
+  },
+  {
+    "subject": "soft almond nougat creamy almond turrón (product_id: 22082412)",
+    "predicate": "brand_is",
+    "object": "elalmendro",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-663fa494c38a14fa3002dbcdf6357e0fdd34a7b4"
+    ]
+  },
+  {
+    "subject": "soft almond nougat creamy almond turrón (product_id: 22082412)",
+    "predicate": "has_pack_size",
+    "object": "150g",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-663fa494c38a14fa3002dbcdf6357e0fdd34a7b4"
+    ]
+  },
+  {
+    "subject": "soft almond nougat creamy almond turrón",
+    "predicate": "is_type_of",
+    "object": "confectionery",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-663fa494c38a14fa3002dbcdf6357e0fdd34a7b4"
+    ]
+  },
+  {
+    "subject": "soft almond nougat creamy almond turrón (product_id: 22082412)",
+    "predicate": "is_type_of",
+    "object": "confectionery",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-663fa494c38a14fa3002dbcdf6357e0fdd34a7b4"
+    ]
+  },
+  {
+    "subject": "pan-fried gnocchi casa morando",
+    "predicate": "product_id",
+    "object": "22083988",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7a92584268f212c3d1b77522f20dda4f28b45168"
+    ]
+  },
+  {
+    "subject": "pan-fried gnocchi casa morando",
+    "predicate": "brand_is",
+    "object": "casa morando",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7a92584268f212c3d1b77522f20dda4f28b45168"
+    ]
+  },
+  {
+    "subject": "pan-fried gnocchi casa morado",
+    "predicate": "brand_is",
+    "object": "casa morado",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7a92584268f212c3d1b77522f20dda4f28b45168"
+    ]
+  },
+  {
+    "subject": "château winter almond (product_id: 22083317)",
+    "predicate": "brand_is",
+    "object": "château",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-16ecb1262c44d29e280d9e458d051b4b93216d73"
+    ]
+  },
+  {
+    "subject": "château winter almond (product_id: 22083317)",
+    "predicate": "is_type_of",
+    "object": "chocolate bar",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-16ecb1262c44d29e280d9e458d051b4b93216d73"
+    ]
+  },
+  {
+    "subject": "château winter almond (product_id: 22083317)",
+    "predicate": "has_ingredient",
+    "object": "sugar",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-16ecb1262c44d29e280d9e458d051b4b93216d73"
+    ]
+  },
+  {
+    "subject": "chocolate bar",
+    "predicate": "has_ingredient",
+    "object": "sugar",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-16ecb1262c44d29e280d9e458d051b4b93216d73"
+    ]
+  },
+  {
+    "subject": "chocolate bar",
+    "predicate": "has_ingredient",
+    "object": "cocoa butter",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-16ecb1262c44d29e280d9e458d051b4b93216d73"
+    ]
+  },
+  {
+    "subject": "chocolate bar",
+    "predicate": "has_ingredient",
+    "object": "cocoa mass",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-16ecb1262c44d29e280d9e458d051b4b93216d73"
+    ]
+  },
+  {
+    "subject": "toilet water snack box . box . box . scatola (product_id: 22082474)",
+    "predicate": "has_brand",
+    "object": "star wars",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-02297a78f2dff2333f7706647941e68db8052aa7"
+    ]
+  },
+  {
+    "subject": "toilet water snack box . box . box . scatola (product_id: 22082474)",
+    "predicate": "has_pack_size",
+    "object": "1.02 fl. oz. ℮ 30 ml",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-02297a78f2dff2333f7706647941e68db8052aa7"
+    ]
+  },
+  {
+    "subject": "toilet water snack box . box . box . scat",
+    "predicate": "is_type_of",
+    "object": "beauty_product",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-02297a78f2dff2333f7706647941e68db8052aa7"
+    ]
+  },
+  {
+    "subject": "toilet water snack box . box . box . scat",
+    "predicate": "is_type_of",
+    "object": "fragrance",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-02297a78f2dff2333f7706647941e68db8052aa7"
+    ]
+  },
+  {
+    "subject": "instant noodles with chicken flavor",
+    "predicate": "product_id",
+    "object": "22083095",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-9a36c9ca3f7bc61a135ed217f56be0686ba50c17"
+    ]
+  },
+  {
+    "subject": "instant noodles with chicken flavor",
+    "predicate": "brand_is",
+    "object": "instant noodles",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-9a36c9ca3f7bc61a135ed217f56be0686ba50c17"
+    ]
+  },
+  {
+    "subject": "instant noodles with chicken flavor",
+    "predicate": "has_claim",
+    "object": "halal",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-9a36c9ca3f7bc61a135ed217f56be0686ba50c17"
+    ]
+  },
+  {
+    "subject": "instant noodles with chicken flavor",
+    "predicate": "has_claim",
+    "object": "sustainable",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-9a36c9ca3f7bc61a135ed217f56be0686ba50c17"
+    ]
+  },
+  {
+    "subject": "natoons + milk - cocoa kinder surprise",
+    "predicate": "is_type_of",
+    "object": "chocolate bar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-081be0c4a5fdd15ba5e2e822ea6d77de9ad0e089"
+    ]
+  },
+  {
+    "subject": "natoons + milk - cocoa kinder surprise",
+    "predicate": "has_brand",
+    "object": "kinder surprise",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-081be0c4a5fdd15ba5e2e822ea6d77de9ad0e089"
+    ]
+  },
+  {
+    "subject": "natoons + milk - cocoa kinder surprise",
+    "predicate": "has_pack_size",
+    "object": "20 g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-081be0c4a5fdd15ba5e2e822ea6d77de9ad0e089"
+    ]
+  },
+  {
+    "subject": "natoons + milk - cocoa kinder surprise",
+    "predicate": "has_ingredient",
+    "object": "sugar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-081be0c4a5fdd15ba5e2e822ea6d77de9ad0e089"
+    ]
+  },
+  {
+    "subject": "gran gusto sauce tomatoes and olives",
+    "predicate": "is_type_of",
+    "object": "food_product",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a672cefaf5f012c314d0c35b7444f7c651ea9f7c"
+    ]
+  },
+  {
+    "subject": "gran gusto sauce tomatoes and olives",
+    "predicate": "has_brand",
+    "object": "shneider",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a672cefaf5f012c314d0c35b7444f7c651ea9f7c"
+    ]
+  },
+  {
+    "subject": "gran gusto sauce tomatoes and olives",
+    "predicate": "has_pack_size",
+    "object": "190g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a672cefaf5f012c314d0c35b7444f7c651ea9f7c"
+    ]
+  },
+  {
+    "subject": "gran gusto sauce tomatoes and olives",
+    "predicate": "has_nutritional_profile",
+    "object": "low_sugar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a672cefaf5f012c314d0c35b7444f7c651ea9f7c"
+    ]
+  },
+  {
+    "subject": "lapp spritz poptail prosecco-bitters blood orange 4 x alcoholic sorbets 110ml (product_id: 22082518)",
+    "predicate": "is a",
+    "object": "product",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-955f34d1d95bcb269f2d4cf7a308a09a38f8ae99"
+    ]
+  },
+  {
+    "subject": "lapp spritz poptail prosecco-bitters blood orange",
+    "predicate": "is a",
+    "object": "product",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-955f34d1d95bcb269f2d4cf7a308a09a38f8ae99"
+    ]
+  },
+  {
+    "subject": "marinated chicken wings with mexican flavor (product_id: 22084208)",
+    "predicate": "is_type_of",
+    "object": "chicken wings",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5f13cfd0761cbad452d15c83c4450e51873e3f7b"
+    ]
+  },
+  {
+    "subject": "marinated chicken wings with mexican flavor (product_id: 22084208)",
+    "predicate": "brand_is",
+    "object": "biste vibe",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5f13cfd0761cbad452d15c83c4450e51873e3f7b"
+    ]
+  },
+  {
+    "subject": "marinated chicken wings with mexican flavor (product_id: 22084208)",
+    "predicate": "has_flavor_profile",
+    "object": "mexican",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5f13cfd0761cbad452d15c83c4450e51873e3f7b"
+    ]
+  },
+  {
+    "subject": "marinated chicken wings with mexican flavor (product_id: 22084208)",
+    "predicate": "has_cooking_method",
+    "object": "grill",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5f13cfd0761cbad452d15c83c4450e51873e3f7b"
+    ]
+  },
+  {
+    "subject": "marinated chicken wings with mexican flavor",
+    "predicate": "has_cooking_method",
+    "object": "oven",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5f13cfd0761cbad452d15c83c4450e51873e3f7b"
+    ]
+  },
+  {
+    "subject": "marinated chicken wings with mexican flavor",
+    "predicate": "has_cooking_method",
+    "object": "air fryer",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5f13cfd0761cbad452d15c83c4450e51873e3f7b"
+    ]
+  },
+  {
+    "subject": "desserissimes_entremets_au_chocolat_500g",
+    "predicate": "has_product_id",
+    "object": "22083151",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-948abcdc489ee38bccc3e1a1770bf000375f9697"
+    ]
+  },
+  {
+    "subject": "desserissimes chocolate mousse 500g",
+    "predicate": "has_product_id",
+    "object": "22083151",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-948abcdc489ee38bccc3e1a1770bf000375f9697"
+    ]
+  },
+  {
+    "subject": "duck fillets marinated with 3 peppers (product_id: 22083359)",
+    "predicate": "brand_is",
+    "object": "ald",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-e70528445d40a6a4256fda3f6630863c7dd4a1c6"
+    ]
+  },
+  {
+    "subject": "duck fillets marinated with 3 peppers",
+    "predicate": "brand_is",
+    "object": "ald",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-e70528445d40a6a4256fda3f6630863c7dd4a1c6"
+    ]
+  },
+  {
+    "subject": "18 authentic merguez (product_id: 22083375)",
+    "predicate": "brand",
+    "object": "boucherie",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-64a9cd947600e49583790274a9cefae1549ce67f"
+    ]
+  },
+  {
+    "subject": "18 authentic merguez",
+    "predicate": "brand",
+    "object": "boucherie",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-64a9cd947600e49583790274a9cefae1549ce67f"
+    ]
+  },
+  {
+    "subject": "Lyons' Biscuits toffee filled biscuits (Product ID: 22080957)",
+    "predicate": "has_name",
+    "object": "Lyons' Biscuits toffee filled biscuits",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8a7691a75ba1630be04b9c799fceff1863fd56e6"
+    ]
+  },
+  {
+    "subject": "Lyons' Biscuits toffee filled biscuits",
+    "predicate": "is_a_type_of",
+    "object": "Biscuit",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8a7691a75ba1630be04b9c799fceff1863fd56e6"
+    ]
+  },
+  {
+    "subject": "Lyons' Biscuits toffee filled biscuits",
+    "predicate": "has_flavor_profile",
+    "object": "Chocolate and Caramel",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8a7691a75ba1630be04b9c799fceff1863fd56e6"
+    ]
+  },
+  {
+    "subject": "Lyons' Biscuits toffee filled biscuits",
+    "predicate": "has_nutritional_profile",
+    "object": "high sugar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8a7691a75ba1630be04b9c799fceff1863fd56e6"
+    ]
+  },
+  {
+    "subject": "Lyons' Biscuits toffee filled biscuits",
+    "predicate": "has_nutritional_profile",
+    "object": "high calorie",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8a7691a75ba1630be04b9c799fceff1863fd56e6"
+    ]
+  },
+  {
+    "subject": "Lyons' Biscuits toffee filled biscuits",
+    "predicate": "has_nutritional_profile",
+    "object": "high fat",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8a7691a75ba1630be04b9c799fceff1863fd56e6"
+    ]
+  },
+  {
+    "subject": "Chocolate Brioche (product_id: 22081970)",
+    "predicate": "has_pack_size",
+    "object": "350g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-920c2474ecfc86de47b27e27056a1da8c0c898d1"
+    ]
+  },
+  {
+    "subject": "Chocolate Brioche (product_id: 22081970)",
+    "predicate": "is_type_of",
+    "object": "Bakery Product",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-920c2474ecfc86de47b27e27056a1da8c0c898d1"
+    ]
+  },
+  {
+    "subject": "Chocolate Brioche (product_id: 22081970)",
+    "predicate": "brand_is",
+    "object": "Le Bon Goût",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-920c2474ecfc86de47b27e27056a1da8c0c898d1"
+    ]
+  },
+  {
+    "subject": "Chocolate Brioche (product_id: 22081970)",
+    "predicate": "has_flavor_profile",
+    "object": "Sweet",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-920c2474ecfc86de47b27e27056a1da8c0c898d1"
+    ]
+  },
+  {
+    "subject": "Chocolate Brioche (product_id: 22081970)",
+    "predicate": "has_dietary_restriction",
+    "object": "Contains Gluten",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-920c2474ecfc86de47b27e27056a1da8c0c898d1"
+    ]
+  },
+  {
+    "subject": "Chocolate Brioche (product_id: 22081970)",
+    "predicate": "has_dairy_content",
+    "object": "Yes",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-920c2474ecfc86de47b27e27056a1da8c0c898d1"
+    ]
+  },
+  {
+    "subject": "Chocolate Brioche (product_id: 22081970)",
+    "predicate": "has_dairy_fat",
+    "object": "Yes",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-920c2474ecfc86de47b27e27056a1da8c0c898d1"
+    ]
+  },
+  {
+    "subject": "shneider's privilèges 12 sweet hearts puff pastry biscuits (product_id: 22083028)",
+    "predicate": "brand",
+    "object": "shneider's",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4ab1fab33be27e2e96db328b0d9f8752f2fd5684"
+    ]
+  },
+  {
+    "subject": "product_id",
+    "predicate": "has_value",
+    "object": "22083028",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4ab1fab33be27e2e96db328b0d9f8752f2fd5684"
+    ]
+  },
+  {
+    "subject": "product_type",
+    "predicate": "is_type_of",
+    "object": "biscuit",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4ab1fab33be27e2e96db328b0d9f8752f2fd5684"
+    ]
+  },
+  {
+    "subject": "product_id",
+    "predicate": "is_type_of",
+    "object": "biscuit",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4ab1fab33be27e2e96db328b0d9f8752f2fd5684"
+    ]
+  },
+  {
+    "subject": "snyder's pretzel crisps honey mustard onion (product_id: 22080844)",
+    "predicate": "has_brand",
+    "object": "snyder's pretzel crisps honey mustard onion",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-9dfa75d01f1028c5ca8c50ca5eec5c457eb9b8ff"
+    ]
+  },
+  {
+    "subject": "snyder's pretzel crisps honey mustard onion",
+    "predicate": "has_brand",
+    "object": "snyder's pretzel crisps honey mustard onion",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-9dfa75d01f1028c5ca8c50ca5eec5c457eb9b8ff"
+    ]
+  },
+  {
+    "subject": "snyder's pretzels crisps honey mustard onion",
+    "predicate": "has_brand",
+    "object": "snyder's pretzel crisps honey mustard onion",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-9dfa75d01f1028c5ca8c50ca5eec5c457eb9b8ff"
+    ]
+  },
+  {
+    "subject": "snyder's pretzels crisps honey mustard onion",
+    "predicate": "has_brand",
+    "object": "snyder's pretzels crisps honey mustard onion",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-9dfa75d01f1028c5ca8c50ca5eec5c457eb9b8ff"
+    ]
+  },
+  {
+    "subject": "snyder's pretzels crisps honey mustard onion",
+    "predicate": "has_brand",
+    "object": "snyder's pretzys crisps honey mustard onion",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-9dfa75d01f1028c5ca8c50ca5eec5c457eb9b8ff"
+    ]
+  },
+  {
+    "subject": "the little gift box of pure butter cookies (product_id: 22082439)",
+    "predicate": "has_brand",
+    "object": "delaunay-léveillé",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fffeb3da83c87dc601e576b4febb8e0d12b8784e"
+    ]
+  },
+  {
+    "subject": "the little gift box of pure butter cookies",
+    "predicate": "has_brand",
+    "object": "delaunay-léveillé",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fffeb3da83c87dc601e576b4febb8e0d12b8784e"
+    ]
+  },
+  {
+    "subject": "the little gift box of pure butter cookies",
+    "predicate": "has_product_type",
+    "object": "biscuits",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fffeb3da83c87dc601e576b4febb8e0d12b8784e"
+    ]
+  },
+  {
+    "subject": "mango juice drink (product_id: 22080551)",
+    "predicate": "has_claim",
+    "object": "gluten free",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-66daf3547f474f82169412f4b63a33555c1f6ca3"
+    ]
+  },
+  {
+    "subject": "mango juice drink (product_id: 22080551)",
+    "predicate": "has_claim",
+    "object": "no added sugar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-66daf3547f474f82169412f4b63a33555c1f6ca3"
+    ]
+  },
+  {
+    "subject": "mango juice drink (product_id: 22080551)",
+    "predicate": "has_claim",
+    "object": "no preservatives",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-66daf3547f474f82169412f4b63a33555c1f6ca3"
+    ]
+  },
+  {
+    "subject": "mango juice drink (product_id: 22080551)",
+    "predicate": "has_claim",
+    "object": "no colorings",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-66daf3547f474f82169412f4b63a33555c1f6ca3"
+    ]
+  },
+  {
+    "subject": "mango juice drink (product_id: 22080551)",
+    "predicate": "has_claim",
+    "object": "no flavor enhancers",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-66daf3547f474f82169412f4b63a33555c1f6ca3"
+    ]
+  },
+  {
+    "subject": "foco 100% pure coconut water with pink guava hydration by nature",
+    "predicate": "has_brand",
+    "object": "foco",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fb817421bebf1401638307bfc02cd1976652897d"
+    ]
+  },
+  {
+    "subject": "biscuits half covered with milk chocolate (product_id: 22083080)",
+    "predicate": "has_product_id",
+    "object": "22083080",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6606461355971d33e3b4d7eb08587da405530370"
+    ]
+  },
+  {
+    "subject": "biscuits half covered with milk chocolate",
+    "predicate": "brand_is",
+    "object": "shneider's",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6606461355971d33e3b4d7eb08587da405530370"
+    ]
+  },
+  {
+    "subject": "biscuits half covered with milk chocolate",
+    "predicate": "is_type_of",
+    "object": "biscuit",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6606461355971d33e3b4d7eb08587da405530370"
+    ]
+  },
+  {
+    "subject": "biscuits half covered with milk chocolate",
+    "predicate": "has_pack_size",
+    "object": "5.29 oz",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6606461355971d33e3b4d7eb08587da405530370"
+    ]
+  },
+  {
+    "subject": "sponge cake filled with cream (product_id: 22080107)",
+    "predicate": "brand_is",
+    "object": "choco snack",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-84c2a8017e3667b882e00d0783e8c9efcbf3ed1d"
+    ]
+  },
+  {
+    "subject": "sponge cake filled with cream (product_id: 22080107)",
+    "predicate": "is_type_of",
+    "object": "confectionery",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-84c2a8017e3667b882e00d0783e8c9efcbf3ed1d"
+    ]
+  },
+  {
+    "subject": "sponge cake filled with cream (product_id: 22080107)",
+    "predicate": "is_type_of",
+    "object": "chocolate bar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-84c2a8017e3667b882e00d0783e8c9efcbf3ed1d"
+    ]
+  },
+  {
+    "subject": "arrabbiata sauce (product_id: 22083026)",
+    "predicate": "is_type_of",
+    "object": "pasta sauce",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ad66a4d05034a2bf0b45d37b836e3c112511f787"
+    ]
+  },
+  {
+    "subject": "arrabbiata sauce (product_id: 22083026)",
+    "predicate": "brand_is",
+    "object": "shneider's",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ad66a4d05034a2bf0b45d37b836e3c112511f787"
+    ]
+  },
+  {
+    "subject": "arrabbiata sauce (product_id: 22083026)",
+    "predicate": "has_ingredient",
+    "object": "tomato puree",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ad66a4d05034a2bf0b45d37b836e3c112511f787"
+    ]
+  },
+  {
+    "subject": "arrabbiata sauce (product_id: 22083026)",
+    "predicate": "has_ingredient",
+    "object": "sunflower oil",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ad66a4d05034a2bf0b45d37b836e3c112511f787"
+    ]
+  },
+  {
+    "subject": "arrabbiata sauce (product_id: 22083026)",
+    "predicate": "has_ingredient",
+    "object": "olive oil",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ad66a4d05034a2bf0b45d37b836e3c112511f787"
+    ]
+  },
+  {
+    "subject": "arrabbiata sauce (product_id: 22083026)",
+    "predicate": "has_ingredient",
+    "object": "sundried tomatoes",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ad66a4d05034a2bf0b45d37b836e3c112511f787"
+    ]
+  },
+  {
+    "subject": "arrabbiata sauce (product_id: 22083026)",
+    "predicate": "has_ingredient",
+    "object": "sugar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ad66a4d05034a2bf0b45d37b836e3c112511f787"
+    ]
+  },
+  {
+    "subject": "arrabbiata sauce (product_id: 22083026)",
+    "predicate": "has_ingredient",
+    "object": "salt",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ad66a4d05034a2bf0b45d37b836e3c112511f787"
+    ]
+  },
+  {
+    "subject": "arrabbiata sauce (product_id: 22083026)",
+    "predicate": "has_ingredient",
+    "object": "pepper",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ad66a4d05034a2bf0b45d37b836e3c112511f787"
+    ]
+  },
+  {
+    "subject": "arrabbiata sauce (product_id: 22083026)",
+    "predicate": "has_ingredient",
+    "object": "chili pepper",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ad66a4d05034a2bf0b45d37b836e3c112511f787"
+    ]
+  },
+  {
+    "subject": "arrabbiata sauce (product_id: 22083026)",
+    "predicate": "has_ingredient",
+    "object": "garlic",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ad66a4d05034a2bf0b45d37b836e3c112511f787"
+    ]
+  },
+  {
+    "subject": "arrabbiata sauce (product_id: 22083026)",
+    "predicate": "has_ingredient",
+    "object": "onion",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ad66a4d05034a2bf0b45d37b836e3c112511f787"
+    ]
+  },
+  {
+    "subject": "disney moana eau de toilette (disney moana eau de toilette)",
+    "predicate": "brand_is",
+    "object": "vaiana",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a9011edeaad5863f37278b1d4c7255e85f839bb9"
+    ]
+  },
+  {
+    "subject": "disney moana eau de toilette",
+    "predicate": "has_pack_size",
+    "object": "100ml",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a9011edeaad5863f37278b1d4c7255e85f839bb9"
+    ]
+  },
+  {
+    "subject": "disney moana eau de toilette",
+    "predicate": "has_pack_size",
+    "object": "30 ml",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a9011edeaad5863f37278b1d4c7255e85f839bb9"
+    ]
+  },
+  {
+    "subject": "Chocolate Chunk Classic Dark Chocolate Crispy Cookies (product_id: 22080528)",
+    "predicate": "has_pack_size",
+    "object": "204 g",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5595727ccf75f084ffc843c144c5868ca47365e3"
+    ]
+  },
+  {
+    "subject": "Chocolate Chunk Classic Dark Chocolate Crispy Cookies",
+    "predicate": "brand_is",
+    "object": "Pepperidge Farm",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5595727ccf75f084ffc843c144c5868ca47365e3"
+    ]
+  },
+  {
+    "subject": "Chocolate Chunk Dark Chocolate Crispy Cookies",
+    "predicate": "is_type_of",
+    "object": "Baked Good",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5595727ccf75f084ffc843c144c5868ca47365e3"
+    ]
+  },
+  {
+    "subject": "Chocolate Chunk Dark Chocolate Crispy Cookies",
+    "predicate": "has_ingredient",
+    "object": "wheat flour",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5595727ccf75f084ffc843c144c5868ca47365e3"
+    ]
+  },
+  {
+    "subject": "Chocolate Chunk Dark Chocolate Crispy Cookies",
+    "predicate": "has_ingredient",
+    "object": "sugar",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5595727ccf75f084ffc843c144c5868ca47365e3"
+    ]
+  },
+  {
+    "subject": "Chocolate Chunk Dark Chocolate Crispy Cookies",
+    "predicate": "has_ingredient",
+    "object": "cocoa mass",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5595727ccf75f084ffc843c144c5868ca47365e3"
+    ]
+  },
+  {
+    "subject": "Chocolate Chunk Dark Chocolate Crispy Cookies",
+    "predicate": "has_ingredient",
+    "object": "cocoa butter",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5595727ccf75f084ffc843c144c5868ca47365e3"
+    ]
+  },
+  {
+    "subject": "Chocolate Chunk Dark Chocolate Crispy Cookies",
+    "predicate": "has_ingredient",
+    "object": "emulsifier",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5595727ccf75f084ffc843c144c5868ca47365e3"
+    ]
+  },
+  {
+    "subject": "Chocolate Chunk Dark Chocolate Crispy Cookies",
+    "predicate": "has_ingredient",
+    "object": "flavoring",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5595727ccf75f084ffc843c144c5868ca47365e3"
+    ]
+  },
+  {
+    "subject": "Chocolate Chunk Dark Chocolate Crispy Cookies",
+    "predicate": "has_ingredient",
+    "object": "vanilla",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5595727ccf75f084ffc843c144c5868ca47365e3"
+    ]
+  },
+  {
+    "subject": "Chocolate Chunk Dark Chocolate Crispy Cookies",
+    "predicate": "has_ingredient",
+    "object": "hazelnut",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5595727ccf75f084ffc843c144c5868ca47365e3"
+    ]
+  },
+  {
+    "subject": "Chocolate Chunk Dark Chocolate Crispy Cookies",
+    "predicate": "has_ingredient",
+    "object": "almond",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5595727ccf75f084ffc843c144c5868ca47365e3"
+    ]
+  },
+  {
+    "subject": "Chocolate Chunk Dark Chocolate Crispy Cookies",
+    "predicate": "has_ingredient",
+    "object": "pecan nut",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5595727ccf75f084ffc843c144c5868ca47365e3"
+    ]
+  },
+  {
+    "subject": "Chocolate Chunk Dark Chocolate Crispy Cookies",
+    "predicate": "has_ingredient",
+    "object": "macadamia nut",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5595727ccf75f084ffc843c144c5868ca47365e3"
+    ]
+  },
+  {
+    "subject": "5 organic superior chipolatas (product_id: 22083654)",
+    "predicate": "has_brand",
+    "object": "bon et bio",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f0a1e5b2d3cdffdeef4b39efc0f065f209531765"
+    ]
+  },
+  {
+    "subject": "5 organic superior chipolatas",
+    "predicate": "has_brand",
+    "object": "bon et bio",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f0a1e5b2d3cdffdeef4b39efc0f065f209531765"
+    ]
+  },
+  {
+    "subject": "5 organic superior chipolats",
+    "predicate": "has_brand",
+    "object": "bon et bio",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f0a1e5b2d3cdffdeef4b39efc0f065f209531765"
+    ]
+  },
+  {
+    "subject": "shneider's privilèges french cookies (product_id: 22083040)",
+    "predicate": "is a",
+    "object": "food product",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6f9e271d01576ff00e8f06ef5a71598f7548d087"
+    ]
+  },
+  {
+    "subject": "product_id",
+    "predicate": "has_value",
+    "object": "22083040",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6f9e271d01576ff00e8f06ef5a71598f7548d087"
+    ]
+  },
+  {
+    "subject": "shneider's privilèges french cookies",
+    "predicate": "brand_is",
+    "object": "shneider's",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6f9e271d01576ff00e8f06ef5a71598f7548d087"
+    ]
+  },
+  {
+    "subject": "product_id",
+    "predicate": "has_brand",
+    "object": "shneider's",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6f9e271d01576ff00e8f06ef5a71598f7548d087"
+    ]
+  },
+  {
+    "subject": "product_id",
+    "predicate": "has_brand",
+    "object": "s",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6f9e271d01576ff00e8f06ef5a71598f7548d087"
+    ]
+  },
+  {
+    "subject": "royal dansk oatmeal cookies with cranberries (product_id: 22080918)",
+    "predicate": "is a type of",
+    "object": "baked good",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3c71ce8ee6613fb32baa0ccc91c91d9632612542"
+    ]
+  },
+  {
+    "subject": "royal dansk oatmeal cookies with cranberries",
+    "predicate": "has_brand",
+    "object": "royal danish",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3c71ce8ee6613fb32baa0ccc91c91d9632612542"
+    ]
+  },
+  {
+    "subject": "royal danish oatmeal cookies with cranberries",
+    "predicate": "has_origin_country",
+    "object": "denmark",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3c71ce8ee6613fb32baa0ccc91c91d9632612542"
+    ]
+  },
+  {
+    "subject": "royal danish oatmeal cookies with cranberries",
+    "predicate": "has_weight",
+    "object": "125 g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3c71ce8ee6613fb32baa0ccc91c91d9632612542"
+    ]
+  },
+  {
+    "subject": "royal danish oatmeal cookies with cranberries",
+    "predicate": "has_pack_size",
+    "object": "125 g",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3c71ce8ee6613fb32baa0ccc91c91d9632612542"
+    ]
+  },
+  {
+    "subject": "half sourdough loaf (product_id: 22081973)",
+    "predicate": "has_name",
+    "object": "half sourdough loaf",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-d7c4c1820e5391f33c279c7dc3cc9f027f59dc52"
+    ]
+  },
+  {
+    "subject": "half sourdough loaf",
+    "predicate": "has_name",
+    "object": "half sourdough loaf",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-d7c4c1820e5391f33c279c7dc3cc9f027f59dc52"
+    ]
+  },
+  {
+    "subject": "butter shortbread biscuits with apple filling (22084365)",
+    "predicate": "has_name",
+    "object": "butter shortbread biscuits with apple filling",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-c09ca7cfaa3887318031ce2c6ae0ba290e654887"
+    ]
+  },
+  {
+    "subject": "butter shortbread biscuits with apple filling",
+    "predicate": "has_name",
+    "object": "butter shortbread biscuits with apple filling",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-c09ca7cfaa3887318031ce2c6ae0ba290e654887"
+    ]
+  },
+  {
+    "subject": "butter shortbread biscuits with apple filling (22084365)",
+    "predicate": "brand_is",
+    "object": "les malins",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-c09ca7cfaa3887318031ce2c6ae0ba290e654887"
+    ]
+  },
+  {
+    "subject": "butter shortbread biscuits with apple filling",
+    "predicate": "has_nutritional_profile",
+    "object": "high protein",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-c09ca7cfaa3887318031ce2c6ae0ba290e654887"
+    ]
+  },
+  {
+    "subject": "butter shortbread biscuits with apple filling",
+    "predicate": "has_nutritional_profile",
+    "object": "high calorie",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-c09ca7cfaa3887318031ce2c6ae0ba290e654887"
+    ]
+  },
+  {
+    "subject": "premium aloe vera drink mango taste (product_id: 22083093)",
+    "predicate": "brand",
+    "object": "t'best",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3088948491608bd1296210898f2177b206202a8e"
+    ]
+  },
+  {
+    "subject": "premium aloe vera drink mango taste (product_id: 22083093)",
+    "predicate": "has_flavor",
+    "object": "mango",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3088948491608bd1296210898f2177b206202a8e"
+    ]
+  },
+  {
+    "subject": "premium aloe vera drink mango taste",
+    "predicate": "has_nutritional_profile",
+    "object": "high_fiber",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3088948491608bd1296210898f2177b206202a8e"
+    ]
+  },
+  {
+    "subject": "premium aloe vera drink mango taste",
+    "predicate": "has_nutritional_profile",
+    "object": "low_sugar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3088948491608bd1296210898f2177b206202a8e"
+    ]
+  },
+  {
+    "subject": "roast chicken 100% fillet (product_id: 22084292)",
+    "predicate": "has_brand",
+    "object": "marsigny rôti de poulet",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fba842c23c81382cff90b441be889b10b46f300a"
+    ]
+  },
+  {
+    "subject": "roast chicken 100% fillet",
+    "predicate": "has_brand",
+    "object": "marsigny rôti de poulet",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fba842c23c81382cff90b441be889b10b46f300a"
+    ]
+  },
+  {
+    "subject": "roast chicken 100% fillet",
+    "predicate": "has_pack_size",
+    "object": "160 g",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fba842c23c81382cff90b441be889b10b46f300a"
+    ]
+  },
+  {
+    "subject": "marinated duck breast in provencal style (product_id: 22083439)",
+    "predicate": "brand_is",
+    "object": "procanar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-685df52b0c7a3e41f4e87df858ffa73874e220e5"
+    ]
+  },
+  {
+    "subject": "marinated duck breast in provencal style (product_id: 22083439)",
+    "predicate": "is_type_of",
+    "object": "poultry product",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-685df52b0c7a3e41f4e87df858ffa73874e220e5"
+    ]
+  },
+  {
+    "subject": "marinated duck breast in provencal style (product_id: 22083439)",
+    "predicate": "has_pack_size",
+    "object": "780 g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-685df52b0c7a3e41f4e87df858ffa73874e220e5"
+    ]
+  },
+  {
+    "subject": "marinated duck breast in provencal style",
+    "predicate": "has_nutritional_profile",
+    "object": "high protein",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-685df52b0c7a3e41f4e87df858ffa73874e220e5"
+    ]
+  },
+  {
+    "subject": "marinated duck breast in provencal style",
+    "predicate": "brand_is",
+    "object": "procanar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-685df52b0c7a3e41f4e87df858ffa73874e220e5"
+    ]
+  },
+  {
+    "subject": "marinated duck breast in provencal style",
+    "predicate": "has_nutritional_profile",
+    "object": "low fat",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-685df52b0c7a3e41f4e87df858ffa73874e220e5"
+    ]
+  },
+  {
+    "subject": "marinated duck breast in provencal style",
+    "predicate": "has_nutritional_property",
+    "object": "high protein",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-685df52b0c7a3e41f4e87df858ffa73874e220e5"
+    ]
+  },
+  {
+    "subject": "marinated duck breast in provencal style",
+    "predicate": "has_nutritional_property",
+    "object": "low fat",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-685df52b0c7a3e41f4e87df858ffa73874e220e5"
+    ]
+  },
+  {
+    "subject": "compromising cologne water (product_id: 22082463)",
+    "predicate": "has_brand",
+    "object": "air-val",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-d4d8a2e47d5625a8f4062655d477f69626bb0648"
+    ]
+  },
+  {
+    "subject": "compromising cologne water",
+    "predicate": "has_brand",
+    "object": "air-val",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-d4d8a2e47d5625a8f4062655d477f69626bb0648"
+    ]
+  },
+  {
+    "subject": "compromising cologne water",
+    "predicate": "has_pack_size",
+    "object": "net 1.01 fl. oz. (30 ml)",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-d4d8a2e47d5625a8f4062655d477f69626bb0648"
+    ]
+  },
+  {
+    "subject": "3 chicken skewers marinated with thyme and lemon flavor (product_id: 22083360)",
+    "predicate": "has_brand",
+    "object": "corril",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-99204188ab9c9ec9e06d3182b8bbc7b6bd7d5014"
+    ]
+  },
+  {
+    "subject": "3 chicken skewers marinated with thyme and lemon flavor",
+    "predicate": "has_brand",
+    "object": "corril",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-99204188ab9c9ec9e06d3182b8bbc7b6bd7d5014"
+    ]
+  },
+  {
+    "subject": "red bull the pink edition sugarfree",
+    "predicate": "is",
+    "object": "red bull the pink edition sugarfree (product_id: 22080121)",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bcb4babdb213bd198c86126a86bc7fa952ce3137"
+    ]
+  },
+  {
+    "subject": "red bull the pink edition sugarfree",
+    "predicate": "is_type_of",
+    "object": "beverage",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bcb4babdb213bd198c86126a86bc7fa952ce3137"
+    ]
+  },
+  {
+    "subject": "red bull the pink edition sugarfree",
+    "predicate": "has_flavor_profile",
+    "object": "fruit",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bcb4babdb213bd198c86126a86bc7fa952ce3137"
+    ]
+  },
+  {
+    "subject": "red bull the pink edition sugarfree",
+    "predicate": "has_nutrient_profile",
+    "object": "high_caffeine",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bcb4babdb213bd198c86126a86bc7fa952ce3137"
+    ]
+  },
+  {
+    "subject": "red bull the pink edition sugarfree",
+    "predicate": "has_nutrient_profile",
+    "object": "low_sugar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bcb4babdb213bd198c86126a86bc7fa952ce3137"
+    ]
+  },
+  {
+    "subject": "stuffed pure butter and caramel biscuits (product_id: 22082411)",
+    "predicate": "has_name",
+    "object": "stuffed pure butter and caramel biscuits",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a9e800973233cad8fd984a777399ef147631b84a"
+    ]
+  },
+  {
+    "subject": "stuffed pure butter and caramel biscuits",
+    "predicate": "has_name",
+    "object": "stuffed pure butter and caramel biscuits",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a9e800973233cad8fd984a777399ef147631b84a"
+    ]
+  },
+  {
+    "subject": "stuffed pure butter and caramel biscuits",
+    "predicate": "has_nutritional_profile",
+    "object": "high protein",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a9e800973233cad8fd984a777399ef147631b84a"
+    ]
+  },
+  {
+    "subject": "stuffed pure butter and caramel biscuits",
+    "predicate": "has_nutritional_product",
+    "object": "high protein",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a9e800973233cad8fd984a777399ef147631b84a"
+    ]
+  },
+  {
+    "subject": "cookies white chocolate raspberry (22080704)",
+    "predicate": "is a",
+    "object": "cookie",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5fc8ac76bfcfde3090f48304c89f98978d3559a3"
+    ]
+  },
+  {
+    "subject": "cookies white chocolate raspberry (22080704)",
+    "predicate": "has_brand",
+    "object": "walkers",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5fc8ac76bfcfde3090f48304c89f98978d3559a3"
+    ]
+  },
+  {
+    "subject": "cookies white chocolate raspberry (22080704)",
+    "predicate": "has_flavor",
+    "object": "white chocolate and raspberry",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5fc8ac76bfcfde3090f48304c89f98978d3559a3"
+    ]
+  },
+  {
+    "subject": "cookies white chocolate raspberry (22080704)",
+    "predicate": "has_nutritional_profile",
+    "object": "high protein",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5fc8ac76bfcfde3090f48304c89f98978d3559a3"
+    ]
+  },
+  {
+    "subject": "cookies white chocolate raspberry (22080704)",
+    "predicate": "has_nutritional_protein",
+    "object": "high protein",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5fc8ac76bfcfde3090f48304c89f98978d3559a3"
+    ]
+  },
+  {
+    "subject": "sinfulcolors (product_id: 22082670)",
+    "predicate": "brand_is",
+    "object": "sinfulcolors",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-687094f328e4141e7abd9ab19216dac2f33ca2ec"
+    ]
+  },
+  {
+    "subject": "sinfulcolors (product_id: 22082670)",
+    "predicate": "has_pack_size",
+    "object": "15 ml",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-687094f328e4141e7abd9ab19216dac2f33ca2ec"
+    ]
+  },
+  {
+    "subject": "sinfulcolors (product_id: 22082670)",
+    "predicate": "has_attribute",
+    "object": "professional",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-687094f328e4141e7abd9ab19216dac2f33ca2ec"
+    ]
+  },
+  {
+    "subject": "22080273",
+    "predicate": "has_name",
+    "object": "red bull® the summer edition energy drink",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3c13eb2f6428a1e14f339c33bf1abd4800ddafa5"
+    ]
+  },
+  {
+    "subject": "22080273",
+    "predicate": "brand_is",
+    "object": "red bull",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3c13eb2f6428a1e14f339c33bf1abd4800ddafa5"
+    ]
+  },
+  {
+    "subject": "22080273",
+    "predicate": "is_type_of",
+    "object": "beverage",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3c13eb2f6428a1e14f339c33bf1abd4800ddafa5"
+    ]
+  },
+  {
+    "subject": "22080273",
+    "predicate": "has_nutritional_profile",
+    "object": "high caffeine",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3c13eb2f6428a1e14f339c33bf1abd4800ddafa5"
+    ]
+  },
+  {
+    "subject": "refreshing flavored drink with sugars and sweeteners (Product ID: 22082534)",
+    "predicate": "has_brand",
+    "object": "tropick",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fbbad40692af15f020c6aeeaa770b1c26f2df608"
+    ]
+  },
+  {
+    "subject": "refreshing flavored drink with sugars and sweeteners",
+    "predicate": "has_brand",
+    "object": "tropick",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fbbad40692af15f020c6aeeaa770b1c26f2df608"
+    ]
+  },
+  {
+    "subject": "cassoulet with duck confit (product_id: 22083164)",
+    "predicate": "has_brand",
+    "object": "gourmet",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8c9cad60405d310efa63037ea7657ffe8314d78c"
+    ]
+  },
+  {
+    "subject": "cassoulet with duck confit (product_id: 22083164)",
+    "predicate": "has_brand",
+    "object": "gourmand",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8c9cad60405d310efa63037ea7657ffe8314d78c"
+    ]
+  },
+  {
+    "subject": "cassoulet with duck confit (product_id: 22083164)",
+    "predicate": "has_pack_size",
+    "object": "1.58 kg",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8c9cad60405d310efa63037ea7657ffe8314d78c"
+    ]
+  },
+  {
+    "subject": "soft bread without palm oil",
+    "predicate": "product_id",
+    "object": "22084192",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-10f959f6807bd98aec3be7b3a680e04296fb63fb"
+    ]
+  },
+  {
+    "subject": "soft bread without palm oil",
+    "predicate": "brand_is",
+    "object": "simply good and bio",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-10f959f6807bd98aec3be7b3a680e04296fb63fb"
+    ]
+  },
+  {
+    "subject": "soft bread without palm oil",
+    "predicate": "has_pack_size",
+    "object": "500 g",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-10f959f6807bd98aec3be7b3a680e04296fb63fb"
+    ]
+  },
+  {
+    "subject": "delicious christmas cookies (product_id: 22080940)",
+    "predicate": "brand_is",
+    "object": "royal dansk",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-95ca38c77b1c93f60b7d8d174e38ec16d7e616cb"
+    ]
+  },
+  {
+    "subject": "delicious christmas cookies (product_id: 22080940)",
+    "predicate": "has_pack_size",
+    "object": "454 g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-95ca38c77b1c93f60b7d8d174e38ec16d7e616cb"
+    ]
+  },
+  {
+    "subject": "delicious christmas cookies (product_id: 22080940)",
+    "predicate": "has_nutrient_profile",
+    "object": "high protein",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-95ca38c77b1c93f60b7d8d174e38ec16d7e616cb"
+    ]
+  },
+  {
+    "subject": "delicious christmas cookies (product_id: 22080940)",
+    "predicate": "has_nutrient_profile",
+    "object": "high_fat",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-95ca38c77b1c93f60b7d8d174e38ec16d7e616cb"
+    ]
+  },
+  {
+    "subject": "delicious christmas cookies (product_id: 22080940)",
+    "predicate": "has_nutrient_profile",
+    "object": "high_sugar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-95ca38c77b1c93f60b7d8d174e38ec16d7e616cb"
+    ]
+  },
+  {
+    "subject": "peanut butter and chocolate spread reese",
+    "predicate": "has_brand",
+    "object": "reese's",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ba2a9b7b8ca8e0e73fb3d6d23063166e756d8c44"
+    ]
+  },
+  {
+    "subject": "peanut butter and chocolate spread reese",
+    "predicate": "has_product_type",
+    "object": "spread",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ba2a9b7b8ca8e0e73fb3d6d23063166e756d8c44"
+    ]
+  },
+  {
+    "subject": "peanut butter and chocolate spread reese",
+    "predicate": "has_pack_size",
+    "object": "net wt 13 oz (375 g)",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ba2a9b7b8ca8e0e73fb3d6d23063166e756d8c44"
+    ]
+  },
+  {
+    "subject": "peanut butter and chocolate spread reese",
+    "predicate": "has_nutritional_profile",
+    "object": "high calorie",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ba2a9b7b8ca8e0e73fb3d6d23063166e756d8c44"
+    ]
+  },
+  {
+    "subject": "peanut butter and chocolate spread reese",
+    "predicate": "has_nutritional_profile",
+    "object": "high fat",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ba2a9b7b8ca8e0e73fb3d6d23063166e756d8c44"
+    ]
+  },
+  {
+    "subject": "peanut butter and chocolate spread reese",
+    "predicate": "has_nutritional_profile",
+    "object": "high sugar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ba2a9b7b8ca8e0e73fb3d6d23063166e756d8c44"
+    ]
+  },
+  {
+    "subject": "basque chicken with espelette pepper",
+    "predicate": "has_ingredient",
+    "object": "chicken meat",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-620f2250e027445af724d28f5288a89723512bc4"
+    ]
+  },
+  {
+    "subject": "basque chicken with espelette pepper",
+    "predicate": "has_ingredient",
+    "object": "rice",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-620f2250e027445af724d28f5288a89723512bc4"
+    ]
+  },
+  {
+    "subject": "basque chicken with espelette pepper",
+    "predicate": "has_ingredient",
+    "object": "peppers",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-620f2250e027445af724d28f5288a89723512bc4"
+    ]
+  },
+  {
+    "subject": "basque chicken with espelette pepper",
+    "predicate": "has_ingredient",
+    "object": "onions",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-620f2250e027445af724d28f5288a89723512bc4"
+    ]
+  },
+  {
+    "subject": "basque chicken with espelette pepper",
+    "predicate": "has_ingredient",
+    "object": "tomatoes",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-620f2250e027445af724d28f5288a89723512bc4"
+    ]
+  },
+  {
+    "subject": "basque chicken with espelete pepper",
+    "predicate": "has_ingredient",
+    "object": "tomatoes",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-620f2250e027445af724d28f5288a89723512bc4"
+    ]
+  },
+  {
+    "subject": "basque chicken with espelette pepper",
+    "predicate": "has_ingredient",
+    "object": "rapeseed oil",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-620f2250e027445af724d28f5288a89723512bc4"
+    ]
+  },
+  {
+    "subject": "basque chicken with espelette pepper",
+    "predicate": "has_ingredient",
+    "object": "salt",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-620f2250e027445af724d28f5288a89723512bc4"
+    ]
+  },
+  {
+    "subject": "basque chicken with espelette pepper",
+    "predicate": "has_ingredient",
+    "object": "pepper",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-620f2250e027445af724d28f5288a89723512bc4"
+    ]
+  },
+  {
+    "subject": "basque chicken with espelette pepper",
+    "predicate": "has_ingredient",
+    "object": "garlic",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-620f2250e027445af724d28f5288a89723512bc4"
+    ]
+  },
+  {
+    "subject": "basque chicken with espelette pepper",
+    "predicate": "has_ingredient",
+    "object": "corn starch",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-620f2250e027445af724d28f5288a89723512bc4"
+    ]
+  },
+  {
+    "subject": "4 bagel au cereals (product_id: 22081986)",
+    "predicate": "has_brand",
+    "object": "nicole & maguy le bon gout",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fcb11dbedcc5364602280987b01ee7d7cc92aa16"
+    ]
+  },
+  {
+    "subject": "4 bagel au cereals",
+    "predicate": "has_brand",
+    "object": "nicole & maguy le bon gout",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fcb11dbedcc5364602280987b01ee7d7cc92aa16"
+    ]
+  },
+  {
+    "subject": "4 bagel au cereals",
+    "predicate": "has_brand",
+    "object": "nicole & goud",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fcb11dbedcc5364602280987b01ee7d7cc92aa16"
+    ]
+  },
+  {
+    "subject": "red bull® the lime green edition",
+    "predicate": "product_id",
+    "object": "22080272",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-61c29a181b325086acf2b528878770b01cc3f721"
+    ]
+  },
+  {
+    "subject": "red bull® the lime green edition",
+    "predicate": "brand",
+    "object": "red bull",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-61c29a181b325086acf2b528878770b01cc3f721"
+    ]
+  },
+  {
+    "subject": "red bull® the lime green edition",
+    "predicate": "is_type_of",
+    "object": "beverage",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-61c29a181b325086acf2b528878770b01cc3f721"
+    ]
+  },
+  {
+    "subject": "red bull® the lime green edition",
+    "predicate": "has_flavor",
+    "object": "lime",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-61c29a181b325086acf2b528878770b01cc3f721"
+    ]
+  },
+  {
+    "subject": "red bull® the lime green edition",
+    "predicate": "has_ingredient",
+    "object": "carbonated water",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-61c29a181b325086acf2b528878770b01cc3f721"
+    ]
+  },
+  {
+    "subject": "red bull® the lime green edition",
+    "predicate": "has_ingredient",
+    "object": "sugar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-61c29a181b325086acf2b528878770b01cc3f721"
+    ]
+  },
+  {
+    "subject": "red bull® the lime green edition",
+    "predicate": "has_ingredient",
+    "object": "glucose",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-61c29a181b325086acf2b528878770b01cc3f721"
+    ]
+  },
+  {
+    "subject": "red bull® the lime green edition",
+    "predicate": "has_ingredient",
+    "object": "sodium citrate",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-61c29a181b325086acf2b528878770b01cc3f721"
+    ]
+  },
+  {
+    "subject": "red bull® the lime green edition",
+    "predicate": "has_ingredient",
+    "object": "caffeine",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-61c29a181b325086acf2b528878770b01cc3f721"
+    ]
+  },
+  {
+    "subject": "red bull® the lime green edition",
+    "predicate": "has_ingredient",
+    "object": "niacin",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-61c29a181b325086acf2b528878770b01cc3f721"
+    ]
+  },
+  {
+    "subject": "red bull® the lime green edition",
+    "predicate": "has_ingredient",
+    "object": "niacinamide",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-61c29a181b325086acf2b528878770b01cc3f721"
+    ]
+  },
+  {
+    "subject": "zanimo shortbread biscuits (product_id: 22080885)",
+    "predicate": "has_brand",
+    "object": "cadbury",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7026fb9b43b1d237da161637692288a6a3a883f6"
+    ]
+  },
+  {
+    "subject": "zanimo shortbread biscuits (product_id: 22080885)",
+    "predicate": "is_type_of",
+    "object": "shortbread biscuits",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7026fb9b43b1d237da161637692288a6a3a883f6"
+    ]
+  },
+  {
+    "subject": "zanimo shortbread biscuits (product_id: 22080885)",
+    "predicate": "is_type_of",
+    "object": "biscuits",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7026fb9b43b1d237da161637692288a6a3a883f6"
+    ]
+  },
+  {
+    "subject": "whole wheat flour tortillas to fill 6 tortillas (product_id: 22083642)",
+    "predicate": "has_brand",
+    "object": "mannapain",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-94d6961e3bad640f31bcb2fa38e8d13103b70bf9"
+    ]
+  },
+  {
+    "subject": "whole wheat flour tortillas to fill 6 tortillas (product_id: 22083642)",
+    "predicate": "is_type_of",
+    "object": "tortilla",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-94d6961e3bad640f31bcb2fa38e8d13103b70bf9"
+    ]
+  },
+  {
+    "subject": "whole wheat flour tortillas to fill 6 tortillas (product_id: 22083642)",
+    "predicate": "has_pack_size",
+    "object": "240g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-94d6961e3bad640f31bcb2fa38e8d13103b70bf9"
+    ]
+  },
+  {
+    "subject": "whole wheat flour tortillas to fill 6 tortillas",
+    "predicate": "has_nutritional_profile",
+    "object": "high protein",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-94d6961e3bad640f31bcb2fa38e8d13103b70bf9"
+    ]
+  },
+  {
+    "subject": "whole wheat flour tortillas to fill 6 tortillas",
+    "predicate": "has_nutritional_profile",
+    "object": "high fiber",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-94d6961e3bad640f31bcb2fa38e8d13103b70bf9"
+    ]
+  },
+  {
+    "subject": "whole wheat flour tortillas to fill 6 tortillas",
+    "predicate": "has_nutritional_profile",
+    "object": "high calorie",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-94d6961e3bad640f31bcb2fa38e8d13103b70bf9"
+    ]
+  },
+  {
+    "subject": "whole wheat flour tortillas to fill 6 tortillas (product_id: 22083642)",
+    "predicate": "has_nutritional_profile",
+    "object": "high protein",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-94d6961e3bad640f31bcb2fa38e8d13103b70bf9"
+    ]
+  },
+  {
+    "subject": "noodlicious vegetable flavour instant noodles (product_id: 22083096)",
+    "predicate": "has_brand",
+    "object": "noodlicious",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-2799979bc73c4e1e9f6366646363292c71e3d896"
+    ]
+  },
+  {
+    "subject": "noodlicious vegetable flavour instant noodles (product_id: 22083096)",
+    "predicate": "has_pack_size",
+    "object": "300 ml",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-2799979bc73c4e1e9f6366646363292c71e3d896"
+    ]
+  },
+  {
+    "subject": "noodlicious vegetable flavour instant noodles (product_id: 22083096)",
+    "predicate": "has_nutritional_profile",
+    "object": "high protein",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-2799979bc73c4e1e9f6366646363292c71e3d896"
+    ]
+  },
+  {
+    "subject": "penne pasta (product_id: 22083466)",
+    "predicate": "has_name",
+    "object": "penne pasta",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-406897810c712fbb8ec43e7c1e2d530ac103567a"
+    ]
+  },
+  {
+    "subject": "penne pasta (product_id: 22083466)",
+    "predicate": "is_type_of",
+    "object": "pasta",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-406897810c712fbb8ec43e7c1e2d530ac103567a"
+    ]
+  },
+  {
+    "subject": "penne pasta (product_id: 22083466)",
+    "predicate": "has_pack_size",
+    "object": "1000g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-406897810c712fbb8ec43e7c1e2d530ac103567a"
+    ]
+  },
+  {
+    "subject": "penne pasta (product_id: 22083466)",
+    "predicate": "has_cooking_time",
+    "object": "9-10 minutes",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-406897810c712fbb8ec43e7c1e2d530ac103567a"
+    ]
+  },
+  {
+    "subject": "penne pasta (product_id: 22083466)",
+    "predicate": "has_cooking_method",
+    "object": "boil",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-406897810c712fbb8ec43e7c1e2d530ac103567a"
+    ]
+  },
+  {
+    "subject": "sparkling natural mineral water drink with grapefruit / lemon / lime flavor (product_id: 22083946)",
+    "predicate": "has_brand",
+    "object": "rocheval source faustine",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8a59a0f39059af277127c1257301f3861bc48318"
+    ]
+  },
+  {
+    "subject": "sparkling natural mineral water drink with grapefruit / lemon / lime flavor",
+    "predicate": "is_a",
+    "object": "beverage",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8a59a0f39059af277127c1257301f3861bc48318"
+    ]
+  },
+  {
+    "subject": "sparkling natural mineral water drink with grapefruit / lemon / lime flavor",
+    "predicate": "has_flavor",
+    "object": "grapefruit",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8a59a0f39059af277127c1257301f3861bc48318"
+    ]
+  },
+  {
+    "subject": "sparkling natural mineral water drink with grapefruit / lemon / lime flavor",
+    "predicate": "has_flavor",
+    "object": "lemon",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8a59a0f39059af277127c1257301f3861bc48318"
+    ]
+  },
+  {
+    "subject": "sparkling natural mineral water drink with grapefruit / lemon / lime flavor",
+    "predicate": "has_flavor",
+    "object": "lime",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8a59a0f39059af277127c1257301f3861bc48318"
+    ]
+  },
+  {
+    "subject": "Sliced Atlantic Salmon Gravlox Style (22083609)",
+    "predicate": "has_part",
+    "object": "Atlantic Salmon",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-406264fa2fd0f7ee821ea3c74b30d726845cf92e"
+    ]
+  },
+  {
+    "subject": "...",
+    "predicate": "...",
+    "object": "...",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-406264fa2fd0f7ee821ea3c74b30d726845cf92e",
+      "doc-ec77b7cac11837eecd4f830c7c4e49a6f739caec"
+    ]
+  },
+  {
+    "subject": "crispy seaweed snacks (product_id: 22083014)",
+    "predicate": "has_ingredient",
+    "object": "seaweed",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-20051432841fde489403053254005e17bb94b750"
+    ]
+  },
+  {
+    "subject": "crispy seaweed snacks (product_id: 22083014)",
+    "predicate": "has_ingredient",
+    "object": "corn oil",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-20051432841fde489403053254005e17bb94b750"
+    ]
+  },
+  {
+    "subject": "crispy seaweed snacks (product_id: 22083014)",
+    "predicate": "has_ingredient",
+    "object": "maltodextrin",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-20051432841fde489403053254005e17bb94b750"
+    ]
+  },
+  {
+    "subject": "vegetable oil for cooking, frying, and seasoning (dilecta)",
+    "predicate": "is_type_of",
+    "object": "cooking oil",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-64a11458cb72672c9d6c8c6b989ad76274999b14"
+    ]
+  },
+  {
+    "subject": "vegetable oil for cooking, frying, and seasoning",
+    "predicate": "is_type_of",
+    "object": "cooking oil",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-64a11458cb72672c9d6c8c6b989ad76274999b14"
+    ]
+  },
+  {
+    "subject": "2 organic ground beef steaks (2006050009886)",
+    "predicate": "is_type_of",
+    "object": "food_product",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3343d9eeb5bfd28cca7cc07666aede94e5870e74"
+    ]
+  },
+  {
+    "subject": "2 organic ground beef steaks",
+    "predicate": "has_brand",
+    "object": "socopa",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3343d9eeb5bfd28cca7cc07666aede94e5870e74"
+    ]
+  },
+  {
+    "subject": "2 organic ground beef steaks",
+    "predicate": "has_pack_size",
+    "object": "250 g",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3343d9eeb5bfd28cca7cc07666aede94e5870e74"
+    ]
+  },
+  {
+    "subject": "Cream-nut Natural Peanut Butter (ID: 22080901)",
+    "predicate": "has_brand",
+    "object": "Cream-nut",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-235af7b2e0a611347be630cdd45d8cf1063f1105"
+    ]
+  },
+  {
+    "subject": "Cream-nut Natural Peanut Butter",
+    "predicate": "has_brand",
+    "object": "Cream-nut",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-235af7b2e0a611347be630cdd45d8cf1063f1105"
+    ]
+  },
+  {
+    "subject": "Cream-nut Natural Peanut Butter",
+    "predicate": "has_pack_size",
+    "object": "368 g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-235af7b2e0a611347be630cdd45d8cf1063f1105"
+    ]
+  },
+  {
+    "subject": "Cream-nut Natural Peanut Butter",
+    "predicate": "has_nutritional_profile",
+    "object": "high protein",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-235af7b2e0a611347be630cdd45d8cf1063f1105"
+    ]
+  },
+  {
+    "subject": "foco 100% pure coconut water with pineapple",
+    "predicate": "has_pack_size",
+    "object": "330 ml",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-87731145044ea78ae86e1d0803c70c1b27913c35"
+    ]
+  },
+  {
+    "subject": "foco 100% pure coconut water",
+    "predicate": "has_pack_size",
+    "object": "330 ml",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-87731145044ea78ae86e1d0803c70c1b27913c35"
+    ]
+  },
+  {
+    "subject": "minions eau de toilette natural spray",
+    "predicate": "has_brand",
+    "object": "minions",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f82561a8450b6083300347df300ed7c6ce6fe8a2"
+    ]
+  },
+  {
+    "subject": "minions eau de toilette natural spray",
+    "predicate": "has_product_type",
+    "object": "perfume",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f82561a8450b6083300347df300ed7c6ce6fe8a2"
+    ]
+  },
+  {
+    "subject": "minions eau de toilette natural spray",
+    "predicate": "has_pack_size",
+    "object": "1.7 fl. oz.",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f82561a8450b6083300347df300ed7c6ce6fe8a2"
+    ]
+  },
+  {
+    "subject": "minions eau de toilette natural spray",
+    "predicate": "has_pack_size",
+    "object": "50 ml",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f82561a8450b6083300347df300ed7c6ce6fe8a2"
+    ]
+  },
+  {
+    "subject": "Chicken Donuts (22083579)",
+    "predicate": "has_brand",
+    "object": "cassel",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fa5cd90c77956969ed2f5968ffda95330a8c5c92"
+    ]
+  },
+  {
+    "subject": "Chicken Donuts (22083579)",
+    "predicate": "has_pack_size",
+    "object": "800 g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fa5cd90c77956969ed2f5968ffda95330a8c5c92"
+    ]
+  },
+  {
+    "subject": "Chicken Donuts (22083579)",
+    "predicate": "has_nutritional_profile",
+    "object": "high protein",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fa5cd90c77956969ed2f5968ffda95330a8c5c92"
+    ]
+  },
+  {
+    "subject": "Chicken Donuts (22083579)",
+    "predicate": "has_cooking_method",
+    "object": "fry",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fa5cd90c77956969ed2f5968ffda95330a8c5c92"
+    ]
+  },
+  {
+    "subject": "Chicken Donuts (22083579)",
+    "predicate": "has_cooking_method",
+    "object": "oven",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fa5cd90c77956969ed2f5968ffda95330a8c5c92"
+    ]
+  },
+  {
+    "subject": "instant noodles (product_id: 22082548)",
+    "predicate": "has_ingredient",
+    "object": "wheat flour",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-e167945274cb8fafc1a130e88d8b0a1a69067079"
+    ]
+  },
+  {
+    "subject": "Hershey's Cookies 'n' Cream Bar (Product ID: 22081785)",
+    "predicate": "has_brand",
+    "object": "Hershey's",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4072e6032e9dfd71873f629ced96dc5f9c6840bf"
+    ]
+  },
+  {
+    "subject": "Hershey's Cookies 'n' Cream Bar",
+    "predicate": "is_type_of",
+    "object": "chocolate bar",
+    "confidence": 0.85,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4072e6032e9dfd71873f629ced96dc5f9c6840bf"
+    ]
+  },
+  {
+    "subject": "Hershey's Cookies 'n' Cream Bar",
+    "predicate": "has_flavor_profile",
+    "object": "Cookies 'n' Cream",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4072e6032e9dfd71873f629ced96dc5f9c6840bf"
+    ]
+  },
+  {
+    "subject": "Hershey's Cookies 'n' Cream Bar",
+    "predicate": "has_pack_size",
+    "object": "1.55 oz (43 g)",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4072e6032e9dfd71873f629ced96dc5f9c6840bf"
+    ]
+  },
+  {
+    "subject": "Hershey's Cookies 'n' Cream Bar",
+    "predicate": "is_suitable_for",
+    "object": "snacking",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4072e6032e9dfd71873f629ced96dc5f9c6840bf"
+    ]
+  },
+  {
+    "subject": "Hershey's Cookies 'n' Cream Bar",
+    "predicate": "is_suitable_for",
+    "object": "dessert",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4072e6032e9dfd71873f629ced96dc5f9c6840bf"
+    ]
+  },
+  {
+    "subject": "Hershey's Cookies 'n' Cream Bar",
+    "predicate": "is_suitable_for",
+    "object": "snack",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4072e6032e9dfd71873f629ced96dc5f9c6840bf"
+    ]
+  },
+  {
+    "subject": "epicurillades maxi format 10 saucisses fumées",
+    "predicate": "has_part",
+    "object": "pork meat 90%, pork fat, salt, pepper, garlic, antioxidants",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-26624e0e6e2798e38903351e1b10e0d3a5247c91"
+    ]
+  },
+  {
+    "subject": "a premium-quality 4-piece green tea infused eye brush set (product_id: 22081257)",
+    "predicate": "is_type_of",
+    "object": "beauty_tool",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-696dda0bfc4e386077f923795cd2fbfe476ecd39"
+    ]
+  },
+  {
+    "subject": "a premium-quality 4-piece green tea infused eye brush set",
+    "predicate": "has_pack_size",
+    "object": "4 piece set",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-696dda0bfc4e386077f923795cd2fbfe476ecd39"
+    ]
+  },
+  {
+    "subject": "a premium-quality 4-piece green tea infused eye brush set",
+    "predicate": "brand_is",
+    "object": "l.a.b.2",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-696dda0bfc4e386077f923795cd2fbfe476ecd39"
+    ]
+  },
+  {
+    "subject": "a premium-quality 4-piece green tea infused eye brush set",
+    "predicate": "has_claim",
+    "object": "permanently infused with green tea",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-696dda0bfc4e386077f923795cd2fbfe476ecd39"
+    ]
+  },
+  {
+    "subject": "a premium-quality 4-piece green tea infused eye brush set",
+    "predicate": "has_feature",
+    "object": "eco-friendly",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-696dda0bfc4e386077f923795cd2fbfe476ecd39"
+    ]
+  },
+  {
+    "subject": "a premium-quality 4-piece green tea infused eye brush set",
+    "predicate": "has_feature",
+    "object": "sustainable_materials",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-696dda0bfc4e386077f923795cd2fbfe476ecd39"
+    ]
+  },
+  {
+    "subject": "a premium-quality 4-piece green tea infused eye brush set",
+    "predicate": "has_feature",
+    "object": "long-lasting",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-696dda0bfc4e386077f923795cd2fbfe476ecd39"
+    ]
+  },
+  {
+    "subject": "a premium-quality 4-piece green tea infused eye brush set",
+    "predicate": "has_feature",
+    "object": "durable",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-696dda0bfc4e386077f923795cd2fbfe476ecd39"
+    ]
+  },
+  {
+    "subject": "a premium-quality 4-piece green tea infused eye brush set",
+    "predicate": "has_feature",
+    "object": "sustainable",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-696dda0bfc4e386077f923795cd2fbfe476ecd39"
+    ]
+  },
+  {
+    "subject": "tagliatelles fresh egg pasta (product_id: 22083610)",
+    "predicate": "is_type_of",
+    "object": "fresh pasta",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4c9efbd9d052c950146e891db5f61b5d0e137924"
+    ]
+  },
+  {
+    "subject": "tagliatelle fresh egg pasta",
+    "predicate": "has_ingredient",
+    "object": "durum wheat semolina",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4c9efbd9d052c950146e891db5f61b5d0e137924"
+    ]
+  },
+  {
+    "subject": "tagliatelle fresh egg pasta",
+    "predicate": "has_ingredient",
+    "object": "eggs",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4c9efbd9d052c950146e891db5f61b5d0e137924"
+    ]
+  },
+  {
+    "subject": "tagliatelle fresh egg pasta",
+    "predicate": "has_pack_size",
+    "object": "600 g",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4c9efbd9d052c950146e891db5f61b5d0e137924"
+    ]
+  },
+  {
+    "subject": "12 veal sausages (product_id: 22083433)",
+    "predicate": "has_attribute",
+    "object": "product_id_22083433",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-0aacd40bf8969df518e9cf6de4c75eef78bb9e37"
+    ]
+  },
+  {
+    "subject": "12 veal sausages (product_id: 22083433)",
+    "predicate": "has_brand",
+    "object": "tendriade",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-0aacd40bf8969df518e9cf6de4c75eef78bb9e37"
+    ]
+  },
+  {
+    "subject": "12 veal sausages (product_id: 22083433)",
+    "predicate": "has_origin",
+    "object": "France",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-0aacd40bf8969df518e9cf6de4c75eef78bb9e37"
+    ]
+  },
+  {
+    "subject": "12 veal sausages (product_id: 22083433)",
+    "predicate": "has_nutritional_profile",
+    "object": "high protein",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-0aacd40bf8969df518e9cf6de4c75eef78bb9e37"
+    ]
+  },
+  {
+    "subject": "12 veal sausages (product_id: 22083433)",
+    "predicate": "has_nutritional_profile",
+    "object": "high fat",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-0aacd40bf8969df518e9cf6de4c75eef78bb9e37"
+    ]
+  },
+  {
+    "subject": "12 veal sausages (product_id: 22083433)",
+    "predicate": "has_nutritional_profile",
+    "object": "high calorie",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-0aacd40bf8969df518e9cf6de4c75eef78bb9e37"
+    ]
+  },
+  {
+    "subject": "12 vea sausages (product_id: 22083433)",
+    "predicate": "has_nutritional_profile",
+    "object": "high calorie",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-0aacd40bf8969df518e9cf6de4c75eef78bb9e37"
+    ]
+  },
+  {
+    "subject": "frozen special polar bread sandwich",
+    "predicate": "product_id",
+    "object": "22083388",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6c737d955cfe3daeb492b32f3c00d3ac545c723d"
+    ]
+  },
+  {
+    "subject": "frozen special polar bread sandwich",
+    "predicate": "has_brand",
+    "object": "aldi",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6c737d955cfe3daeb492b32f3c00d3ac545c723d"
+    ]
+  },
+  {
+    "subject": "frozen special polar bread sandwich",
+    "predicate": "is_type_of",
+    "object": "sandwich",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6c737d955cfe3daeb492b32f3c00d3ac545c723d"
+    ]
+  },
+  {
+    "subject": "Pringles Island Paprika (22080613)",
+    "predicate": "is_type_of",
+    "object": "Snack",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-1da5e6116ee8c2b071f7e6803070916ef5c9c73a"
+    ]
+  },
+  {
+    "subject": "Pringles Island Paprika",
+    "predicate": "has_flavor_profile",
+    "object": "Spicy Paprika",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-1da5e6116ee8c2b071f7e6803070916ef5c9c73a"
+    ]
+  },
+  {
+    "subject": "Pringles Island Paprika",
+    "predicate": "is_type_of",
+    "object": "Potato Crisps",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-1da5e6116ee8c2b071f7e6803070916ef5c9c73a"
+    ]
+  },
+  {
+    "subject": "ham and cheese croissants (product_id: 22084030)",
+    "predicate": "has_brand",
+    "object": "bistro vite",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fe01e2ade1cfc1e2280c82f4e54f7e254295ba26"
+    ]
+  },
+  {
+    "subject": "ham and cheese croissants",
+    "predicate": "has_brand",
+    "object": "bistro vite",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fe01e2ade1cfc1e2280c82f4e54f7e254295ba26"
+    ]
+  },
+  {
+    "subject": "ham and cheese croissants",
+    "predicate": "has_pack_size",
+    "object": "640 g",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-fe01e2ade1cfc1e2280c82f4e54f7e254295ba26"
+    ]
+  },
+  {
+    "subject": "green olive cream (product_id: 22079933)",
+    "predicate": "brand_is",
+    "object": "ortocori",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-012d8b2441e85a3aff3953e65041b9f7c274f3d1"
+    ]
+  },
+  {
+    "subject": "green olive cream",
+    "predicate": "has_pack_size",
+    "object": "130g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-012d8b2441e85a3aff3953e65041b9f7c274f3d1"
+    ]
+  },
+  {
+    "subject": "green olive cream",
+    "predicate": "has_flavor_profile",
+    "object": "olive",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-012d8b2441e85a3aff3953e65041b9f7c274f3d1"
+    ]
+  },
+  {
+    "subject": "green olive cream",
+    "predicate": "has_ingredient",
+    "object": "green olives",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-012d8b2441e85a3aff3953e65041b9f7c274f3d1"
+    ]
+  },
+  {
+    "subject": "green olive cream",
+    "predicate": "has_ingredient",
+    "object": "extra virgin olive oil",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-012d8b2441e85a3aff3953e65041b9f7c274f3d1"
+    ]
+  },
+  {
+    "subject": "green olive cream",
+    "predicate": "has_ingredient",
+    "object": "salt",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-012d8b2441e85a3aff3953e65041b9f7c274f3d1"
+    ]
+  },
+  {
+    "subject": "green olive cream",
+    "predicate": "has_ingredient",
+    "object": "olive oil",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-012d8b2441e85a3aff3953e65041b9f7c274f3d1"
+    ]
+  },
+  {
+    "subject": "Russian Earl Grey (product_id: 220808)",
+    "predicate": "brand_is",
+    "object": "Twinings",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-091eeda8bfa104787919d594767e6f833d2dd608"
+    ]
+  },
+  {
+    "subject": "Russian Earl Grey (product_id: 220808)",
+    "predicate": "has_base_ingredient",
+    "object": "tea",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-091eeda8bfa104787919d594767e6f833d2dd608"
+    ]
+  },
+  {
+    "subject": "Russian Earl Grey (product_id: 220808)",
+    "predicate": "has_flavor_profile",
+    "object": "bergamot and citrus notes",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-091eeda8bfa104787919d594767e6f833d2dd608"
+    ]
+  },
+  {
+    "subject": "Russian Earl Grey (product_id: 220808)",
+    "predicate": "has_pack_size",
+    "object": "30g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-091eeda8bfa104787919d594767e6f833d2dd608"
+    ]
+  },
+  {
+    "subject": "Russian Earl Grey (product_id: 220808)",
+    "predicate": "is_type_of",
+    "object": "tea",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-091eeda8bfa104787919d594767e6f833d2dd608"
+    ]
+  },
+  {
+    "subject": "Russian Earl Green Tea (product_id: 220808)",
+    "predicate": "has_nutritional_profile",
+    "object": "low_sugar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-091eeda8bfa104787919d594767e6f833d2dd608"
+    ]
+  },
+  {
+    "subject": "Russian Earl Grey (product_id: 220808)",
+    "predicate": "has_nutritional_profile",
+    "object": "caffeine_free",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-091eeda8bfa104787919d594767e6f833d2dd608"
+    ]
+  },
+  {
+    "subject": "spaghetti",
+    "predicate": "product_id",
+    "object": "22083480",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-97ac25f592a8ce7a8ab3409b02a6313b954816b2"
+    ]
+  },
+  {
+    "subject": "spaghetti",
+    "predicate": "has_brand",
+    "object": "ald",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-97ac25f592a8ce7a8ab3409b02a6313b954816b2"
+    ]
+  },
+  {
+    "subject": "spaghetti",
+    "predicate": "has_nutritional_profile",
+    "object": "high protein",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-97ac25f592a8ce7a8ab3409b02a6313b954816b2"
+    ]
+  },
+  {
+    "subject": "spaghetti",
+    "predicate": "has_nutritional_profile",
+    "object": "high_carb",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-97ac25f592a8ce7a8ab3409b02a6313b954816b2"
+    ]
+  },
+  {
+    "subject": "spaghetti",
+    "predicate": "has_nutritional_profile",
+    "object": "high_fiber",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-97ac25f592a8ce7a8ab3409b02a6313b954816b2"
+    ]
+  },
+  {
+    "subject": "mini briochettes filled with duck foie gras preparation",
+    "predicate": "has_pack_size",
+    "object": "96 g",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-cacc8636f6981e450c11928f7d0855a6c8900d9e"
+    ]
+  },
+  {
+    "subject": "mini briochettes filled with duck foie gras preparation (product_id: 22083657)",
+    "predicate": "has_brand",
+    "object": "defroidmont",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-cacc8636f6981e450c11928f7d0855a6c8900d9e"
+    ]
+  },
+  {
+    "subject": "mini briochettes filled with duck foie gras preparation",
+    "predicate": "has_brand",
+    "object": "defroidmont",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-cacc8636f6981e450c11928f7d0855a6c8900d9e"
+    ]
+  },
+  {
+    "subject": "mediterranean fish soup (product_id: 22083882)",
+    "predicate": "brand_is",
+    "object": "doris",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a812cc04458d82a40bf6419970d010ff9cb05f81"
+    ]
+  },
+  {
+    "subject": "mediterranean fish soup (product_id: 22083882)",
+    "predicate": "has_nutrition_score",
+    "object": "B",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a812cc04458d82a40bf6419970d010ff9cb05f81"
+    ]
+  },
+  {
+    "subject": "mediterranean fish soup (product_id: 22083882)",
+    "predicate": "has_cuisine_style",
+    "object": "Mediterranean",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a812cc04458d82a40bf6419970d010ff9cb05f81"
+    ]
+  },
+  {
+    "subject": "mediterranean fish soup (product_id: 22083882)",
+    "predicate": "has_pack_size",
+    "object": "950g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a812cc04458d82a40bf6419970d010ff9cb05f81"
+    ]
+  },
+  {
+    "subject": "mediterranean fish soup (product_id: 22083882)",
+    "predicate": "is_type_of",
+    "object": "soup",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a812cc04458d82a40bf6419970d010ff9cb05f81"
+    ]
+  },
+  {
+    "subject": "nickelodeon paw patrol eau de toilette natural spray",
+    "predicate": "has_brand",
+    "object": "nickelodeon",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-d218e63ac9435fd3148b66b5fae0724c6e8913ec"
+    ]
+  },
+  {
+    "subject": "nickelodeon paw patrol eau de toilette natural spray",
+    "predicate": "has_product_type",
+    "object": "perfume",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-d218e63ac9435fd3148b66b5fae0724c6e8913ec"
+    ]
+  },
+  {
+    "subject": "nickelodeon paw patrol eau de toilette natural spray",
+    "predicate": "has_pack_size",
+    "object": "100 ml",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-d218e63ac9435fd3148b66b5fae0724c6e8913ec"
+    ]
+  },
+  {
+    "subject": "nickelodean paw patrol eau de toilette natural spray",
+    "predicate": "has_pack_size",
+    "object": "100 ml",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-d218e63ac9435fd3148b66b5fae0724c6e8913ec"
+    ]
+  },
+  {
+    "subject": "instant noodles chicken flavour (product_id: 22083079)",
+    "predicate": "is_type_of",
+    "object": "instant noodles",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7533befb210e692ed7ef6e799c71a54cf178e07c"
+    ]
+  },
+  {
+    "subject": "instant noodles chicken flavour (product_id: 22083079)",
+    "predicate": "has_ingredient",
+    "object": "wheat flour",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7533befb210e692ed7ef6e799c71a54cf178e07c"
+    ]
+  },
+  {
+    "subject": "instant noodles chicken flour (product_id: 22083079)",
+    "predicate": "has_ingredient",
+    "object": "wheat flour",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7533befb210e692ed7ef6e799c71a54cf178e07c"
+    ]
+  },
+  {
+    "subject": "ground beef 15% fat (product_id: 22084193)",
+    "predicate": "has_ingredient",
+    "object": "beef",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7a4a3469e911b4eda56d5ee334bc465cb75dc832"
+    ]
+  },
+  {
+    "subject": "maroc pom sparkling drink apple flavor 1.5l",
+    "predicate": "has_brand",
+    "object": "maroc pom",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-0bf34c77440155fd13a8d435c7313ac19fbd8f96"
+    ]
+  },
+  {
+    "subject": "maroc pom sparkling drink apple flavor 1.5l",
+    "predicate": "has_flavor",
+    "object": "apple",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-0bf34c77440155fd13a8d435c7313ac19fbd8f96"
+    ]
+  },
+  {
+    "subject": "cereal surprise bread ×50 sandwiches, thawed",
+    "predicate": "has_name",
+    "object": "cereal surprise bread ×50 sandwiches, thawed",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-af610735670a078021365cee6603e71beee1a930"
+    ]
+  },
+  {
+    "subject": "Panettone (Product ID: 22080609)",
+    "predicate": "brand_is",
+    "object": "panettone de conti",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bbebd213e1804d7533ac93c31aa460731a538251"
+    ]
+  },
+  {
+    "subject": "Panettone de conti",
+    "predicate": "is_type_of",
+    "object": "Italian fruit cake",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bbebd213e1804d7533ac93c31aa460731a538251"
+    ]
+  },
+  {
+    "subject": "Panettone de conti",
+    "predicate": "has_pack_size",
+    "object": "908 g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bbebd213e1804d7533ac93c31aa460731a538251"
+    ]
+  },
+  {
+    "subject": "Panettone de conti",
+    "predicate": "has_origin",
+    "object": "Italy",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bbebd213e1804d7533ac93c31aa460731a538251"
+    ]
+  },
+  {
+    "subject": "Panettone de conti",
+    "predicate": "has_flavor_profile",
+    "object": "sweet",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bbebd213e1804d7533ac93c31aa460731a538251"
+    ]
+  },
+  {
+    "subject": "Panettone de conti",
+    "predicate": "has_texture",
+    "object": "soft",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bbebd213e1804d7533ac93c31aa460731a538251"
+    ]
+  },
+  {
+    "subject": "Panettone de conti",
+    "predicate": "has_texture",
+    "object": "fluffy",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bbebd213e1804d7533ac93c31aa460731a538251"
+    ]
+  },
+  {
+    "subject": "Panettone de conti",
+    "predicate": "has_texture",
+    "object": "light",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bbebd213e1804d7533ac93c31aa460731a538251"
+    ]
+  },
+  {
+    "subject": "Panettone de conti",
+    "predicate": "has_texture",
+    "object": "airy",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bbebd213e1804d7533ac93c31aa460731a538251"
+    ]
+  },
+  {
+    "subject": "Panettone de conti",
+    "predicate": "has_texture",
+    "object": "spongy",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bbebd213e1804d7533ac93c31aa460731a538251"
+    ]
+  },
+  {
+    "subject": "Panettone de coni",
+    "predicate": "has_texture",
+    "object": "light",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-bbebd213e1804d7533ac93c31aa460731a538251"
+    ]
+  },
+  {
+    "subject": "assortment of 6 marinated pork skewers, 12 mini chipolatas, and 12 mini merguez",
+    "predicate": "has_part",
+    "object": "assortment of 6 marinated pork skewers, 12 mini chipolatas, and 12 mini chipolatas",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4c70979feebdac8bc326fc3c70085408b95988b9"
+    ]
+  },
+  {
+    "subject": "assortment of 6 marinated pork skewers, 12 mini chipolatas, and 12 mini chipolatas",
+    "predicate": "has_part",
+    "object": "assortment of 6 marinated pork skewers, 12 mini chipolatas, and 12 mini chipolatas",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4c70979feebdac8bc326fc3c70085408b95988b9"
+    ]
+  },
+  {
+    "subject": "Reethel white pudding igp",
+    "predicate": "has_part",
+    "object": "pork meat",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4a2604db6970f6756b0cdac41c94c576c9c4bd3e"
+    ]
+  },
+  {
+    "subject": "Reethel white pudding igp",
+    "predicate": "has_part",
+    "object": "milk",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4a2604db6970f6756b0cdac41c94c576c9c4bd3e"
+    ]
+  },
+  {
+    "subject": "Reethel white pudding igp",
+    "predicate": "has_part",
+    "object": "salt",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4a2604db6970f6756b0cdac41c94c576c9c4bd3e"
+    ]
+  },
+  {
+    "subject": "Reethel white pudding igp",
+    "predicate": "has_part",
+    "object": "pepper",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4a2604db6970f6756b0cdac41c94c576c9c4bd3e"
+    ]
+  },
+  {
+    "subject": "duck confit 4 thighs",
+    "predicate": "has_pack_size",
+    "object": "1350 g",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f27688ff9006bd37e82b7d3ed17467a41f4f1801"
+    ]
+  },
+  {
+    "subject": "potato gnocchi (product_id: 22084603)",
+    "predicate": "has_ingredient",
+    "object": "potatoes",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f91629329cb250bc79b8f7d2d18ad11e1f8adc4c"
+    ]
+  },
+  {
+    "subject": "potato gnocchi (product_id: 22084603)",
+    "predicate": "has_ingredient",
+    "object": "wheat flour",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f91629329cb250bc79b8f7d2d18ad11e1f8adc4c"
+    ]
+  },
+  {
+    "subject": "potato gnocchi (product_id: 22084603)",
+    "predicate": "has_ingredient",
+    "object": "starch",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f91629329cb250bc79b8f7d2d18ad11e1f8adc4c"
+    ]
+  },
+  {
+    "subject": "potato gnocchi (product_id: 22084603)",
+    "predicate": "has_ingredient",
+    "object": "water",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f91629329cb250bc79b8f7d2d18ad11e1f8adc4c"
+    ]
+  },
+  {
+    "subject": "potato gnocchi (product_id: 22084603)",
+    "predicate": "has_ingredient",
+    "object": "durum wheat semolina",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f91629329cb250bc79b8f7d2d18ad11e1f8adc4c"
+    ]
+  },
+  {
+    "subject": "potato gnocchi (product_id: 22084603)",
+    "predicate": "has_ingredient",
+    "object": "salt",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f91629329cb250bc79b8f7d2d18ad11e1f8adc4c"
+    ]
+  },
+  {
+    "subject": "brioches (product_id: 22081969)",
+    "predicate": "has_name",
+    "object": "nature brioche",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6d35bb262067165111a1259b9078f957f1d2af42"
+    ]
+  },
+  {
+    "subject": "brioches (product_id: 22081969)",
+    "predicate": "is_type_of",
+    "object": "bakery product",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6d35bb262067165111a1259b9078f957f1d2af42"
+    ]
+  },
+  {
+    "subject": "brioches (product_id: 22081969)",
+    "predicate": "is_type_of",
+    "object": "bread",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-6d35bb262067165111a1259b9078f957f1d2af42"
+    ]
+  },
+  {
+    "subject": "tuna flakes in tomato sauce (product_id: 22084848)",
+    "predicate": "brand_is",
+    "object": "les doris",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4aa0c2f69d6a901d8e4a89dc1c4309da88e422ef"
+    ]
+  },
+  {
+    "subject": "tuna flakes in tomato sauce",
+    "predicate": "is_type_of",
+    "object": "canned fish product",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4aa0c2f69d6a901d8e4a89dc1c4309da88e422ef"
+    ]
+  },
+  {
+    "subject": "tuna flakes in tomato sauce",
+    "predicate": "has_protein_source",
+    "object": "tuna",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4aa0c2f69d6a901d8e4a89dc1c4309da88e422ef"
+    ]
+  },
+  {
+    "subject": "tuna flakes in tomato sauce",
+    "predicate": "has_flavor_profile",
+    "object": "tomato",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4aa0c2f69d6a901d8e4a89dc1c4309da88e422ef"
+    ]
+  },
+  {
+    "subject": "tuna flakes in tomato sauce",
+    "predicate": "has_nutritional_info",
+    "object": "high protein, low sugar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4aa0c2f69d6a901d8e4a89dc1c4309da88e422ef"
+    ]
+  },
+  {
+    "subject": "tuna flakes in tomato sauce",
+    "predicate": "has_nutritional_info",
+    "object": "146 kcal per 100g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4aa0c2f69d6a901d8e4a89dc1c4309da88e422ef"
+    ]
+  },
+  {
+    "subject": "tuna flakes in tomato sauce",
+    "predicate": "has_pack_size",
+    "object": "160 g",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4aa0c2f69d6a901d8e4a89dc1c4309da88e422ef"
+    ]
+  },
+  {
+    "subject": "coconut milk 400ml (coconut milk 400ml)",
+    "predicate": "is_type_of",
+    "object": "beverage",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-dd827a4356d96ca6718211593f4f5a0a91ddeb72"
+    ]
+  },
+  {
+    "subject": "coconut milk 400ml",
+    "predicate": "is_type_of",
+    "object": "beverage",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-dd827a4356d96ca6718211593f4f5a0a91ddeb72"
+    ]
+  },
+  {
+    "subject": "white sausage with scallops (product_id: 22083604)",
+    "predicate": "brand_is",
+    "object": "Aldi",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-9b59bbdda11144c3de6b25a4181b8537849cbc60"
+    ]
+  },
+  {
+    "subject": "durum wheat semolina fine 100% durum wheat 5kg",
+    "predicate": "has_ingredient",
+    "object": "durum wheat semolina fine 100% durum wheat 5kg",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-d2bf7388017677521c260b381cf4c83cf652848b"
+    ]
+  },
+  {
+    "subject": "toffeee® 48 pieces a hazelnut in caramel with creamy nougat and chocolate (product_id: 22083962)",
+    "predicate": "has_ingredient",
+    "object": "sugar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-204a94b286b14c6ad2557a8856e508a3b69c580f"
+    ]
+  },
+  {
+    "subject": "toffeee® 48 pieces a hazelnut in caramel with creamy nougat and chocolate",
+    "predicate": "has_ingredient",
+    "object": "sugar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-204a94b286b14c6ad2557a8856e508a3b69c580f"
+    ]
+  },
+  {
+    "subject": "cetrioli all'aceto di vino (product_id: 22079965)",
+    "predicate": "has_ingredient",
+    "object": "gherkin",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-10a2ccfe3bbea44285c58c794d58482dcdb520d7"
+    ]
+  },
+  {
+    "subject": "cetrioli all'aceto di vino (product_id: 22079965)",
+    "predicate": "has_ingredient",
+    "object": "wine vinegar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-10a2ccfe3bbea44285c58c794d58482dcdb520d7"
+    ]
+  },
+  {
+    "subject": "amofood soya bean drink (22080428)",
+    "predicate": "has_brand",
+    "object": "amofood",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-efeb56babafbeecbe263b78f34d88c8c04689704"
+    ]
+  },
+  {
+    "subject": "amofood soya bean drink",
+    "predicate": "has_pack_size",
+    "object": "300ml",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-efeb56babafbeecbe263b78f34d88c8c04689704"
+    ]
+  },
+  {
+    "subject": "amofood soya bean drink",
+    "predicate": "is_type_of",
+    "object": "beverage",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-efeb56babafbeecbe263b78f34d88c8c04689704"
+    ]
+  },
+  {
+    "subject": "amofood soya bean drink",
+    "predicate": "has_flavor_profile",
+    "object": "soy",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-efeb56babafbeecbe263b78f34d88c8c04689704"
+    ]
+  },
+  {
+    "subject": "amofood soya bean drink",
+    "predicate": "has_nutritional_profile",
+    "object": "high protein",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-efeb56babafbeecbe263b78f34d88c8c04689704"
+    ]
+  },
+  {
+    "subject": "amofood soya bean drink",
+    "predicate": "has_nutritional_profile",
+    "object": "high sugar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-efeb56babafbeecbe263b78f34d88c8c04689704"
+    ]
+  },
+  {
+    "subject": "Mentos (Product ID: 22079953)",
+    "predicate": "has_claim",
+    "object": "sugar free",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a6f6baa2c1a86c77f4a405a6b94426cf9afa0913"
+    ]
+  },
+  {
+    "subject": "Mentos (Product ID: 22079953)",
+    "predicate": "is_type_of",
+    "object": "chewing gum",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a6f6baa2c1a86c77f4a405a6b94426cf9afa0913"
+    ]
+  },
+  {
+    "subject": "Mentos (Product ID: 22079953)",
+    "predicate": "has_flavor_profile",
+    "object": "mint",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a6f6baa2c1a86c77f4a405a6b94426cf9afa0913"
+    ]
+  },
+  {
+    "subject": "Mentos (Product ID: 22079953)",
+    "predicate": "is_suitable_for",
+    "object": "fresh breath",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a6f6baa2c1a86c77f4a405a6b94426cf9afa0913"
+    ]
+  },
+  {
+    "subject": "Kerets Beef Salami Rosette (Kerets)",
+    "predicate": "is a type of",
+    "object": "cured meat",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3840b3a242609c01fe1bc5a5fbcfb3e59298ac63"
+    ]
+  },
+  {
+    "subject": "Kerets Beef Salami Rosette",
+    "predicate": "is a type of",
+    "object": "cured meat",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3840b3a242609c01fe1bc5a5fbcfb3e59298ac63"
+    ]
+  },
+  {
+    "subject": "Kerets Beef Salami Rosette",
+    "predicate": "brand is",
+    "object": "Kerets",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3840b3a242609c01fe1bc5a5fbcfb3e59298ac63"
+    ]
+  },
+  {
+    "subject": "Reese's Sticks Chocolate Flavoured Coating, Peanut Butter & Crispy Wafers (Product ID: 22082110)",
+    "predicate": "has_brand",
+    "object": "Reese's",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-47b3f89be057461ef9761c81bbf37ab222f2e58d"
+    ]
+  },
+  {
+    "subject": "Reese's Sticks Chocolate Flavoured Coating",
+    "predicate": "has_brand",
+    "object": "Reese's",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-47b3f89be057461ef9761c81bbf37ab222f2e58d"
+    ]
+  },
+  {
+    "subject": "Reese's Sticks Chocolate Flavoured Coating, Peanut Butter & Crispy Wafers",
+    "predicate": "has_brand",
+    "object": "Reese's",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-47b3f89be057461ef9761c81bbf37ab222f2e58d"
+    ]
+  },
+  {
+    "subject": "stone-baked precooked baguette (22084184)",
+    "predicate": "has_brand",
+    "object": "mannapain",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-57eb30fad7342058afd73c433518c0f11284f1fd"
+    ]
+  },
+  {
+    "subject": "stone-baked precooked baguette",
+    "predicate": "has_brand",
+    "object": "mannapain",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-57eb30fad7342058afd73c433518c0f11284f1fd"
+    ]
+  },
+  {
+    "subject": "freez mix energy drink dragon (product_id: 22082828)",
+    "predicate": "has_pack_size",
+    "object": "4 × 1.5 L",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4c299615d5f946018812a62c3bace7bd432b26d3"
+    ]
+  },
+  {
+    "subject": "freez mix energy drink dragon",
+    "predicate": "has_pack_size",
+    "object": "4 × 1.5 L",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4c299615d5f946018812a62c3bace7bd432b26d3"
+    ]
+  },
+  {
+    "subject": "savane pocket chocolate (product_id: 22082830)",
+    "predicate": "is_type_of",
+    "object": "chocolate bar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-918a0b0d8d4bf662056049ffb386dd821cff5928"
+    ]
+  },
+  {
+    "subject": "savane pocket chocolate (product_id: 22082830)",
+    "predicate": "brand_is",
+    "object": "brossard",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-918a0b0d8d4bf662056049ffb386dd821cff5928"
+    ]
+  },
+  {
+    "subject": "savane pocket chocolate (product_id: 22082830)",
+    "predicate": "has_pack_size",
+    "object": "1000 g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-918a0b0d8d4bf662056049ffb386dd821cff5928"
+    ]
+  },
+  {
+    "subject": "savane pocket chocolate (product_id: 22082830)",
+    "predicate": "has_flavor_profile",
+    "object": "dark chocolate",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-918a0b0d8d4bf662056049ffb386dd821cff5928"
+    ]
+  },
+  {
+    "subject": "savane pocket chocolate (product_id: 22082830)",
+    "predicate": "has_origin",
+    "object": "FR",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-918a0b0d8d4bf662056049ffb386dd821cff5928"
+    ]
+  },
+  {
+    "subject": "Strasbourg sausages knacks (22084191)",
+    "predicate": "has_name",
+    "object": "strasbourg sausages knacks",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ec77b7cac11837eecd4f830c7c4e49a6f739caec"
+    ]
+  },
+  {
+    "subject": "Strasbourg sausages knacks",
+    "predicate": "is_a",
+    "object": "sausage",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ec77b7cac11837eecd4f830c7c4e49a6f739caec"
+    ]
+  },
+  {
+    "subject": "Strasbourg sausages knacks",
+    "predicate": "has_brand",
+    "object": "epicur",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ec77b7cac11837eecd4f830c7c4e49a6f739caec"
+    ]
+  },
+  {
+    "subject": "Strasbourg sausages knacks",
+    "predicate": "has_flavor",
+    "object": "smoked",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ec77b7cac11837eecd4f830c7c4e49a6f739caec"
+    ]
+  },
+  {
+    "subject": "Shredded's T-Choc (22083066)",
+    "predicate": "has_name",
+    "object": "Shredded's T-Choc (22083066)",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ec21b4f11136131f258a3f3e82dcc401e9ff94d8"
+    ]
+  },
+  {
+    "subject": "Product",
+    "predicate": "has_brand",
+    "object": "Shneider's T-Choc",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ec21b4f11136131f258a3f3e82dcc401e9ff94d8"
+    ]
+  },
+  {
+    "subject": "Product",
+    "predicate": "has_pack_size",
+    "object": "150 g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ec21b4f11136131f258a3f3e82dcc401e9ff94d8"
+    ]
+  },
+  {
+    "subject": "Product",
+    "predicate": "has_flavor",
+    "object": "Dark Chocolate",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ec21b4f11136131f258a3f3e82dcc401e9ff94d8"
+    ]
+  },
+  {
+    "subject": "Product",
+    "predicate": "has_nutritional_profile",
+    "object": "High Protein",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ec21b4f11136131f258a3f3e82dcc401e9ff94d8"
+    ]
+  },
+  {
+    "subject": "Product",
+    "predicate": "has_nutritional_profile",
+    "object": "High Fat",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ec21b4f11136131f258a3f3e82dcc401e9ff94d8"
+    ]
+  },
+  {
+    "subject": "Product",
+    "predicate": "has_nutritional_profile",
+    "object": "High Sugar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ec21b4f11136131f258a3f3e82dcc401e9ff94d8"
+    ]
+  },
+  {
+    "subject": "nougatine and chocolate cookies (product_id: 22083052)",
+    "predicate": "brand_is",
+    "object": "schneider's",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-c20709ef7990b3aa03f91b2639fb99db6a07ba29"
+    ]
+  },
+  {
+    "subject": "nougatine and chocolate cookies",
+    "predicate": "has_pack_size",
+    "object": "200g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-c20709ef7990b3aa03f91b2639fb99db6a07ba29"
+    ]
+  },
+  {
+    "subject": "nougatine and chocolate cookies",
+    "predicate": "is_type_of",
+    "object": "cookie",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-c20709ef7990b3aa03f91b2639fb99db6a07ba29"
+    ]
+  },
+  {
+    "subject": "boni instant noodles chicken (product_id: 22082546)",
+    "predicate": "brand_is",
+    "object": "boni",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-ace05cf5faf76b4f28b88972c046f43859da0419"
+    ]
+  },
+  {
+    "subject": "thai-style rice cooked with coconut milk and chicken",
+    "predicate": "has_product_id",
+    "object": "22085169",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5ed4278ecd19604fe5ba356a4f6b0dfc42ddbeee"
+    ]
+  },
+  {
+    "subject": "thai-style rice cooked with coconut milk and chicken",
+    "predicate": "has_brand",
+    "object": "Aldi",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5ed4278ecd19604fe5ba356a4f6b0dfc42ddbeee"
+    ]
+  },
+  {
+    "subject": "thai-style rice cooked with coconut milk and chicken",
+    "predicate": "has_ingredient",
+    "object": "water",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5ed4278ecd19604fe5ba356a4f6b0dfc42ddbeee"
+    ]
+  },
+  {
+    "subject": "thai-style rice cooked with coconut milk and chicken",
+    "predicate": "has_ingredient",
+    "object": "rice",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5ed4278ecd19604fe5ba356a4f6b0dfc42ddbeee"
+    ]
+  },
+  {
+    "subject": "thai-style rice cooked with coconut milk and chicken",
+    "predicate": "has_ingredient",
+    "object": "coconut milk",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5ed4278ecd19604fe5ba356a4f6b0dfc42ddbeee"
+    ]
+  },
+  {
+    "subject": "thai-style rice cooked with coconut milk and chicken",
+    "predicate": "has_ingredient",
+    "object": "chicken breast",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5ed4278ecd19604fe5ba356a4f6b0dfc42ddbeee"
+    ]
+  },
+  {
+    "subject": "sprite soft drink with natural lemon-lime flavors",
+    "predicate": "has_pack_size",
+    "object": "375ml",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-dc065adf1bd56c155034dc5eb7924a620a76edbb"
+    ]
+  },
+  {
+    "subject": "asia green garden indian platter 4 chicken samosas 4 vegetable spring rolls 4 beef curry meatballs",
+    "predicate": "has_part",
+    "object": "4 chicken samosas",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-97d3c75126cf8fe832d5c42bd6e50aa46ad6b7ef"
+    ]
+  },
+  {
+    "subject": "asia green garden indian plate 4 chicken samosas 4 vegetable spring rolls 4 beef curry meatballs",
+    "predicate": "has_part",
+    "object": "4 chicken samosas",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-97d3c75126cf8fe832d5c42bd6e50aa46ad6b7ef"
+    ]
+  },
+  {
+    "subject": "warheads chewy cubes - blue raspberry, watermelon, orange, green apple, strawberry, black cherry",
+    "predicate": "has_brand",
+    "object": "warner",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-52dd3025d3af4415485d86dbec9945408ddca38c"
+    ]
+  },
+  {
+    "subject": "warheads chewy cubes",
+    "predicate": "has_brand",
+    "object": "warner",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-52dd3025d3af4415485d86dbec9945408ddca38c"
+    ]
+  },
+  {
+    "subject": "Hershey Cookies & Cream Bar (22081653)",
+    "predicate": "has_part",
+    "object": "sugar",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-51f32cb4884f0d9736b314f84f38b70ac545a2a0"
+    ]
+  },
+  {
+    "subject": "Hershey Cookies & Cream Bar",
+    "predicate": "has_ingredient",
+    "object": "sugar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-51f32cb4884f0d9736b314f84f38b70ac545a2a0"
+    ]
+  },
+  {
+    "subject": "Mentos Spearmint Chewing Gum (ID: 22079993)",
+    "predicate": "has_brand",
+    "object": "mentos",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-9f6cc63f6972edf419113eafd3567dad1d2501a7"
+    ]
+  },
+  {
+    "subject": "Mentos Spearmint Chewing Gum (ID: 22079993)",
+    "predicate": "has_pack_size",
+    "object": "53.2g",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-9f6cc63f6972edf419113eafd3567dad1d2501a7"
+    ]
+  },
+  {
+    "subject": "Mentos Spearmint Chewing Gum (ID: 2207993)",
+    "predicate": "has_pack_size",
+    "object": "53.2g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-9f6cc63f6972edf419113eafd3567dad1d2501a7"
+    ]
+  },
+  {
+    "subject": "hamburger bun sandwich (product_id: 2208433)",
+    "predicate": "is a type of",
+    "object": "food product",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4e8155282a051b72bd93fa958945c8bb7c588bae"
+    ]
+  },
+  {
+    "subject": "hamburger bun sandwich (product_id: 2208433)",
+    "predicate": "is a type of",
+    "object": "sandwich",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4e8155282a051b72bd93fa958945c8bb7c588bae"
+    ]
+  },
+  {
+    "subject": "hamburger bun sandwich (product_id: 2208433)",
+    "predicate": "is a type of",
+    "object": "lunch meat product",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4e8155282a051b72bd93fa958945c8bb7c588bae"
+    ]
+  },
+  {
+    "subject": "candy planet frothies (product_id: 22083055)",
+    "predicate": "has_brand",
+    "object": "candy planet",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-52f796727da0090552ef3f128ded1fdc9eb5067d"
+    ]
+  },
+  {
+    "subject": "candy planet frothies",
+    "predicate": "is_type_of",
+    "object": "confectionery",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-52f796727da0090552ef3f128ded1fdc9eb5067d"
+    ]
+  },
+  {
+    "subject": "candy planet frothies",
+    "predicate": "has_flavor_profile",
+    "object": "fruity",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-52f796727da0090552ef3f128ded1fdc9eb5067d"
+    ]
+  },
+  {
+    "subject": "candy planet frothies",
+    "predicate": "has_texture",
+    "object": "chewy",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-52f796727da0090552ef3f128ded1fdc9eb5067d"
+    ]
+  },
+  {
+    "subject": "candy planet frothies",
+    "predicate": "has_pack_size",
+    "object": "150g",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-52f796727da0090552ef3f128ded1fdc9eb5067d"
+    ]
+  },
+  {
+    "subject": "candy planet frothies",
+    "predicate": "has_pack_size",
+    "object": "5.29 oz",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-52f796727da0090552ef3f128ded1fdc9eb5067d"
+    ]
+  },
+  {
+    "subject": "preparation for frangipane filling",
+    "predicate": "has_brand",
+    "object": "albona",
+    "confidence": 1.0,
+    "confirmations": 2,
+    "source_chunks": [
+      "doc-580c2f8cb1375ba48f3500c782f67ec60fe9f71b"
+    ]
+  },
+  {
+    "subject": "fresh egg pasta (product_id: 22084289)",
+    "predicate": "has_brand",
+    "object": "casa morando",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8c9e5b584304b123105711a7373c634a4cedf8ad"
+    ]
+  },
+  {
+    "subject": "fresh egg pasta (product_id: 22084289)",
+    "predicate": "has_brand",
+    "object": "casa morado",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8c9e5b584304b123105711a7373c634a4cedf8ad"
+    ]
+  },
+  {
+    "subject": "fanta spiced apple soda",
+    "predicate": "has_brand",
+    "object": "fanta",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-c4abdde3dd8203ef28f6faf7077a940a0993a5fe"
+    ]
+  },
+  {
+    "subject": "fanta",
+    "predicate": "is_manufacturer_of",
+    "object": "fanta spiced apple soda",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-c4abdde3dd8203ef28f6faf7077a940a0993a5fe"
+    ]
+  },
+  {
+    "subject": "fanta",
+    "predicate": "is_manufacturer_of",
+    "object": "fanta",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-c4abdde3dd8203ef28f6faf7077a940a0993a5fe"
+    ]
+  },
+  {
+    "subject": "fanta spiced apple soda",
+    "predicate": "is_manufacturer_of",
+    "object": "fanta",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-c4abdde3dd8203ef28f6faf7077a940a0993a5fe"
+    ]
+  },
+  {
+    "subject": "flamkueche with smoked bacon and onions (2x400g pack)",
+    "predicate": "has_part",
+    "object": "flour",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-b5effee460c1d03400bd1d3454055bc6829c66b9"
+    ]
+  },
+  {
+    "subject": "flamkueche with smoked bacon and onions",
+    "predicate": "has_part",
+    "object": "flour",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-b5effee460c1d03400bd1d3454055bc6829c66b9"
+    ]
+  },
+  {
+    "subject": "snickers cookie dough 3.1 oz",
+    "predicate": "has_pack_size",
+    "object": "3.1 oz (88g)",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a59af8d1e992f994b27625adba7b430582031075"
+    ]
+  },
+  {
+    "subject": "snickers cookie dough 3.1 oz",
+    "predicate": "has_brand",
+    "object": "snickers",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a59af8d1e992f994b27625adba7b430582031075"
+    ]
+  },
+  {
+    "subject": "snickers cookie dough 3.1 oz",
+    "predicate": "has_flavor_profile",
+    "object": "chocolate peanut",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a59af8d1e992f994b27625adba7b430582031075"
+    ]
+  },
+  {
+    "subject": "snickers cookie dough 3.1 oz",
+    "predicate": "has_nutritional_profile",
+    "object": "high sugar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a59af8d1e992f994b27625adba7b430582031075"
+    ]
+  },
+  {
+    "subject": "snickers cookie dough 3.1 oz",
+    "predicate": "has_nutritional_profile",
+    "object": "high calorie",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a59af8d1e992f994b27625adba7b430582031075"
+    ]
+  },
+  {
+    "subject": "snickers cookie dough 3.1 oz",
+    "predicate": "has_nutritional_profile",
+    "object": "high fat",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-a59af8d1e992f994b27625adba7b430582031075"
+    ]
+  },
+  {
+    "subject": "beef flavour (product_id: 22083081)",
+    "predicate": "has_attribute",
+    "object": "product_id_22083081",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-b54c033103f351a74095dfc7f168f6073dcc0b25"
+    ]
+  },
+  {
+    "subject": "beef flavour (product_id: 22083081)",
+    "predicate": "has_attribute",
+    "object": "beef flavour",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-b54c033103f351a74095dfc7f168f6073dcc0b25"
+    ]
+  },
+  {
+    "subject": "hazelnut and cocoa spread (product_id: 22083482)",
+    "predicate": "has_brand",
+    "object": "nutella",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f391796275cf9db8fa9de7915ed4fb4c107f4b89"
+    ]
+  },
+  {
+    "subject": "hazelnut and cocoa spread (product_id: 22083482)",
+    "predicate": "has_nutrient_profile",
+    "object": "high protein",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f391796275cf9db8fa9de7915ed4fb4c107f4b89"
+    ]
+  },
+  {
+    "subject": "hazelnut and cocoa spread (product_id: 22083482)",
+    "predicate": "has_nutrient_profile",
+    "object": "high calorie",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f391796275cf9db8fa9de7915ed4fb4c107f4b89"
+    ]
+  },
+  {
+    "subject": "hazelnut and cocoa spread (product_id: 22083482)",
+    "predicate": "has_nutrient_profile",
+    "object": "high fat",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f391796275cf9db8fa9de7915ed4fb4c107f4b89"
+    ]
+  },
+  {
+    "subject": "hazelnut and cocoa spread (product_id: 22083482)",
+    "predicate": "has_nutrient_profile",
+    "object": "high sugar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f391796275cf9db8fa9de7915ed4fb4c107f4b89"
+    ]
+  },
+  {
+    "subject": "herb pork roast (product_id: 22084350)",
+    "predicate": "has_brand",
+    "object": "marsigny",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f65b63d33e40e136afca465ad83a47f61f489523"
+    ]
+  },
+  {
+    "subject": "herb pork roast",
+    "predicate": "has_brand",
+    "object": "marsigny",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f65b63d33e40e136afca465ad83a47f61f489523"
+    ]
+  },
+  {
+    "subject": "herb pork roast",
+    "predicate": "is_type_of",
+    "object": "pork roast",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f65b63d33e40e136afca465ad83a47f61f489523"
+    ]
+  },
+  {
+    "subject": "herb pork roast",
+    "predicate": "has_pack_size",
+    "object": "160g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f65b63d33e40e136afca465ad83a47f61f489523"
+    ]
+  },
+  {
+    "subject": "herb pork roast",
+    "predicate": "has_origin",
+    "object": "FR",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f65b63d33e40e136afca465ad83a47f61f489523"
+    ]
+  },
+  {
+    "subject": "herb pork roast",
+    "predicate": "has_ingredient",
+    "object": "pork fillet",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-f65b63d33e40e136afca465ad83a47f61f489523"
+    ]
+  },
+  {
+    "subject": "prime hydration ice pop 500 ml",
+    "predicate": "has_brand",
+    "object": "prime",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-64ccb067e31f81e9236387a0e240cb5daa257a4c"
+    ]
+  },
+  {
+    "subject": "prime hydration ice pop 500 ml",
+    "predicate": "has_product_type",
+    "object": "beverage",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-64ccb067e31f81e9236387a0e240cb5daa257a4c"
+    ]
+  },
+  {
+    "subject": "prime hydration ice pop 500 ml",
+    "predicate": "has_flavor_profile",
+    "object": "unspecified",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-64ccb067e31f81e9236387a0e240cb5daa257a4c"
+    ]
+  },
+  {
+    "subject": "prime hydration ice pop 500 ml",
+    "predicate": "has_nutritional_claim",
+    "object": "hydration",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-64ccb067e31f81e9236387a0e240cb5daa257a4c"
+    ]
+  },
+  {
+    "subject": "prime hydration ice pop 500 ml",
+    "predicate": "has_nutritional_claim",
+    "object": "electrolyte",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-64ccb067e31f81e9236387a0e240cb5daa257a4c"
+    ]
+  },
+  {
+    "subject": "prime hydration ice pop 500 ml",
+    "predicate": "has_pack_size",
+    "object": "500 ml",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-64ccb067e31f81e9236387a0e240cb5daa257a4c"
+    ]
+  },
+  {
+    "subject": "Premium Marzipan Christ-Stollen Christmas Cake (ID: 22081536)",
+    "predicate": "has_brand",
+    "object": "schlünder",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-1e3c01e1f9be86775926f35dc7713b5b2f170cb9"
+    ]
+  },
+  {
+    "subject": "Premium Marzipan Christ-Stollen Christmas Cake",
+    "predicate": "is_type_of",
+    "object": "Baked Good",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-1e3c01e1f9be86775926f35dc7713b5b2f170cb9"
+    ]
+  },
+  {
+    "subject": "Premium Marzipan Christ-Stollen Christmas Cake",
+    "predicate": "is_type_of",
+    "object": "Bakery Product",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-1e3c01e1f9be86775926f35dc7713b5b2f170cb9"
+    ]
+  },
+  {
+    "subject": "Premium Marzipan Christ-Stollen Christmas Cake (ID: 22081536)",
+    "predicate": "is_type_of",
+    "object": "Bakery Product",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-1e3c01e1f9be86775926f35dc7713b5b2f170cb9"
+    ]
+  },
+  {
+    "subject": "palmnut cream concentrate sauce (product_id: 22082435)",
+    "predicate": "has_brand",
+    "object": "charafresh",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-82de24aa89fdf1bc4b27114671d6e04c5f18de40"
+    ]
+  },
+  {
+    "subject": "palmnut cream concentrate sauce",
+    "predicate": "has_brand",
+    "object": "charafresh",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-82de24aa89fdf1bc4b27114671d6e04c5f18de40"
+    ]
+  },
+  {
+    "subject": "palmnut cream concentrate sauce",
+    "predicate": "has_brand",
+    "object": "charf",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-82de24aa89fdf1bc4b27114671d6e04c5f18de40"
+    ]
+  },
+  {
+    "subject": "Mentos Sugar-Free Gum (ID: 22079995)",
+    "predicate": "has_brand",
+    "object": "Mentos",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-51b663aac5bb6e2bbebac378b1e57f706687dbe2"
+    ]
+  },
+  {
+    "subject": "Menthol Eucalyptus Gum (ID: 22079995)",
+    "predicate": "has_brand",
+    "object": "Mentos",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-51b663aac5bb6e2bbebac378b1e57f706687dbe2"
+    ]
+  },
+  {
+    "subject": "traditional spaetzle pasta 7 fresh eggs made in alsace",
+    "predicate": "product_id",
+    "object": "22083409",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-2257bca6d86ce2243d842771334ad271a491b148"
+    ]
+  },
+  {
+    "subject": "traditional spaetzle pasta 7 fresh eggs made in alsace",
+    "predicate": "has_brand",
+    "object": "pay's gourmet",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-2257bca6d86ce2243d842771334ad271a491b148"
+    ]
+  },
+  {
+    "subject": "traditional spaetzle pasta 7 fresh eggs made in alsace",
+    "predicate": "has_nutritional_profile",
+    "object": "high protein",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-2257bca6d86ce2243d842771334ad271a491b148"
+    ]
+  },
+  {
+    "subject": "3 superior pâté verrines (product_id: 22083948)",
+    "predicate": "has_brand",
+    "object": "les terrines du bocage",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-1c4f9ac94738a3acdc406d8d6de904de3f629a5b"
+    ]
+  },
+  {
+    "subject": "3 superior pâté verrines",
+    "predicate": "has_brand",
+    "object": "les terrines du bocage",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-1c4f9ac94738a3acdc406d8d6de904de3f629a5b"
+    ]
+  },
+  {
+    "subject": "apple flavor candies (product_id: 22080090)",
+    "predicate": "has_brand",
+    "object": "Mentos",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-b1e1f6c83def8e0344375a33aaa8c8c556f5c9c5"
+    ]
+  },
+  {
+    "subject": "apple flavor candies",
+    "predicate": "has_brand",
+    "object": "Mentos",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-b1e1f6c83def8e0344375a33aaa8c8c556f5c9c5"
+    ]
+  },
+  {
+    "subject": "apple flavor candies",
+    "predicate": "is_type_of",
+    "object": "confectionery",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-b1e1f6c83def8e0344375a33aaa8c8c556f5c9c5"
+    ]
+  },
+  {
+    "subject": "apple flavor candies",
+    "predicate": "has_flavor",
+    "object": "apple",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-b1e1f6c83def8e0344375a33aaa8c8c556f5c9c5"
+    ]
+  },
+  {
+    "subject": "apple flavor candies",
+    "predicate": "has_nutritional_profile",
+    "object": "high sugar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-b1e1f6c83def8e0344375a33aaa8c8c556f5c9c5"
+    ]
+  },
+  {
+    "subject": "apple flavor candies",
+    "predicate": "has_nutritional_profile",
+    "object": "high calorie",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-b1e1f6c83def8e0344375a33aaa8c8c556f5c9c5"
+    ]
+  },
+  {
+    "subject": "mannapain_special_bread_made_with_whole_wheat_flour",
+    "predicate": "has_brand",
+    "object": "mannapain",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-88ec865d4d1fcce83377c73308981810779cc68f"
+    ]
+  },
+  {
+    "subject": "mannapain_special_bread_made_with_whole_wheat_flour",
+    "predicate": "has_product_id",
+    "object": "22084005",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-88ec865d4d1fcce83377c73308981810779cc68f"
+    ]
+  },
+  {
+    "subject": "mannapain_special_bread_made_with_whole_wheat_flour",
+    "predicate": "has_pack_size",
+    "object": "500g",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-88ec865d4d1fcce83377c73308981810779cc68f"
+    ]
+  },
+  {
+    "subject": "mannapin_special_bread_made_with_whole_wheat_flour",
+    "predicate": "has_pack_size",
+    "object": "500g",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-88ec865d4d1fcce83377c73308981810779cc68f"
+    ]
+  },
+  {
+    "subject": "beef ravioli 300g",
+    "predicate": "has_product_id",
+    "object": "22084183",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5163ff385d8e0838601627dd6e28bbe930a1a041"
+    ]
+  },
+  {
+    "subject": "beef ravioli 300g",
+    "predicate": "has_brand",
+    "object": "d'antelli",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5163ff385d8e0838601627dd6e28bbe930a1a041"
+    ]
+  },
+  {
+    "subject": "beef ravioli 300g",
+    "predicate": "has_pack_size",
+    "object": "300g",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5163ff385d8e0838601627dd6e28bbe930a1a041"
+    ]
+  },
+  {
+    "subject": "beef ravioli 300g",
+    "predicate": "has_origin",
+    "object": "FR",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5163ff385d8e0838601627dd6e28bbe930a1a041"
+    ]
+  },
+  {
+    "subject": "beef ravioli 300g",
+    "predicate": "has_ingredient",
+    "object": "soft wheat flour",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5163ff385d8e0838601627dd6e28bbe930a1a041"
+    ]
+  },
+  {
+    "subject": "beef ravioli 300g",
+    "predicate": "has_ingredient",
+    "object": "beef",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-5163ff385d8e0838601627dd6e28bbe930a1a041"
+    ]
+  },
+  {
+    "subject": "cooked tomato sauce with basil (product_id: 22081665)",
+    "predicate": "has_brand",
+    "object": "shneider's",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7e1be5d7040608d92ff707393b667689799b183e"
+    ]
+  },
+  {
+    "subject": "cooked tomato sauce with basil",
+    "predicate": "has_brand",
+    "object": "shneider's",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7e1be5d7040608d92ff707393b667689799b183e"
+    ]
+  },
+  {
+    "subject": "cooked tomato sauce with basil",
+    "predicate": "has_brand",
+    "object": "sainsbury's",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-7e1be5d7040608d92ff707393b667689799b183e"
+    ]
+  },
+  {
+    "subject": "coke zero® vanilla flavored zero sugar cola (product_id: 22080703)",
+    "predicate": "has_brand",
+    "object": "coca-cola",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3193e8b9591cae951938aa176f4d17d225064cd8"
+    ]
+  },
+  {
+    "subject": "coke zero® vanilla flavored zero sugar cola",
+    "predicate": "has_brand",
+    "object": "coca-cola",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-3193e8b9591cae951938aa176f4d17d225064cd8"
+    ]
+  },
+  {
+    "subject": "shneider's cookies with chocolate chips (product_id: 22083054)",
+    "predicate": "is a",
+    "object": "cookies with chocolate chips",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4d6342013e79c0730051dc579ce122f496f976af"
+    ]
+  },
+  {
+    "subject": "shneider's cookies with chocolate chips",
+    "predicate": "has_brand",
+    "object": "shneider's",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4d6342013e79c0730051dc579ce122f496f976af"
+    ]
+  },
+  {
+    "subject": "product_id",
+    "predicate": "has_value",
+    "object": "22083054",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4d6342013e79c0730051dc579ce122f496f976af"
+    ]
+  },
+  {
+    "subject": "product_type",
+    "predicate": "is_type_of",
+    "object": "cookies with chocolate chips",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4d6342013e79c0730051dc579ce122f496f976af"
+    ]
+  },
+  {
+    "subject": "product_id",
+    "predicate": "has_origin",
+    "object": "FR",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-4d6342013e79c0730051dc579ce122f496f976af"
+    ]
+  },
+  {
+    "subject": "instant noodles - with shrimp flavor seasoning (product_id: 22082535)",
+    "predicate": "has_ingredient",
+    "object": "wheat flour",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-80986914638f83c47e5e1082679ae5e6d18d4728"
+    ]
+  },
+  {
+    "subject": "instant noodles - with shrimp flavor seasoning",
+    "predicate": "has_ingredient",
+    "object": "wheat flour",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-80986914638f83c47e5e1082679ae5e6d18d4728"
+    ]
+  },
+  {
+    "subject": "panettone (product_id: 22082870)",
+    "predicate": "brand_is",
+    "object": "loison",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-d2ae687eaf7e84daac1fbaf91986b31b33c86325"
+    ]
+  },
+  {
+    "subject": "sugar brioche (product_id: 22081971)",
+    "predicate": "has_brand",
+    "object": "nicole & maguy",
+    "confidence": 0.95,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8e53608a00133addfc1097f45762c9a0cdb78166"
+    ]
+  },
+  {
+    "subject": "sugar brioche (product_id: 22081971)",
+    "predicate": "has_ingredient",
+    "object": "wheat flour",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8e53608a00133addfc1097f45762c9a0cdb78166"
+    ]
+  },
+  {
+    "subject": "sugar brioche (product_id: 22081971)",
+    "predicate": "has_ingredient",
+    "object": "sugar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8e53608a00133addfc1097f45762c9a0cdb78166"
+    ]
+  },
+  {
+    "subject": "sugar brioche (product_id: 22081971)",
+    "predicate": "has_ingredient",
+    "object": "eggs",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8e53608a00133addfc1097f45762c9a0cdb78166"
+    ]
+  },
+  {
+    "subject": "sugar brioche (product_id: 22081971)",
+    "predicate": "has_ingredient",
+    "object": "sunflower oil",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8e53608a00133addfc1097f45762c9a0cdb78166"
+    ]
+  },
+  {
+    "subject": "sugar brioche (product_id: 22081971)",
+    "predicate": "has_ingredient",
+    "object": "salt",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8e53608a00133addfc1097f45762c9a0cdb78166"
+    ]
+  },
+  {
+    "subject": "sugar brioche (product_id: 22081971)",
+    "predicate": "has_ingredient",
+    "object": "yeast",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8e53608a00133addfc1097f45762c9a0cdb78166"
+    ]
+  },
+  {
+    "subject": "sugar brioche (product_id: 22081971)",
+    "predicate": "has_ingredient",
+    "object": "sugar pearls",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-8e53608a00133addfc1097f45762c9a0cdb78166"
+    ]
+  },
+  {
+    "subject": "Captain's Slices (lethrinus lentjan) frozen emperor slices",
+    "predicate": "has_brand",
+    "object": "cstar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-2faa81e0cfcb18412f863590c0a689279b821205"
+    ]
+  },
+  {
+    "subject": "Captain's Slices (lethrinus lentjan)",
+    "predicate": "has_brand",
+    "object": "cstar",
+    "confidence": 1.0,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-2faa81e0cfcb18412f863590c0a689279b821205"
+    ]
+  },
+  {
+    "subject": "kinder surprise chocolate (product_id: 22080047)",
+    "predicate": "has_brand",
+    "object": "Kinder",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-e66d140e685d84ddb18137f286e45f9b47138240"
+    ]
+  },
+  {
+    "subject": "kinder surprise chocolate (product_id: 22080047)",
+    "predicate": "has_pack_size",
+    "object": "unknown",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-e66d140e685d84ddb18137f286e45f9b47138240"
+    ]
+  },
+  {
+    "subject": "kinder surprise chocolate (product_id: 22080047)",
+    "predicate": "is_type_of",
+    "object": "chocolate bar",
+    "confidence": 0.9,
+    "confirmations": 1,
+    "source_chunks": [
+      "doc-e66d140e685d84ddb18137f286e45f9b47138240"
+    ]
+  }
+]
