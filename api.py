@@ -312,16 +312,18 @@ async def _semantic_rerank(food_ctr, question: str, docs: list[dict], top_k: int
 
 
 async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
-    """DFlash-optimized path: parallel retrieval + semantic reranker + concise prompt."""
+    """DFlash path: full KG retrieval (same as KG) + non-streaming LLM with speculative decoding."""
     t0 = time.perf_counter()
     timings: dict[str, float] = {}
 
     try:
-        yield _sse({"stage": "progress", "message": "DFlash: embedding + parallel retrieval...", "_ts": _elapsed(t0)})
+        yield _sse({"stage": "progress", "message": "Embedding question...", "_ts": _elapsed(t0)})
 
         t_embed = time.perf_counter()
         q_emb = await engine._embedder.embed(question)
         timings["embed"] = time.perf_counter() - t_embed
+
+        yield _sse({"stage": "progress", "message": f"Embedded in {timings['embed']:.2f}s", "_ts": _elapsed(t0)})
 
         cosmos = await engine._get_cosmos()
         db = cosmos.get_database_client(engine._db_name)
@@ -330,10 +332,14 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
         food_ctr = db.get_container_client("food")
 
         cfg = engine._query_cfg
-        seed_k = int(cfg.get("seed_entities_k", 10))
-        max_triples = int(cfg.get("max_triples", 40))
-        fetch_k = RERANKER_FETCH_K
-        rerank_top_k = RERANKER_TOP_K
+        seed_k = int(cfg.get("seed_entities_k", 20))
+        max_hops = int(cfg.get("max_hops", 2))
+        max_triples = int(cfg.get("max_triples", 150))
+        max_source = int(cfg.get("max_source_chunks", 30))
+        vec_k = int(cfg.get("vector_augment_k", 15))
+
+        # --- Step 1: Entity search + keyword expansion (parallel) ---
+        yield _sse({"stage": "progress", "message": "Searching entity index + expanding keywords...", "_ts": _elapsed(t0)})
 
         async def _entity_search():
             r = []
@@ -343,6 +349,58 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
                 parameters=[{"name": "@k", "value": seed_k}, {"name": "@emb", "value": q_emb}]):
                 r.append(item)
             return r
+
+        basic_kw = _extract_keywords(question)
+        t_es = time.perf_counter()
+        seed_entities, llm_keywords = await asyncio.gather(
+            _entity_search(), _llm_expand_keywords(question, engine)
+        )
+        timings["entity_search"] = time.perf_counter() - t_es
+
+        if not seed_entities:
+            yield _sse({"stage": "progress", "message": "No entities found.", "_ts": _elapsed(t0)})
+            yield _sse({"stage": "token", "text": "No relevant entities found in the knowledge graph."})
+            timings["total"] = time.perf_counter() - t0
+            yield _sse({"stage": "done", "_ts": _elapsed(t0), "timings": timings})
+            yield "data: [DONE]\n\n"
+            return
+
+        entity_names = [e["name"] for e in seed_entities[:10]]
+        yield _sse({"stage": "progress",
+                     "message": f"Found {len(seed_entities)} entities in {timings['entity_search']:.2f}s: {', '.join(entity_names[:5])}",
+                     "_ts": _elapsed(t0)})
+
+        # --- Step 2: Graph traversal + vector triples + food search + keyword search (parallel) ---
+        yield _sse({"stage": "progress", "message": "Graph traversal + vector search + keyword search...", "_ts": _elapsed(t0)})
+
+        async def _graph_traversal():
+            """PK-based hop traversal like KG path."""
+            all_t = []
+            visited = set()
+            names = list(entity_names)
+            for hop in range(max_hops):
+                batch = [n for n in names if n not in visited]
+                if not batch:
+                    break
+                for n in batch[:10]:
+                    visited.add(n)
+
+                async def _fetch_pk(name):
+                    pk = name.lower()[:100]
+                    r = []
+                    async for triple in triples_ctr.query_items(
+                        query="SELECT * FROM c WHERE c.pk = @pk",
+                        parameters=[{"name": "@pk", "value": pk}],
+                    ):
+                        r.append(triple)
+                    return r
+
+                results = await asyncio.gather(*[_fetch_pk(n) for n in batch[:10]])
+                for r in results:
+                    all_t.extend(r)
+                if hop == 0 and len(all_t) < max_triples:
+                    names = list({t["object"] for t in all_t if t["object"] not in visited})[:5]
+            return all_t
 
         async def _triple_vec():
             r = []
@@ -360,7 +418,7 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
                        "c.claims_translated, c.ingredients_translated, c.allergens_translated, "
                        "c.pack_size_translated, c.product_title, c.claims, c.ingredients, c.allergens, c.pack_size, "
                        "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
-                parameters=[{"name": "@k", "value": fetch_k}, {"name": "@emb", "value": q_emb}]):
+                parameters=[{"name": "@k", "value": vec_k}, {"name": "@emb", "value": q_emb}]):
                 for k in ("_rid", "_self", "_etag", "_attachments", "_ts"):
                     doc.pop(k, None)
                 r.append(doc)
@@ -381,59 +439,81 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
                 log.warning("Fulltext search for '%s' failed: %s", keyword, e)
             return r
 
-        basic_kw = _extract_keywords(question)
-        llm_kw_task = asyncio.create_task(_llm_expand_keywords(question, engine))
+        all_kw = list(set(basic_kw[:5] + (llm_keywords or [])[:6]))
+        ft_tasks = [_food_fulltext(kw) for kw in all_kw]
+        log.info("Keywords basic=%s llm=%s combined=%s", basic_kw[:5], llm_keywords, all_kw)
 
-        ft_tasks = [_food_fulltext(kw) for kw in basic_kw[:5]]
-
-        t_ret = time.perf_counter()
-        results = await asyncio.gather(
-            _entity_search(), _triple_vec(), _food_vec(), *ft_tasks
+        t_graph = time.perf_counter()
+        graph_results = await asyncio.gather(
+            _graph_traversal(), _triple_vec(), _food_vec(), *ft_tasks
         )
-        seed_entities = results[0]
-        vec_triples = results[1]
-        vec_sources = results[2]
-        ft_basic_results = results[3:]
+        pk_triples = graph_results[0]
+        vec_triples = graph_results[1]
+        vec_food = graph_results[2]
+        ft_results = graph_results[3:]
 
-        llm_keywords = await llm_kw_task
-        if llm_keywords:
-            ft_llm_results = await asyncio.gather(*[_food_fulltext(kw) for kw in llm_keywords[:6]])
-        else:
-            ft_llm_results = []
-        log.info("Keywords basic=%s llm=%s", basic_kw[:5], llm_keywords)
+        # Deduplicate triples
+        all_triples_raw = pk_triples + vec_triples
+        seen_keys: set[str] = set()
+        all_triples = []
+        for t in all_triples_raw:
+            key = f"{t.get('subject','')}|{t.get('predicate','')}|{t.get('object','')}"
+            if key not in seen_keys:
+                seen_keys.add(key)
+                all_triples.append(t)
+        all_triples = all_triples[:max_triples]
+        timings["graph_traversal"] = time.perf_counter() - t_graph
 
-        hybrid_sources = []
-        for batch in list(ft_basic_results) + list(ft_llm_results):
-            hybrid_sources.extend(batch)
-        timings["retrieval"] = time.perf_counter() - t_ret
+        yield _sse({"stage": "progress",
+                     "message": f"Graph: {len(pk_triples)} PK + {len(vec_triples)} vec = {len(all_triples)} unique triples in {timings['graph_traversal']:.2f}s",
+                     "_ts": _elapsed(t0)})
 
-        seen_ids = {doc.get("id") for doc in vec_sources}
-        for doc in hybrid_sources:
+        # --- Step 3: Fetch source documents from KG references + merge with vector/keyword results ---
+        yield _sse({"stage": "progress", "message": "Fetching source documents...", "_ts": _elapsed(t0)})
+
+        t_src = time.perf_counter()
+        source_chunk_ids: set[str] = set()
+        for t in all_triples:
+            for cid in t.get("source_chunks", []):
+                source_chunk_ids.add(cid)
+        for e in seed_entities[:5]:
+            for cid in e.get("source_chunks", []):
+                source_chunk_ids.add(cid)
+
+        source_ids = list(source_chunk_ids)[:max_source]
+        source_chunks: list[dict] = []
+
+        if source_ids:
+            for batch_start in range(0, len(source_ids), 20):
+                batch = source_ids[batch_start:batch_start + 20]
+                ids_param = ", ".join(f'"{sid}"' for sid in batch)
+                async for doc in food_ctr.query_items(query=f"SELECT * FROM c WHERE c.id IN ({ids_param})"):
+                    for k in ("e", "_rid", "_self", "_etag", "_attachments", "_ts"):
+                        doc.pop(k, None)
+                    source_chunks.append(doc)
+
+        # Merge vector + keyword results
+        seen_ids = {doc.get("id") for doc in source_chunks}
+        for doc in vec_food:
             if doc.get("id") not in seen_ids:
-                vec_sources.append(doc)
+                source_chunks.append(doc)
                 seen_ids.add(doc.get("id"))
+        for batch in ft_results:
+            for doc in batch:
+                if doc.get("id") not in seen_ids:
+                    source_chunks.append(doc)
+                    seen_ids.add(doc.get("id"))
 
-        if not seed_entities:
-            yield _sse({"stage": "token", "text": "No relevant entities found in the knowledge graph."})
-            timings["total"] = time.perf_counter() - t0
-            yield _sse({"stage": "done", "_ts": _elapsed(t0), "timings": timings})
-            yield "data: [DONE]\n\n"
-            return
+        timings["source_fetch"] = time.perf_counter() - t_src
 
+        yield _sse({"stage": "progress",
+                     "message": f"Sources: {len(source_ids)} from KG + {len(vec_food)} vector + keyword = {len(source_chunks)} total in {timings['source_fetch']:.2f}s",
+                     "_ts": _elapsed(t0)})
+
+        # --- Step 4: Rerank ---
         t_rerank = time.perf_counter()
-        source_chunks = await _semantic_rerank(food_ctr, question, vec_sources, top_k=rerank_top_k)
+        source_chunks = await _semantic_rerank(food_ctr, question, source_chunks, top_k=RERANKER_TOP_K)
         timings["rerank"] = time.perf_counter() - t_rerank
-
-        all_triples = vec_triples[:max_triples]
-        graph_context = engine._build_graph_context(seed_entities, all_triples)
-        source_text = engine._build_source_text(source_chunks)
-        prompt = DFLASH_ANSWER_PROMPT.replace("{graph_context}", graph_context) \
-                                      .replace("{source_chunks}", source_text) \
-                                      .replace("{question}", question)
-
-        timings["entity_search"] = timings["retrieval"]
-        timings["graph_traversal"] = 0.0
-        timings["source_fetch"] = 0.0
 
         yield _sse({
             "stage": "stats",
@@ -444,11 +524,22 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
             "_ts": _elapsed(t0),
         })
 
+        # --- Step 5: Build prompt + non-streaming LLM call (DFlash speculative decoding) ---
+        yield _sse({"stage": "progress",
+                     "message": f"Retrieval done in {time.perf_counter() - t0:.1f}s — calling LLM (DFlash)...",
+                     "_ts": _elapsed(t0)})
+
+        graph_context = engine._build_graph_context(seed_entities, all_triples)
+        source_text = engine._build_source_text(source_chunks)
+        prompt = DFLASH_ANSWER_PROMPT.replace("{graph_context}", graph_context) \
+                                      .replace("{source_chunks}", source_text) \
+                                      .replace("{question}", question)
+
         t_llm = time.perf_counter()
         resp = await engine._llm.chat.completions.create(
             model=engine._llm_model,
             messages=[
-                {"role": "system", "content": "You are a helpful food product expert. Always recommend products. Be concise."},
+                {"role": "system", "content": "You are a helpful food product expert. Always recommend products."},
                 {"role": "user", "content": prompt},
             ],
             temperature=0.0,
@@ -458,6 +549,10 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
         answer = resp.choices[0].message.content if resp.choices else ""
         timings["llm"] = time.perf_counter() - t_llm
         timings["total"] = time.perf_counter() - t0
+
+        yield _sse({"stage": "progress",
+                     "message": f"Answer ready in {timings['total']:.1f}s (LLM: {timings['llm']:.1f}s) — streaming...",
+                     "_ts": str(timings["total"])})
 
         chunk_size = 80
         for i in range(0, len(answer), chunk_size):
@@ -631,7 +726,7 @@ async def _stream_kg_sse(question: str, engine: KGQueryEngine, backend_id: str =
             "entity_names": [e["name"] for e in seed_entities[:8]],
             "_ts": _elapsed(t0),
         })
-        yield _sse({"stage": "progress", "message": f"Retrieval done in {time.perf_counter() - t0:.1f}s — streaming answer...", "_ts": _elapsed(t0)})
+        yield _sse({"stage": "progress", "message": f"Retrieval done in {time.perf_counter() - t0:.1f}s — calling LLM...", "_ts": _elapsed(t0)})
 
         t_llm = time.perf_counter()
         from prompts_kg_food import GRAPHRAG_ANSWER_PROMPT
@@ -642,22 +737,25 @@ async def _stream_kg_sse(question: str, engine: KGQueryEngine, backend_id: str =
                          .replace("{source_chunks}", source_text) \
                          .replace("{question}", question)
 
-        stream = await engine._llm.chat.completions.create(
+        resp = await engine._llm.chat.completions.create(
             model=engine._llm_model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
             max_tokens=engine._max_tokens,
-            stream=True,
             extra_body={"chat_template_kwargs": {"enable_thinking": False}},
         )
-
-        async for chunk in stream:
-            delta = chunk.choices[0].delta if chunk.choices else None
-            if delta and delta.content:
-                yield _sse({"stage": "token", "text": delta.content})
-
+        answer = resp.choices[0].message.content if resp.choices else ""
         timings["llm"] = time.perf_counter() - t_llm
         timings["total"] = time.perf_counter() - t0
+
+        yield _sse({"stage": "progress",
+                     "message": f"Answer ready in {timings['total']:.1f}s (LLM: {timings['llm']:.1f}s) — streaming...",
+                     "_ts": str(timings["total"])})
+
+        chunk_size = 80
+        for i in range(0, len(answer), chunk_size):
+            yield _sse({"stage": "token", "text": answer[i:i + chunk_size]})
+
         yield _sse({"stage": "done", "_ts": _elapsed(t0), "timings": timings})
 
     except Exception as e:
@@ -776,13 +874,12 @@ async def ask_stream(body: AskRequest):
     )
 
 async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
-    """Non-streaming DFlash: parallel retrieval + concise prompt, returns result dict."""
+    """Non-streaming DFlash: full KG retrieval + non-streaming LLM, returns result dict."""
     t0 = time.perf_counter()
     timings: dict[str, float] = {}
 
-    t_embed = time.perf_counter()
     q_emb = await engine._embedder.embed(question)
-    timings["embed"] = time.perf_counter() - t_embed
+    timings["embed"] = time.perf_counter() - t0
 
     cosmos = await engine._get_cosmos()
     db = cosmos.get_database_client(engine._db_name)
@@ -791,11 +888,13 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
     food_ctr = db.get_container_client("food")
 
     cfg = engine._query_cfg
-    seed_k = int(cfg.get("seed_entities_k", 10))
-    max_triples = int(cfg.get("max_triples", 40))
-    fetch_k = RERANKER_FETCH_K
-    rerank_top_k = RERANKER_TOP_K
+    seed_k = int(cfg.get("seed_entities_k", 20))
+    max_hops = int(cfg.get("max_hops", 2))
+    max_triples = int(cfg.get("max_triples", 150))
+    max_source = int(cfg.get("max_source_chunks", 30))
+    vec_k = int(cfg.get("vector_augment_k", 15))
 
+    # Entity search + keyword expansion
     async def _es():
         r = []
         async for item in entities_ctr.query_items(
@@ -804,6 +903,45 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
             parameters=[{"name": "@k", "value": seed_k}, {"name": "@emb", "value": q_emb}]):
             r.append(item)
         return r
+
+    basic_kw = _extract_keywords(question)
+    t_es = time.perf_counter()
+    seed_entities, llm_keywords = await asyncio.gather(
+        _es(), _llm_expand_keywords(question, engine)
+    )
+    timings["entity_search"] = time.perf_counter() - t_es
+
+    if not seed_entities:
+        timings["total"] = time.perf_counter() - t0
+        return {"answer": "No relevant entities found.", "timings": timings}
+
+    entity_names = [e["name"] for e in seed_entities[:10]]
+
+    # Graph traversal + vector + keyword (parallel)
+    async def _graph_traversal():
+        all_t = []
+        visited = set()
+        names = list(entity_names)
+        for hop in range(max_hops):
+            batch = [n for n in names if n not in visited]
+            if not batch:
+                break
+            for n in batch[:10]:
+                visited.add(n)
+            async def _fetch_pk(name):
+                pk = name.lower()[:100]
+                r = []
+                async for triple in triples_ctr.query_items(
+                    query="SELECT * FROM c WHERE c.pk = @pk",
+                    parameters=[{"name": "@pk", "value": pk}]):
+                    r.append(triple)
+                return r
+            results = await asyncio.gather(*[_fetch_pk(n) for n in batch[:10]])
+            for r in results:
+                all_t.extend(r)
+            if hop == 0 and len(all_t) < max_triples:
+                names = list({t["object"] for t in all_t if t["object"] not in visited})[:5]
+        return all_t
 
     async def _tv():
         r = []
@@ -821,7 +959,7 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
                    "c.claims_translated, c.ingredients_translated, c.allergens_translated, "
                    "c.pack_size_translated, c.product_title, c.claims, c.ingredients, c.allergens, c.pack_size, "
                    "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
-            parameters=[{"name": "@k", "value": fetch_k}, {"name": "@emb", "value": q_emb}]):
+            parameters=[{"name": "@k", "value": vec_k}, {"name": "@emb", "value": q_emb}]):
             for k in ("_rid", "_self", "_etag", "_attachments", "_ts"):
                 doc.pop(k, None)
             r.append(doc)
@@ -832,57 +970,69 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
         try:
             sql = _build_fulltext_sql(keyword)
             async for doc in food_ctr.query_items(
-                query=sql,
-                parameters=[{"name": "@k", "value": 10}, {"name": "@kw", "value": keyword}],
-            ):
+                query=sql, parameters=[{"name": "@k", "value": 10}, {"name": "@kw", "value": keyword}]):
                 for k in ("_rid", "_self", "_etag", "_attachments", "_ts", "e"):
                     doc.pop(k, None)
                 r.append(doc)
-        except Exception as e:
-            log.warning("Fulltext search for '%s' failed: %s", keyword, e)
+        except Exception:
+            pass
         return r
 
-    basic_kw = _extract_keywords(question)
-    llm_kw_task = asyncio.create_task(_llm_expand_keywords(question, engine))
+    all_kw = list(set(basic_kw[:5] + (llm_keywords or [])[:6]))
+    ft_tasks = [_ft(kw) for kw in all_kw]
 
-    ft_tasks = [_ft(kw) for kw in basic_kw[:5]]
+    t_graph = time.perf_counter()
+    graph_results = await asyncio.gather(_graph_traversal(), _tv(), _fv(), *ft_tasks)
+    pk_triples = graph_results[0]
+    vec_triples = graph_results[1]
+    vec_food = graph_results[2]
+    ft_results = graph_results[3:]
 
-    t_ret = time.perf_counter()
-    results = await asyncio.gather(_es(), _tv(), _fv(), *ft_tasks)
-    seed_entities = results[0]
-    vec_triples = results[1]
-    vec_sources = results[2]
-    ft_basic_results = results[3:]
+    seen_keys: set[str] = set()
+    all_triples = []
+    for t in pk_triples + vec_triples:
+        key = f"{t.get('subject','')}|{t.get('predicate','')}|{t.get('object','')}"
+        if key not in seen_keys:
+            seen_keys.add(key)
+            all_triples.append(t)
+    all_triples = all_triples[:max_triples]
+    timings["graph_traversal"] = time.perf_counter() - t_graph
 
-    llm_keywords = await llm_kw_task
-    if llm_keywords:
-        ft_llm_results = await asyncio.gather(*[_ft(kw) for kw in llm_keywords[:6]])
-    else:
-        ft_llm_results = []
-    log.info("Keywords basic=%s llm=%s", basic_kw[:5], llm_keywords)
+    # Source chunk fetch + merge
+    t_src = time.perf_counter()
+    source_chunk_ids: set[str] = set()
+    for t in all_triples:
+        for cid in t.get("source_chunks", []):
+            source_chunk_ids.add(cid)
+    for e in seed_entities[:5]:
+        for cid in e.get("source_chunks", []):
+            source_chunk_ids.add(cid)
 
-    hybrid_sources = []
-    for batch in list(ft_basic_results) + list(ft_llm_results):
-        hybrid_sources.extend(batch)
-    timings["entity_search"] = time.perf_counter() - t_ret
+    source_ids = list(source_chunk_ids)[:max_source]
+    source_chunks: list[dict] = []
+    if source_ids:
+        for batch_start in range(0, len(source_ids), 20):
+            batch = source_ids[batch_start:batch_start + 20]
+            ids_param = ", ".join(f'"{sid}"' for sid in batch)
+            async for doc in food_ctr.query_items(query=f"SELECT * FROM c WHERE c.id IN ({ids_param})"):
+                for k in ("e", "_rid", "_self", "_etag", "_attachments", "_ts"):
+                    doc.pop(k, None)
+                source_chunks.append(doc)
 
-    seen_ids = {doc.get("id") for doc in vec_sources}
-    for doc in hybrid_sources:
+    seen_ids = {doc.get("id") for doc in source_chunks}
+    for doc in vec_food:
         if doc.get("id") not in seen_ids:
-            vec_sources.append(doc)
+            source_chunks.append(doc)
             seen_ids.add(doc.get("id"))
-    timings["graph_traversal"] = 0.0
-    timings["source_fetch"] = 0.0
+    for batch in ft_results:
+        for doc in batch:
+            if doc.get("id") not in seen_ids:
+                source_chunks.append(doc)
+                seen_ids.add(doc.get("id"))
+    timings["source_fetch"] = time.perf_counter() - t_src
 
-    if not seed_entities:
-        timings["total"] = time.perf_counter() - t0
-        return {"answer": "No relevant entities found.", "timings": timings}
+    source_chunks = await _semantic_rerank(food_ctr, question, source_chunks, top_k=RERANKER_TOP_K)
 
-    t_rerank = time.perf_counter()
-    source_chunks = await _semantic_rerank(food_ctr, question, vec_sources, top_k=rerank_top_k)
-    timings["rerank"] = time.perf_counter() - t_rerank
-
-    all_triples = vec_triples[:max_triples]
     graph_context = engine._build_graph_context(seed_entities, all_triples)
     source_text = engine._build_source_text(source_chunks)
     prompt = DFLASH_ANSWER_PROMPT.replace("{graph_context}", graph_context) \
@@ -893,7 +1043,7 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
     resp = await engine._llm.chat.completions.create(
         model=engine._llm_model,
         messages=[
-            {"role": "system", "content": "You are a helpful food product expert. Always recommend products. Be concise."},
+            {"role": "system", "content": "You are a helpful food product expert. Always recommend products."},
             {"role": "user", "content": prompt},
         ],
         temperature=0.0,

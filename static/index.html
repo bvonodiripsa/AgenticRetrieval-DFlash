@@ -341,10 +341,11 @@ async function doStream(question) {
             if (tm.entity_search != null) mk('Entity', Number(tm.entity_search).toFixed(2));
             if (tm.graph_traversal != null) mk('Graph', Number(tm.graph_traversal).toFixed(2));
             if (tm.source_fetch != null) mk('Source', Number(tm.source_fetch).toFixed(2));
+            if (tm.rerank != null) mk('Rerank', Number(tm.rerank).toFixed(2));
             if (tm.llm != null) mk('LLM', Number(tm.llm).toFixed(2));
             mk('Total', pipelineTotal.toFixed(1), 'total');
             timingCard.classList.remove('hidden');
-            addProgress('Done in ' + pipelineTotal.toFixed(1) + 's (LLM: ' + (tm.llm ? Number(tm.llm).toFixed(1) : '?') + 's)', 'done');
+            addProgress('Pipeline: ' + pipelineTotal.toFixed(1) + 's total (LLM: ' + (tm.llm ? Number(tm.llm).toFixed(1) : '?') + 's)', 'done', pipelineTotal.toFixed(1));
           } else if (ev.stage === 'error') {
             addProgress('Error: ' + (ev.message || ''), 'error');
           }
