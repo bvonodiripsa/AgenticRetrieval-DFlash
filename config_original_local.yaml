@@ -1,0 +1,179 @@
+# =============================================================================
+# Original AgenticRetrieval — using LOCAL vLLM (Qwen3.5-27B) instead of Azure OpenAI
+# =============================================================================
+# Decomposed RAG pipeline (vector + full-text search, no knowledge graph).
+# Same food DB as KG/DFlash backends but uses the original multi-round
+# retrieval from github.com/bvonodiripsa/AgenticRetrieval.
+# =============================================================================
+
+paths:
+  questions_path: "data/food.json"
+  output_root: "out"
+
+prune_k: 20
+hyde: false
+
+pipeline:
+  mode: decomposed
+  max_sub_questions: 5
+  subq_fanout_cap: 3
+  subq_max_concurrency: 2
+  rounds: 2
+  preliminary_prefix: "If needed, check designation field."
+  subquery_prefix: "If needed, check designation field."
+  dataset_description: ""
+
+retrieval:
+  k_fulltext: 10
+  k_diverse: 100
+  eta: 0.0
+  rescale_power: 5.0
+  cache_size: 2000
+
+ranker:
+  use_ranker: false
+  rerank_multiplier: 8
+  k_ranker: 20
+  region: ""
+  account_name: ""
+  tenant_id: ""
+  token_scope: ""
+  batch_size: 32
+  max_retries: 5
+
+execution:
+  max_questions: null
+  max_workers: 8
+
+# LLM — original Azure OpenAI (GPT-4.1)
+llm:
+  llm_endpoint: "https://smccullough-westus-resource.cognitiveservices.azure.com"
+  api_version: "2025-04-01-preview"
+  tenant_id: "43083d15-7273-40c1-b7db-39efd9ccc17a"
+  llm_model: "gpt-4.1"
+  temperature: 0.0
+  max_completion_tokens: 4096
+  max_retries: 5
+  use_local_fallback_for_subtasks: false
+  premium_max_concurrency: 4
+  local_max_concurrency: 8
+  prompt_cache_size: 2048
+  embed_cache_size: 4096
+  use_rbac_auth: true
+  token_scope: "https://cognitiveservices.azure.com/.default"
+  azure_openai_key: ""
+
+local_llm:
+  use_local_fallback_for_subtasks: false
+
+# Embedding — in-process (same Qwen3-Embedding-0.6B as other backends)
+embedding:
+  embed_endpoint: ""
+  api_format: "openai"
+  api_version: "2024-12-01-preview"
+  embed_model: "Qwen/Qwen3-Embedding-0.6B"
+  embed_dimensions: 1024
+  embed_cache_size: 4096
+  use_rbac_auth: false
+  token_scope: ""
+  embed_api_key: ""
+  use_embed_in_process: true
+
+# Cosmos DB settings — same food database
+cosmos:
+  uri: "https://divdet.documents.azure.com:443/"
+  key: ""
+  database_name: "food"
+  use_rbac_auth: true
+  tenant_id: "43083d15-7273-40c1-b7db-39efd9ccc17a"
+  cosmos_account_name: divdet
+  cosmos_resource_group: ams-cosmos-db
+  azure_subscription_id: "b7d41fc8-d35d-41db-92ed-1f7f1d32d4d9"
+  concurrent_batches: 1
+  embedding_batch_size: 50
+
+  vector_embedding_policy_json: |
+    {
+      "vectorEmbeddings": [
+        {
+          "path": "/e",
+          "dataType": "float32",
+          "dimensions": 1024,
+          "distanceFunction": "cosine"
+        }
+      ]
+    }
+
+  sources:
+    - id: "food"
+      container_name: "food"
+      partition_key_path: "/country_code"
+      embedding_field: "e"
+      documents_root: "data/food/fr_caas.jsonl"
+      context_fields: ["product_id"]
+      embedding_text_fields:
+        - product_title
+        - product_title_translated
+        - brand
+        - claims
+        - claims_translated
+        - ingredients
+        - ingredients_translated
+        - allergens
+        - allergens_translated
+        - pack_size
+        - pack_size_translated
+        - country_code
+      retrieval:
+        search_k: 35
+        fulltext_search_k: 15
+        fulltext_fields:
+          - product_title
+          - product_title_translated
+          - brand
+          - claims
+          - claims_translated
+          - ingredients_translated
+          - country_code
+      indexing_policy_json: |
+        {
+          "indexingMode": "consistent",
+          "automatic": true,
+          "includedPaths": [
+            { "path": "/*" }
+          ],
+          "excludedPaths": [
+            { "path": "/\"_etag\"/?" },
+            { "path": "/e/*" }
+          ],
+          "fullTextIndexes": [
+            { "path": "/product_title" },
+            { "path": "/product_title_translated" },
+            { "path": "/brand" },
+            { "path": "/claims" },
+            { "path": "/claims_translated" },
+            { "path": "/ingredients_translated" },
+            { "path": "/country_code" }
+          ],
+          "vectorIndexes": [
+            {
+              "path": "/e",
+              "type": "diskANN",
+              "quantizationByteSize": 192,
+              "indexingSearchListSize": 100
+            }
+          ]
+        }
+      full_text_policy_json: |
+        {
+          "defaultLanguage": "en-US",
+          "fullTextPaths": [
+            { "path": "/product_title", "language": "it-IT" },
+            { "path": "/product_title_translated", "language": "en-US" },
+            { "path": "/brand", "language": "en-US" },
+            { "path": "/claims", "language": "it-IT" },
+            { "path": "/claims_translated", "language": "en-US" },
+            { "path": "/ingredients_translated", "language": "en-US" },
+            { "path": "/country_code", "language": "en-US" }
+          ]
+        }

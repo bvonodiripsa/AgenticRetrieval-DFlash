@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Food KG-RAG – DFlash Knowledge Assistant</title>
+<title>Food KG-RAG – Multi-Backend Knowledge Assistant</title>
 <style>
   :root {
     --bg: #f5f6f8; --surface: #fff; --border: #d1d5db;
@@ -15,7 +15,7 @@
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
          background: var(--bg); color: var(--text); line-height: 1.5; }
   .header { background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
-            color: #fff; padding: 20px 32px; }
+            color: #fff; padding: 20px 32px; transition: background 0.3s; }
   .header h1 { font-size: 1.4rem; font-weight: 600; }
   .header p { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; }
   .header .badge { display: inline-block; background: rgba(255,255,255,0.2);
@@ -45,6 +45,17 @@
   .btn-stop:hover { background: #b91c1c; }
   .btn-secondary { background: var(--text2); }
   .btn-secondary:hover { background: #4b5563; }
+
+  .backend-select { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .backend-btn {
+    padding: 8px 16px; border: 2px solid var(--border); border-radius: 8px;
+    background: var(--surface); cursor: pointer; font-size: 0.82rem; font-weight: 500;
+    transition: all 0.15s; flex: 1; min-width: 160px; text-align: center;
+  }
+  .backend-btn:hover { border-color: var(--text2); }
+  .backend-btn.active { border-color: var(--accent); background: #ecfdf5; color: #065f46; }
+  .backend-btn .backend-label { font-weight: 600; display: block; }
+  .backend-btn .backend-desc { font-size: 0.72rem; color: var(--text2); display: block; margin-top: 2px; }
 
   .progress-log { background: #1e293b; color: #e2e8f0; font-family: 'SF Mono', 'Fira Code', monospace;
                   font-size: 0.78rem; border-radius: 6px; padding: 14px 16px;
@@ -83,19 +94,23 @@
              animation: spin 0.6s linear infinite; display: inline-block; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .model-badge { display: inline-block; background: #d1fae5; color: #065f46;
-                 border-radius: 12px; padding: 2px 10px; font-size: 0.72rem;
-                 font-weight: 600; margin-left: 8px; }
+  .model-badge { display: inline-block; border-radius: 12px; padding: 2px 10px;
+                 font-size: 0.72rem; font-weight: 600; margin-left: 8px; }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>Food Product Knowledge Assistant <span class="badge">DFlash</span></h1>
-  <p>KG-RAG over 58K food products &middot; 892K knowledge graph triples &middot; Qwen3.5-27B + DFlash speculative decoding</p>
+<div class="header" id="header">
+  <h1>Food Product Knowledge Assistant <span class="badge" id="header-badge">DFlash</span></h1>
+  <p id="header-desc">KG-RAG over 58K food products &middot; 892K knowledge graph triples &middot; Qwen3.5-27B + DFlash speculative decoding</p>
 </div>
 
 <div class="container">
+  <div class="card">
+    <div class="card-title">Backend</div>
+    <div class="backend-select" id="backend-select"></div>
+  </div>
+
   <div class="card">
     <div class="card-title">Question</div>
     <label for="q-select">Select a predefined question or type your own below</label>
@@ -108,7 +123,7 @@
     </div>
     <div class="row" style="margin-top: 12px;">
       <div style="flex: 1;"></div>
-      <button type="button" class="btn btn-secondary hidden" id="btn-run-all" disabled>Run all questions</button>
+      <button type="button" class="btn btn-secondary" id="btn-run-all" disabled>Run all questions</button>
       <button class="btn" id="btn-ask" disabled>Ask</button>
       <button class="btn btn-stop hidden" id="btn-stop">Stop</button>
     </div>
@@ -125,7 +140,7 @@
   </div>
 
   <div class="card">
-    <div class="card-title">Answer <span id="answer-model-badge" class="model-badge hidden">Qwen3.5-27B + DFlash</span></div>
+    <div class="card-title">Answer <span id="answer-model-badge" class="model-badge hidden"></span></div>
     <div class="answer-box" id="answer-box"></div>
   </div>
 
@@ -164,34 +179,79 @@ const benchmarkCard    = document.getElementById('benchmark-card');
 const benchmarkHeadline = document.getElementById('benchmark-headline');
 const benchmarkTbody   = document.getElementById('benchmark-tbody');
 const answerModelBadge = document.getElementById('answer-model-badge');
+const headerEl   = document.getElementById('header');
+const headerBadge = document.getElementById('header-badge');
+const headerDesc = document.getElementById('header-desc');
+const backendSelectEl = document.getElementById('backend-select');
 
 let questions = [];
+let backends = [];
+let currentBackend = 'dflash';
 let abortCtrl = null;
 let startTime = null;
 let batchRunning = false;
 
-fetch('/v1/questions').then(r => r.json()).then(data => {
-  questions = data;
-  qSelect.innerHTML = '<option value="">-- Type your own question --</option>';
-  data.forEach((q, i) => {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = q.question_text;
-    qSelect.appendChild(opt);
+const HEADER_STYLES = {
+  original: { bg: 'linear-gradient(135deg, #312e81 0%, #7c3aed 100%)', badge: 'Original', desc: 'Multi-round decomposed RAG over 58K food products \u00b7 Vector + full-text search, no KG \u00b7 GPT-4.1 (Azure OpenAI)' },
+  kg:       { bg: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)', badge: 'KG-RAG', desc: 'KG-RAG over 58K food products \u00b7 892K knowledge graph triples \u00b7 Qwen3.5-27B' },
+  dflash:   { bg: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)', badge: 'DFlash', desc: 'KG-RAG over 58K food products \u00b7 892K triples \u00b7 Qwen3.5-27B + DFlash speculative decoding' },
+};
+
+function updateHeader(bid) {
+  const s = HEADER_STYLES[bid] || HEADER_STYLES.dflash;
+  headerEl.style.background = s.bg;
+  headerBadge.textContent = s.badge;
+  headerDesc.textContent = s.desc;
+}
+
+function loadQuestions(bid) {
+  fetch('/v1/questions?backend=' + bid).then(r => r.json()).then(data => {
+    questions = data;
+    qSelect.innerHTML = '<option value="">-- Type your own question --</option>';
+    data.forEach((q, i) => {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = q.question_text;
+      qSelect.appendChild(opt);
+    });
+    btnAsk.disabled = false;
+    btnRunAll.disabled = false;
+  }).catch(() => {
+    qSelect.innerHTML = '<option value="">-- Could not load questions --</option>';
+    btnAsk.disabled = false;
   });
-  btnAsk.disabled = false;
-  btnRunAll.disabled = false;
-  btnRunAll.classList.remove('hidden');
-}).catch(() => {
-  qSelect.innerHTML = '<option value="">-- Could not load questions --</option>';
-  btnAsk.disabled = false;
-});
+}
+
+function selectBackend(bid) {
+  currentBackend = bid;
+  document.querySelectorAll('.backend-btn').forEach(b => b.classList.toggle('active', b.dataset.id === bid));
+  updateHeader(bid);
+  loadQuestions(bid);
+
+  const b = backends.find(x => x.id === bid);
+  answerModelBadge.textContent = b ? b.label : bid;
+  answerModelBadge.style.background = b ? b.badge_color + '22' : '#eee';
+  answerModelBadge.style.color = b ? b.badge_color : '#333';
+}
+
+fetch('/v1/backends').then(r => r.json()).then(data => {
+  backends = data;
+  backendSelectEl.innerHTML = '';
+  data.forEach(b => {
+    const btn = document.createElement('div');
+    btn.className = 'backend-btn' + (b.id === currentBackend ? ' active' : '');
+    btn.dataset.id = b.id;
+    btn.innerHTML = '<span class="backend-label">' + esc(b.label) + '</span><span class="backend-desc">' + esc(b.description) + '</span>';
+    btn.addEventListener('click', () => selectBackend(b.id));
+    btn.style.borderColor = b.id === currentBackend ? b.badge_color : '';
+    backendSelectEl.appendChild(btn);
+  });
+  loadQuestions(currentBackend);
+}).catch(() => { loadQuestions(currentBackend); });
 
 qSelect.addEventListener('change', () => {
   const idx = qSelect.value;
-  if (idx !== '') {
-    qInput.value = questions[parseInt(idx)].question_text;
-  }
+  if (idx !== '') { qInput.value = questions[parseInt(idx)].question_text; }
 });
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
@@ -224,9 +284,10 @@ function showStats(ev) {
 
 function cosmosSum(t) {
   if (!t) return null;
-  const keys = ['entity_search', 'graph_traversal', 'source_fetch'];
   let s = 0;
-  for (const k of keys) { if (typeof t[k] === 'number') s += t[k]; }
+  for (const k of ['entity_search', 'graph_traversal', 'source_fetch']) {
+    if (typeof t[k] === 'number') s += t[k];
+  }
   return s;
 }
 
@@ -236,13 +297,10 @@ async function doStream(question) {
     const resp = await fetch('/v1/ask/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question, backend: currentBackend }),
       signal: abortCtrl.signal,
     });
-    if (!resp.ok) {
-      addProgress('Error: ' + await resp.text(), 'error');
-      return;
-    }
+    if (!resp.ok) { addProgress('Error: ' + await resp.text(), 'error'); return; }
 
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
@@ -260,21 +318,18 @@ async function doStream(question) {
         if (payload === '[DONE]') continue;
         try {
           const ev = JSON.parse(payload);
-
           if (ev.stage === 'progress') {
             addProgress(ev.message || '', null, ev._ts);
           } else if (ev.stage === 'stats') {
             showStats(ev);
-            if (ev.triples_found) {
-              addProgress('KG: ' + ev.triples_found + ' triples from ' + ev.seed_entities + ' entities', null, ev._ts);
-            }
-            addProgress('Retrieval done — streaming answer...', '', ev._ts);
+            addProgress('Retrieval done \u2014 streaming answer...', '', ev._ts);
           } else if (ev.stage === 'token') {
             answer += ev.text || '';
             answerEl.textContent = answer;
             answerModelBadge.classList.remove('hidden');
           } else if (ev.stage === 'done') {
-            const wall = (performance.now() - startTime) / 1000;
+            const tm = ev.timings || {};
+            const pipelineTotal = tm.total != null ? Number(tm.total) : (performance.now() - startTime) / 1000;
             timingBar.innerHTML = '';
             const mk = function(label, val, cls) {
               const c = document.createElement('span');
@@ -282,15 +337,14 @@ async function doStream(question) {
               c.textContent = label + ': ' + val + 's';
               timingBar.appendChild(c);
             };
-            const tm = ev.timings || {};
             if (tm.embed != null) mk('Embed', Number(tm.embed).toFixed(2));
             if (tm.entity_search != null) mk('Entity', Number(tm.entity_search).toFixed(2));
             if (tm.graph_traversal != null) mk('Graph', Number(tm.graph_traversal).toFixed(2));
             if (tm.source_fetch != null) mk('Source', Number(tm.source_fetch).toFixed(2));
             if (tm.llm != null) mk('LLM', Number(tm.llm).toFixed(2));
-            mk('Wall', wall.toFixed(1), 'total');
+            mk('Total', pipelineTotal.toFixed(1), 'total');
             timingCard.classList.remove('hidden');
-            addProgress('Done in ' + wall.toFixed(1) + 's (LLM: ' + (tm.llm ? Number(tm.llm).toFixed(1) : '?') + 's)', 'done');
+            addProgress('Done in ' + pipelineTotal.toFixed(1) + 's (LLM: ' + (tm.llm ? Number(tm.llm).toFixed(1) : '?') + 's)', 'done');
           } else if (ev.stage === 'error') {
             addProgress('Error: ' + (ev.message || ''), 'error');
           }
@@ -298,117 +352,78 @@ async function doStream(question) {
       }
     }
   } catch (e) {
-    if (e.name !== 'AbortError') {
-      addProgress('Connection error: ' + e.message, 'error');
-    }
+    if (e.name !== 'AbortError') addProgress('Connection error: ' + e.message, 'error');
   }
 }
 
 async function doAsk() {
   const question = qInput.value.trim();
   if (!question) { qInput.focus(); return; }
-
-  btnAsk.disabled = true;
-  btnRunAll.disabled = true;
+  btnAsk.disabled = true; btnRunAll.disabled = true;
   btnAsk.innerHTML = '<span class="spinner"></span> Running...';
   btnStop.classList.remove('hidden');
-
-  logEl.innerHTML = '';
-  answerEl.textContent = '';
-  statsCard.classList.add('hidden');
-  timingCard.classList.add('hidden');
+  logEl.innerHTML = ''; answerEl.textContent = '';
+  statsCard.classList.add('hidden'); timingCard.classList.add('hidden');
   answerModelBadge.classList.add('hidden');
-
   startTime = performance.now();
   abortCtrl = new AbortController();
 
   await doStream(question);
 
-  btnAsk.disabled = false;
-  btnRunAll.disabled = questions.length === 0;
-  btnAsk.innerHTML = 'Ask';
-  btnStop.classList.add('hidden');
+  btnAsk.disabled = false; btnRunAll.disabled = questions.length === 0;
+  btnAsk.innerHTML = 'Ask'; btnStop.classList.add('hidden');
   abortCtrl = null;
 }
 
 async function runAllQuestions() {
   if (!questions.length || batchRunning) return;
   batchRunning = true;
-  btnAsk.disabled = true;
-  btnRunAll.disabled = true;
+  btnAsk.disabled = true; btnRunAll.disabled = true;
   btnStop.classList.remove('hidden');
-  logEl.innerHTML = '';
-  answerEl.textContent = '\u2014';
-  statsCard.classList.add('hidden');
-  timingCard.classList.add('hidden');
-  benchmarkCard.classList.add('hidden');
-  benchmarkTbody.innerHTML = '';
+  logEl.innerHTML = ''; answerEl.textContent = '\u2014';
+  statsCard.classList.add('hidden'); timingCard.classList.add('hidden');
+  benchmarkCard.classList.add('hidden'); benchmarkTbody.innerHTML = '';
   startTime = performance.now();
   abortCtrl = new AbortController();
-
-  const rows = [];
-  let errors = 0;
-
-  addProgress('Starting batch: ' + questions.length + ' questions via POST /v1/ask...');
-
+  const rows = []; let errors = 0;
+  addProgress('Starting batch: ' + questions.length + ' questions (' + currentBackend + ')...');
   try {
     for (let i = 0; i < questions.length; i++) {
-      if (abortCtrl.signal.aborted) { addProgress('Stopped by user.', 'error'); break; }
+      if (abortCtrl.signal.aborted) { addProgress('Stopped.', 'error'); break; }
       const q = questions[i];
       const qid = q.question_id != null ? String(q.question_id) : String(i);
-      addProgress('[' + (i + 1) + '/' + questions.length + '] ' + qid + '...');
-
-      let data = null;
-      let errMsg = null;
+      addProgress('[' + (i+1) + '/' + questions.length + '] ' + qid + '...');
+      let data = null, errMsg = null;
       try {
         const resp = await fetch('/v1/ask', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: q.question_text }),
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q.question_text, backend: currentBackend }),
           signal: abortCtrl.signal,
         });
         const raw = await resp.text();
-        try { data = raw ? JSON.parse(raw) : {}; } catch (pe) { data = { message: raw.slice(0, 200) }; }
-        if (!resp.ok) {
-          errMsg = data.detail || data.message || ('HTTP ' + resp.status);
-          errors++;
-        }
-      } catch (e) {
-        if (e.name === 'AbortError') { addProgress('Stopped by user.', 'error'); break; }
-        errMsg = e.message;
-        errors++;
+        try { data = raw ? JSON.parse(raw) : {}; } catch(pe) { data = { message: raw.slice(0,200) }; }
+        if (!resp.ok) { errMsg = data.detail || data.message || ('HTTP ' + resp.status); errors++; }
+      } catch(e) {
+        if (e.name === 'AbortError') { addProgress('Stopped.', 'error'); break; }
+        errMsg = e.message; errors++;
       }
-
       const t = (data && data.timings) || {};
-      rows.push({ idx: i + 1, qid: qid, total: t.total, wall: data && data.http_wall_s, embed: t.embed, cosmos: cosmosSum(t), llm: t.llm, err: errMsg });
-      if (errMsg) { addProgress('  \u2717 ' + qid + ': ' + errMsg, 'error'); }
-      else { addProgress('  \u2713 ' + qid + ': ' + (t.total != null ? t.total.toFixed(2) : '?') + 's total', 'done'); }
+      rows.push({ idx:i+1, qid, total:t.total, wall:data&&data.http_wall_s, embed:t.embed, cosmos:cosmosSum(t), llm:t.llm, err:errMsg });
+      if (errMsg) addProgress('  \u2717 ' + qid + ': ' + errMsg, 'error');
+      else addProgress('  \u2713 ' + qid + ': ' + (t.total!=null?t.total.toFixed(2):'?') + 's', 'done');
     }
   } finally {
-    batchRunning = false;
-    btnAsk.disabled = false;
-    btnRunAll.disabled = false;
-    btnStop.classList.add('hidden');
-    abortCtrl = null;
+    batchRunning = false; btnAsk.disabled = false; btnRunAll.disabled = false;
+    btnStop.classList.add('hidden'); abortCtrl = null;
   }
-
   const ok = rows.filter(r => !r.err);
-  const totals = ok.map(r => r.total).filter(x => typeof x === 'number');
-  const avg = totals.length ? totals.reduce((a, b) => a + b, 0) / totals.length : 0;
-  const wallVals = ok.map(r => r.wall).filter(x => typeof x === 'number');
-  const avgWall = wallVals.length ? wallVals.reduce((a, b) => a + b, 0) / wallVals.length : 0;
-
-  benchmarkHeadline.textContent =
-    'Completed ' + rows.length + ' requests (' + ok.length + ' OK, ' + errors + ' errors). ' +
-    'Avg engine total: ' + avg.toFixed(2) + 's \u00b7 Avg HTTP wall: ' + avgWall.toFixed(2) + 's \u00b7 ' +
-    'Batch wall: ' + ((performance.now() - startTime) / 1000).toFixed(1) + 's';
-
+  const totals = ok.map(r=>r.total).filter(x=>typeof x==='number');
+  const avg = totals.length ? totals.reduce((a,b)=>a+b,0)/totals.length : 0;
+  benchmarkHeadline.textContent = 'Completed ' + rows.length + ' (' + ok.length + ' OK, ' + errors + ' err). Avg total: ' + avg.toFixed(2) + 's. Batch wall: ' + ((performance.now()-startTime)/1000).toFixed(1) + 's';
   for (const r of rows) {
     const tr = document.createElement('tr');
-    const fmt = x => (x != null && typeof x === 'number' ? x.toFixed(2) : '\u2014');
-    tr.innerHTML = '<td>' + r.idx + '</td><td>' + esc(r.qid) + '</td><td>' + fmt(r.total) + '</td><td>' + fmt(r.wall) + '</td>' +
-      '<td>' + fmt(r.embed) + '</td><td>' + fmt(r.cosmos) + '</td><td>' + fmt(r.llm) + '</td>' +
-      '<td>' + (r.err ? esc(r.err.slice(0, 80)) : 'OK') + '</td>';
+    const fmt = x => (x!=null&&typeof x==='number'?x.toFixed(2):'\u2014');
+    tr.innerHTML = '<td>'+r.idx+'</td><td>'+esc(r.qid)+'</td><td>'+fmt(r.total)+'</td><td>'+fmt(r.wall)+'</td><td>'+fmt(r.embed)+'</td><td>'+fmt(r.cosmos)+'</td><td>'+fmt(r.llm)+'</td><td>'+(r.err?esc(r.err.slice(0,80)):'OK')+'</td>';
     benchmarkTbody.appendChild(tr);
   }
   benchmarkCard.classList.remove('hidden');
@@ -417,7 +432,7 @@ async function runAllQuestions() {
 btnAsk.addEventListener('click', doAsk);
 btnRunAll.addEventListener('click', runAllQuestions);
 btnStop.addEventListener('click', () => { if (abortCtrl) abortCtrl.abort(); });
-qInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doAsk(); } });
+qInput.addEventListener('keydown', e => { if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); doAsk(); } });
 </script>
 </body>
 </html>
