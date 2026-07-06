@@ -1,258 +1,406 @@
-# Agentic Retrieval
+# Agentic Retrieval + Knowledge Graph + DFlash
 
 ![Agentic Retrieval overview](AgenticRetrievalOverview.png)
 
-Agentic Retrieval is a multi-stage agentic retrieval accelerator for answering complex questions that typically require multi-hop reasoning. It is a self-correcting RAG system that iteratively identifies knowledge gaps, retrieves targeted evidence, and generates more complete answers — built on Azure Cosmos DB for NoSQL and Microsoft Foundry.
+This repository extends the [AgenticRetrieval](https://github.com/bvonodiripsa/AgenticRetrieval) project with two major additions: a **Knowledge Graph (KG)** retrieval layer built on Azure Cosmos DB, and **DFlash speculative decoding** for GPU-accelerated LLM inference. Together they deliver faster, higher-quality answers over the same food product dataset (58K documents, 892K KG triples).
 
-Instead of relying on a single search-and-answer pass, the pipeline interleaves retrieval and reasoning across multiple rounds: it drafts a preliminary answer, analyzes what is still missing or under-supported, decomposes the gap into focused sub-questions, retrieves new evidence per sub-question across one or more Cosmos DB containers, and finally synthesizes a grounded answer from the accumulated context.
+A unified FastAPI web application (`api.py`) exposes three backend pipelines side by side:
 
-## Useful for scenarios with…
+| Backend | LLM | Retrieval Strategy | Decoding |
+|---------|-----|--------------------|----------|
+| **Original** | GPT-4.1 (Azure OpenAI) | Multi-round decomposed RAG (vector + full-text) | Standard cloud |
+| **KG-RAG** | Qwen3.5-27B (local vLLM, FP8) | KG graph traversal + vector + source fetch | Standard local |
+| **KG-RAG + DFlash** | Qwen3.5-27B (local vLLM, FP8) | KG traversal + vector + keyword + semantic rerank | DFlash speculative |
 
-- **Complex questions** that span multiple topics or require information from many documents and modalities.
-- **High-stakes applications** where answer completeness and accuracy matter (legal, medical, financial, real-estate, etc.).
-- **Large heterogeneous corpora** where a single search query can't surface all relevant information.
-- **Enterprise knowledge bases** with structured and unstructured data across multiple collections.
+## What Changed from the Original
 
-## How it works
+### Architecture changes
 
-Agentic Retrieval has two stages:
+| Area | Original ([AgenticRetrieval](https://github.com/bvonodiripsa/AgenticRetrieval)) | This repo (AgenticRetrieval-DFlash) |
+|------|--------------------------|------|
+| **LLM** | Azure OpenAI GPT-4.1 (cloud API) | Qwen3.5-27B served locally via vLLM (FP8 quantized) |
+| **Hardware** | No GPU required (cloud LLM) | 2x NVIDIA H100 80GB (Azure ND96isr_H100_v5) |
+| **Retrieval** | Multi-round decomposed RAG: sub-question decomposition, gap-filling re-retrieval over 2+ rounds | Single-pass KG traversal: entity search → graph hop → source fetch |
+| **Knowledge Graph** | None — retrieves directly from document embeddings | 892K triples extracted from 58K documents; stored in Cosmos DB (`kg_triples_food`, `kg_entities_food`) |
+| **Embedding** | Azure OpenAI embedding endpoint | In-process `Qwen3-Embedding-0.6B` (1024 dims, no network call) |
+| **Decoding** | Standard autoregressive | DFlash speculative: `z-lab/Qwen3.5-27B-DFlash` draft model proposes 5 tokens per step; main model verifies in a single forward pass |
+| **Semantic Reranker** | Optional (disabled by default) | Integrated via Cosmos DB Semantic Reranker SDK (DFlash path) |
+| **Keyword Search** | Built-in full-text search per source | LLM-expanded keyword generation + parallel `FullTextContains` queries |
+| **Web UI** | CLI only (`dynamic_retriever.py`) | FastAPI + SSE streaming web app with real-time progress and timing |
 
-1. **Ingestion (`cosmos_db_upload.py`)**
-   - Reads documents from one or more configured sources (JSONL by default; custom parsers for other formats such as XML).
-   - Builds embeddings with the configured Azure OpenAI / Foundry endpoint and stores them in the per-source embedding field (e.g. `e`).
-   - Upserts documents into Azure Cosmos DB containers with vector and full-text indexing enabled.
+### New files (not in the original)
 
-2. **Retrieval and answering (`dynamic_retriever.py`)**
-   - Runs a decomposed RAG loop combining vector search, full-text search, diversity selection, and optional semantic reranking across all configured sources.
-   - Iteratively generates sub-questions to fill knowledge gaps, retrieves targeted evidence for each, and synthesizes a final answer.
-   - Writes per-question traces and grouped answer files under `out/`.
+| File | Purpose |
+|------|---------|
+| `kg_builder.py` | Offline KG construction: triple extraction, dedup, predicate normalization, entity resolution |
+| `kg_query.py` | Online KG-RAG query engine: graph traversal + vector augment + LLM answer |
+| `api.py` | FastAPI web app hosting all three backends with SSE streaming |
+| `prompts_kg_food.py` | KG-specific prompts for triple extraction and answer generation |
+| `static/index.html` | Web UI with backend selector, progress log, and timing display |
+| `config_kg_dflash.yaml` | DFlash backend configuration (smaller context, faster inference) |
+| `config_kg_oldqwen.yaml` | KG backend configuration (larger context, standard generation) |
+| `config_original_local.yaml` | Original backend configuration (GPT-4.1 via Azure) |
 
-> **Note:** This package can optionally use the **Azure Cosmos DB Semantic Reranker**
-> to reorder retrieved results by semantic relevance before answer synthesis. It is
-> enabled via the `ranker` settings in `config.yaml` (set `ranker.use_ranker: true`)
-> and can be left disabled if you don't have a reranker resource. Learn more:
-> <https://aka.ms/build26/cosmosreranker>.
+## How the Pipelines Work
 
-## What this project does
+### Pipeline 1: Original AgenticRetrieval (decomposed multi-round RAG)
 
-- Uploads your corpus to Cosmos DB through **configurable sources** (`cosmos.sources`), each mapping to a container.
-- Embeds all sources with one configured embedding endpoint/model.
-- Answers evaluation questions by combining:
-  - Initial retrieval
-  - Gap-aware sub-question decomposition
-  - Regeneration/synthesis into a final answer
+This is the upstream [AgenticRetrieval](https://github.com/bvonodiripsa/AgenticRetrieval) pipeline running unmodified. It is the quality baseline.
 
-## Prerequisites
-
-- Python 3.10+
-- Azure Cosmos DB account + database/containers (or management settings for auto-create)
-- Azure OpenAI (or local embedding endpoint if configured)
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
+```
+Question
+  │
+  ├─► Round 1: Vector + full-text search → initial answer
+  │
+  ├─► Gap analysis: identify missing knowledge
+  │
+  ├─► Round 2: Decompose gaps into sub-questions
+  │      ├─► Sub-question 1 → targeted retrieval
+  │      ├─► Sub-question 2 → targeted retrieval
+  │      └─► ...
+  │
+  └─► Final synthesis: combine all evidence → answer
 ```
 
-Or use setup helpers:
+- **LLM**: GPT-4.1 via Azure OpenAI (cloud, ~30-40 tok/s)
+- **Retrieval**: `CombinedRetriever` from `dynamic_retriever.py` — vector search (k=35) + full-text search (k=15) per source container, with diversity selection
+- **Rounds**: 2 decompose/retrieve/synthesize rounds by default
+- **Strengths**: Highest answer completeness (10+ products, detailed reasoning); gap-aware re-retrieval catches information missed in the first pass
+- **Weakness**: Slowest — multiple LLM calls + multiple retrieval rounds (70-94s total)
 
-- PowerShell: `./run.ps1`
-- Bash: `source ./run.sh`
+### Pipeline 2: KG-RAG (knowledge graph retrieval + single LLM call)
 
-## Sequence of actions
+Single-pass retrieval through a pre-built knowledge graph, followed by one LLM call.
 
-### 1) Populate `config.yaml`
-
-Start from `config.yaml.example` and fill required values in `config.yaml`. Make sure to use the latest `config.yaml.example` as the format might have been updated.
-
-At minimum, set:
-
-- `llm.llm_endpoint`
-- `llm.embed_endpoint`
-- `llm.llm_model`
-- `llm.embed_model`
-- `llm.azure_openai_key` (if not using RBAC for OpenAI, i.e., `llm.use_rbac_auth: false`)
-- `cosmos.uri`
-- `cosmos.database_name`
-- `cosmos.sources` (one or more source entries)
-- `paths.output_root`
-
-Each entry in `cosmos.sources` is configured independently and includes:
-
-- `id`
-- `container_name`
-- `partition_key_path`
-- `embedding_field` (document field that stores embedding vectors, e.g. `e`)
-- `documents_root`
-- `embedding_text_fields`
-- `retrieval.vector_k`
-- `retrieval.fulltext_k`
-- `retrieval.fulltext_fields`
-- `indexing_policy_json`
-- `full_text_policy_json`
-
-**Authentication options:**
-
-- **Cosmos DB**: Uses Entra ID RBAC by default (`cosmos.use_rbac_auth: true`).
-  - Set `cosmos.use_rbac_auth: false` to use key-based auth (requires `cosmos.key`).
-  - For RBAC: Ensure your identity has the "Cosmos DB Built-in Data Contributor" role assigned.
-
-- **Azure OpenAI**: Uses key-based auth by default (`llm.use_rbac_auth: false`).
-  - Set `llm.use_rbac_auth: true` to use Entra ID RBAC (requires `llm.token_scope`).
-
-Optional but recommended for auto-creating missing containers:
-
-- `cosmos.azure_subscription_id`
-- `cosmos.cosmos_resource_group`
-- `cosmos.cosmos_account_name` (or let script infer from `cosmos.uri`)
-
-### 2) Upload documents to Cosmos DB
-
-Run:
-
-```bash
-python cosmos_db_upload.py --config config.yaml
+```
+Question
+  │
+  ├─► Embed question (Qwen3-Embedding-0.6B, in-process)
+  │
+  ├─► Entity search (vector search on kg_entities_food, top 20)
+  │
+  ├─► Graph traversal (PK-based triple fetch per entity, 2 hops)
+  │      └─► Vector triple search (top 30 by similarity)
+  │
+  ├─► Source fetch (document IDs from triples/entities → batch read)
+  │      └─► Vector augment (additional food container search, top 15)
+  │
+  └─► Single LLM call (Qwen3.5-27B, standard decoding) → answer
 ```
 
-Notes:
+- **LLM**: Qwen3.5-27B via vLLM (local, FP8, ~55 tok/s standard)
+- **KG**: 892K triples linking products, ingredients, allergens, dietary properties, occasions, cooking methods
+- **Context**: Large window — up to 150 triples + 40 source chunks + 15 vector augment docs
+- **Strengths**: Rich structured context from KG; single LLM call
+- **Weakness**: Still relatively slow (~35-43s) because the LLM generates with standard autoregressive decoding over a large context
 
-- Upload target(s) are inferred from configured `cosmos.sources` entries with non-empty `documents_root`.
+### Pipeline 3: KG-RAG + DFlash (parallel retrieval + speculative decoding)
 
-### 3) Run retrieval and generate answers
+Same KG retrieval as Pipeline 2 but with two key optimizations: **parallel retrieval** and **DFlash speculative decoding**.
 
-Before running retrieval, prepare your questions file.
+```
+Question
+  │
+  ├─► Embed question (Qwen3-Embedding-0.6B, in-process)
+  │
+  ├─► PARALLEL:
+  │      ├─► Entity search (vector, top 10)
+  │      └─► LLM keyword expansion (5-8 food-related search terms)
+  │
+  ├─► PARALLEL:
+  │      ├─► Graph traversal (PK fetch + vector triples)
+  │      ├─► Food vector search
+  │      └─► Full-text keyword search (per expanded keyword)
+  │
+  ├─► Merge + deduplicate all results
+  │
+  ├─► Semantic reranker (Cosmos DB AI reranker, top 25)
+  │
+  └─► Single LLM call (Qwen3.5-27B + DFlash draft model) → answer
+```
 
-The repository includes a sample file at `data/questions-answers.json` with this structure:
+- **LLM**: Qwen3.5-27B via vLLM with DFlash speculative decoding (~110-140 tok/s, 2-2.5x speedup)
+- **Retrieval**: All search paths run concurrently via `asyncio.gather`; reduced context limits (40 triples, 15 source chunks) to minimize prompt tokens
+- **Keyword expansion**: LLM generates additional food-related search terms (e.g., "protein bar", "energy", "peanut") run as parallel `FullTextContains` queries
+- **Semantic reranker**: Cosmos DB Semantic Reranker re-orders retrieved documents by relevance before prompting the LLM
+- **Strengths**: Fastest pipeline (17-23s); lossless quality (DFlash output is mathematically identical to standard decoding)
+- **Context limits vs KG**: Smaller context (1200 vs 2048 answer tokens, 40 vs 150 triples) trades some breadth for speed
+
+## How DFlash Speculative Decoding Works
+
+DFlash is a speculative decoding technique that accelerates LLM inference without changing the output distribution.
+
+```
+Standard decoding (1 token per forward pass):
+  Step 1: [prompt] → token_1
+  Step 2: [prompt, token_1] → token_2
+  Step 3: [prompt, token_1, token_2] → token_3
+  ... (N forward passes for N tokens)
+
+DFlash speculative decoding (up to 6 tokens per forward pass):
+  Step 1: Draft model proposes [d1, d2, d3, d4, d5]  (cheap, ~1B params)
+  Step 2: Main model verifies all 5 in ONE forward pass
+  Step 3: Accept first K correct tokens, reject the rest
+  Step 4: Repeat from the first rejected position
+```
+
+- **Draft model**: `z-lab/Qwen3.5-27B-DFlash` — a small model (~1B params) trained to mimic Qwen3.5-27B's token distribution
+- **Verification**: The main Qwen3.5-27B model checks all draft tokens in a single batched forward pass
+- **Acceptance rate**: Typically 60-80% of draft tokens are accepted, yielding 2-2.5x effective throughput
+- **Lossless**: The rejection-sampling scheme guarantees the output distribution is identical to standard autoregressive generation
+
+### vLLM configuration
+
+```bash
+vllm serve Qwen/Qwen3.5-27B \
+  --tensor-parallel-size 2 \
+  --max-model-len 16384 \
+  --max-num-batched-tokens 16384 \
+  --gpu-memory-utilization 0.92 \
+  --dtype float16 \
+  --quantization fp8 \
+  --spec-model z-lab/Qwen3.5-27B-DFlash \
+  --spec-tokens 5 \
+  --enable-prefix-caching \
+  --port 8000
+```
+
+## How to Build the Knowledge Graph
+
+The KG is built offline using `kg_builder.py`. It reads food product documents from Cosmos DB, extracts structured triples via LLM, post-processes them, and stores the KG back to Cosmos DB.
+
+### KG build pipeline
+
+1. **Read documents** from the `food` container in Cosmos DB (all 58K or a question-driven subset via vector search)
+2. **Extract triples** using Qwen3.5-27B with decomposed extraction:
+   - Round 1: Initial extraction from product fields (title, ingredients, claims, nutrition)
+   - Round 2+: Gap analysis identifies missing knowledge, targeted extraction fills gaps
+3. **Dedup + confidence boost**: Merge duplicate triples; boost confidence when triples are re-confirmed across documents
+4. **Normalize predicates**: LLM batches standardize free-form predicates into a controlled vocabulary (`has_ingredient`, `contains_allergen`, `suitable_for_occasion`, `has_cooking_method`, etc.)
+5. **Entity resolution**: Embedding-based clustering (cosine similarity > 0.85) + LLM merge verification to unify variant entity names
+6. **Store to Cosmos DB**: Upsert triples and entities with embeddings to `kg_triples_food` and `kg_entities_food` containers
+
+### CLI usage
+
+```bash
+# Full KG build
+python kg_builder.py --config config_kg_dflash.yaml
+
+# Question-driven subset (faster for testing)
+python kg_builder.py --config config_kg_dflash.yaml --question-driven --question-k 30
+
+# Resume from checkpoint
+python kg_builder.py --config config_kg_dflash.yaml --time-limit 3600
+
+# Skip extraction, only run post-processing
+python kg_builder.py --config config_kg_dflash.yaml --skip-extraction --reprocess
+```
+
+### Triple schema in Cosmos DB
 
 ```json
-[
-  {
-    "question_id": "1",
-    "question_text": "Your question here",
-    "answer": "Ground-truth answer here"
-  }
-]
+{
+  "id": "triple-hash",
+  "pk": "reeses sticks",
+  "subject": "Reese's Sticks",
+  "predicate": "has_ingredient",
+  "object": "peanut butter",
+  "confidence": 0.95,
+  "confirmations": 3,
+  "source_chunks": ["doc-abc123"],
+  "embedding": [0.012, -0.034, ...]
+}
 ```
 
-How to use it:
+### Inferred semantic triples
 
-- Keep the same JSON array structure and field names (`question_id`, `question_text`, `answer`).
-- Replace `question_text` values with questions your own dataset should be able to answer.
-- Replace `answer` values with your own ground-truth answers (the expected/correct answers you define for evaluation).
+Beyond extracting facts directly from product data, the builder infers higher-level semantic triples:
 
-Then run:
+- **Occasions**: breakfast, snack, dessert, BBQ, cinema, picnic
+- **Cooking methods**: ready to eat, microwave, air fryer, grill, oven
+- **Convenience**: instant, under 5 min, under 15 min, requires cooking
+- **Nutrition**: high protein, high calorie, low sugar, low fat, keto-friendly
+- **Portability**: pocket sized, single serving, family size
+- **Audience**: athletes, health conscious, families, children
+
+## Configuration Reference
+
+Three YAML configs control the three backends. All share the same Cosmos DB account (`divdet`) and database (`food`).
+
+### Key configuration differences
+
+| Setting | DFlash (`config_kg_dflash.yaml`) | KG (`config_kg_oldqwen.yaml`) | Original (`config_original_local.yaml`) |
+|---------|------|-------|----------|
+| **LLM provider** | Local vLLM | Local vLLM | Azure OpenAI |
+| **LLM model** | Qwen3.5-27B | Qwen3.5-27B | GPT-4.1 |
+| **DFlash draft model** | `z-lab/Qwen3.5-27B-DFlash` | None | None |
+| **Pipeline type** | KG-RAG | KG-RAG | Decomposed multi-round RAG |
+| **seed_entities_k** | 10 | 20 | N/A |
+| **max_hops** | 1 | 2 | N/A |
+| **max_triples** | 40 | 150 | N/A |
+| **max_source_chunks** | 15 | 40 | N/A |
+| **vector_augment_k** | 12 | 15 | N/A |
+| **max_answer_tokens** | 1200 | 2048 | 4096 |
+| **Embedding** | In-process Qwen3-Embedding-0.6B | In-process Qwen3-Embedding-0.6B | In-process Qwen3-Embedding-0.6B |
+| **Semantic reranker** | Yes (via SDK) | No | No |
+| **Keyword search** | LLM-expanded FullTextContains | No | Built-in full-text per source |
+| **Retrieval rounds** | 1 | 1 | 2 |
+
+### DFlash context tradeoffs
+
+DFlash uses smaller context limits than the KG backend to minimize prompt tokens and maximize the speedup from speculative decoding:
+
+- Fewer entities (10 vs 20) — focuses on the most relevant seeds
+- Fewer triples (40 vs 150) — relies on the semantic reranker to surface the best ones
+- Fewer hops (1 vs 2) — reduces graph traversal time
+- Fewer answer tokens (1200 vs 2048) — produces concise, focused answers
+
+The quality gap is compensated by LLM-expanded keyword search and the Cosmos DB semantic reranker, which together bring in products that pure vector search might miss.
+
+## Hardware Requirements
+
+| Component | Specification |
+|-----------|--------------|
+| **GPU** | 2x NVIDIA H100 80GB (for vLLM with tensor parallelism) |
+| **VM** | Azure ND96isr_H100_v5 (96 vCPU, 1.9TB RAM) |
+| **Disk** | 256GB+ for model weights and checkpoints |
+| **Network** | Azure VNet with NSG rules for port 8080 (web UI) |
+
+The Original backend (GPT-4.1) requires no local GPU — it calls Azure OpenAI APIs. However, all three backends share the same Azure Cosmos DB account and in-process embedding model.
+
+### vLLM memory layout (2x H100)
+
+| Component | Memory |
+|-----------|--------|
+| Qwen3.5-27B weights (FP8) | ~27 GB across 2 GPUs |
+| DFlash draft model | ~1 GB |
+| KV cache | ~50 GB (FP8, 16K context) |
+| CUDA overhead | ~10 GB |
+| **Total** | ~88 GB / 160 GB available |
+
+## Benchmark Results
+
+**Hardware**: 2x NVIDIA H100 | **Dataset**: 58K food products, 892K KG triples
+
+### Per-question timing (Q1: "high-calorie protein snack for running belt")
+
+| Stage | DFlash | KG | Original |
+|-------|--------|-----|----------|
+| Embed | 0.30s | 0.27s | — |
+| Entity Search | 1.34s | 1.32s | — |
+| Graph Traversal | 1.76s | 2.73s | — |
+| Source Fetch | 0.68s | 1.25s | — |
+| **LLM** | **13.5s** | **37.4s** | **93.7s** |
+| **Total** | **18.9s** | **43.0s** | **93.7s** |
+
+### Speedup summary
+
+| Comparison | LLM Speedup | Total Speedup |
+|-----------|-------------|---------------|
+| DFlash vs KG | **2.8x** | **2.3x** |
+| DFlash vs Original | **6.9x** | **5.0x** |
+| KG vs Original | **2.5x** | **2.2x** |
+
+### DFlash all-10-question average
+
+| Metric | Value |
+|--------|-------|
+| Average total time | **22.6s** |
+| Average LLM time | **17.5s** |
+| Retrieval overhead | ~5s |
+| LLM share of total | 77% |
+
+### Quality comparison
+
+- **Original** (GPT-4.1): Most comprehensive — 10+ product recommendations with detailed reasoning, nutritional analysis, and packaging considerations. Benefits from multi-round gap-filling retrieval.
+- **KG-RAG**: Comparable quality to Original for well-connected topics in the KG. Answers are slightly less detailed (2-4 products in creative format) but grounded in structured KG triples.
+- **DFlash**: Same model quality as KG-RAG (mathematically identical output). Asks for 8-10 products via a more directive prompt. Keyword expansion and semantic reranking improve product coverage.
+
+## Running the Web Application
+
+### Prerequisites
+
+1. Azure Cosmos DB account with `food`, `kg_entities_food`, `kg_triples_food` containers populated
+2. vLLM server running on port 8000 (see vLLM configuration above)
+3. Azure CLI logged in (`az login`) for Cosmos DB RBAC
+4. `AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT` environment variable set (for semantic reranker)
+5. For the Original backend: the [AgenticRetrieval](https://github.com/bvonodiripsa/AgenticRetrieval) repo cloned at `/home/azureuser/AgenticRetrieval`
+
+### Start the web app
 
 ```bash
-python dynamic_retriever.py --config config.yaml --questions-path path/to/questions.json
+pip install -r requirements-web.txt
+
+AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT="https://<account>.westus3.dbinference.azure.com" \
+  python -m uvicorn api:app --host 0.0.0.0 --port 8080 --timeout-keep-alive 120
 ```
 
-Both `--config` and `--questions-path` are required. `--config` specifies the YAML configuration file; `--questions-path` points to a single `.json` file containing the question array.
+### API endpoints
 
-The paradigm is selected by `--mode {tool-use,decomposed}` (CLI flag) or `pipeline.mode` in YAML; the CLI overrides the config. The default when neither is set is `tool-use`.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Web UI |
+| `/health` | GET | Health check |
+| `/v1/backends` | GET | Available backends with descriptions |
+| `/v1/questions?backend=dflash` | GET | Benchmark questions for a backend |
+| `/v1/ask/stream` | POST | SSE streaming answer (`{"question": "...", "backend": "dflash"}`) |
+| `/v1/ask` | POST | JSON response (non-streaming) |
 
-Typical limited smoke test:
+### SSE event format
 
-```bash
-python dynamic_retriever.py --config config.yaml --questions-path data/questions-answers.json --max-questions 1
+```
+data: {"stage": "progress", "message": "Embedding question...", "_ts": 0.0}
+data: {"stage": "progress", "message": "Found 10 entities in 1.3s", "_ts": 1.3}
+data: {"stage": "stats", "entities": 10, "triples": 40, "sources": 65}
+data: {"stage": "answer_chunk", "text": "Based on the provided data..."}
+data: {"stage": "done", "timings": {"embed": 0.3, "entity_search": 1.3, ...}}
 ```
 
-### 4) Generate timing summary table
+## Azure Cosmos DB Semantic Reranker
 
-Run:
+The DFlash pipeline integrates the [Cosmos DB Semantic Reranker](https://learn.microsoft.com/en-us/azure/cosmos-db/gen-ai/semantic-reranker) to re-order retrieved documents by semantic relevance before passing them to the LLM.
 
-```bash
-python timing_summary.py
+### Setup
+
+1. Enable the Semantic Reranker on your Cosmos DB account via the Azure portal
+2. Register the provider: `az provider register -n Microsoft.InferenceService`
+3. Assign the "Semantic Reranker User" role on the **InferenceService** resource:
+   ```bash
+   az role assignment create \
+     --role "Semantic Reranker User" \
+     --assignee-object-id "<your-user-object-id>" \
+     --assignee-principal-type "User" \
+     --scope "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.InferenceService/inferenceAccounts/<account>"
+   ```
+4. Set the environment variable:
+   ```bash
+   export AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT="https://<account>.<region>.dbinference.azure.com"
+   ```
+
+The reranker is called after retrieval and before the LLM, reordering source documents by relevance to the question. If the reranker call fails (e.g., RBAC not configured), the pipeline falls back to vector-search ordering.
+
+## Repository Layout
+
+```
+AgenticRetrieval-DFlash/
+├── api.py                      # FastAPI web app (three backends)
+├── kg_builder.py               # Offline KG construction
+├── kg_query.py                 # Online KG-RAG query engine
+├── prompts_kg_food.py          # KG-specific prompts
+├── static/index.html           # Web UI
+├── config_kg_dflash.yaml       # DFlash backend config
+├── config_kg_oldqwen.yaml      # KG backend config
+├── config_original_local.yaml  # Original backend config (GPT-4.1)
+├── data/food.json              # 10 benchmark questions
+├── ARCHITECTURE.md             # Detailed code-level architecture
+├── BENCHMARKS.md               # Timing benchmark tables
+├── dynamic_retriever.py        # Original decomposed RAG (shared with upstream)
+├── cosmos_db_upload.py         # Document ingestion
+├── requirements-web.txt        # Web app dependencies
+├── requirements.txt            # Full dependencies
+└── out_kg_dflash/              # DFlash benchmark outputs
 ```
 
-What this script does:
+## License
 
-- Runs a fresh timed benchmark (`dynamic_retriever.py --mode decomposed --config config.yaml --questions-path <questions_file> --max-questions 5 --timing`).
-- Parses key retrieval/LLM timing checkpoints from the terminal output.
-- Writes a timestamped log in `out/` (`timing_5q_rerun_<timestamp>.log`).
-- Updates `out/timing_5q_latest.log` with the newest run.
-- Generates a table at `out/timing_5q_compare_table.tsv`:
-  - If no previous latest log exists: prints/writes `Component` + `This run`.
-  - If previous latest log exists: prints/writes `Component`, `Prev run`, `This run`, and `Change`.
-
-Outputs are written to:
-
-- `out/k.../intermediate/...` (per-question intermediate traces)
-- `out/k.../questions_with_answers.json` (final grouped answers)
-
-## Useful runtime overrides
-
-These flags override the corresponding `config.yaml` values for a single run (decomposed mode unless noted):
-
-- `--k-diverse` — number of diverse chunks to select via log-determinant (MMR-style) selection; `0` disables diversity selection.
-- `--eta` — Gram-matrix regularization strength used by the diversity selection.
-- `--rescale-power` — exponent applied to query-similarity scores when rescaling before diversity selection.
-- `--max-sub-questions` — maximum number of gap-filling sub-questions generated per round.
-- `--rounds` — number of decompose/retrieve/synthesize rounds to run.
-- `--max-questions` — only answer the first N questions from the questions file (handy for smoke tests).
-- `--max-workers` — number of questions processed concurrently.
-- `--questions-path` — path to the questions `.json` file (overrides `paths.questions_path`).
-- `--output-root` — directory where traces and answer files are written (overrides `paths.output_root`).
-
-### `--timing` — wall-clock profiling
-
-Add `--timing` to print a checkpoint line for every major operation as it completes:
-
-```bash
-python dynamic_retriever.py --mode decomposed --config config.yaml --questions-path data/questions-answers.json --max-questions 1 --timing
-```
-
-Each line has the form:
-
-```text
-  [TIMING] <label>: +<step_elapsed>s  (total <since_start>s)
-```
-
-Immediately before each Cosmos DB call, the actual query is also printed as a `[QUERY]` line.
-
-## Repository layout
-
-- `cosmos_db_upload.py` — ingestion + embedding + Cosmos upsert
-- `dynamic_retriever.py` — decomposed RAG retrieval/answer pipeline
-- `timing_summary.py` — timed rerun + timing comparison table generation
-- `config.yaml.example` — sample data config template for files under `data/`
-- `data/` — sample input corpus
-- `docs/` — concepts and detailed usage docs for the root/sample-data pipeline
-- `samples/` — standalone example apps built on the pipeline (see below)
-- `out/` — generated outputs
-
-## Samples
-
-The `samples/` folder contains standalone apps that build on the retrieval pipeline:
-
-- [`samples/QA_CLI`](samples/QA_CLI/) — an interactive terminal app to ask a question and compare retrieval strategies: **tool-use** (agentic function-calling loop), **decomposed** (Agentic Retrieval multi-round RAG), a single-shot **vector** search baseline, or **compare** to run all three side by side. See its [README](samples/QA_CLI/README.md) for setup and usage.
-
-## Troubleshooting
-
-- **Azure OpenAI auth errors (401/403)**
-  - If using key auth (`llm.use_rbac_auth: false`), ensure `llm.azure_openai_key` is valid and maps to the configured endpoint.
-  - If using RBAC (`llm.use_rbac_auth: true`), make sure your signed-in identity has Azure OpenAI access and `llm.token_scope` is correct.
-
-- **Cosmos DB auth errors (403/Forbidden)**
-  - If using RBAC (`cosmos.use_rbac_auth: true`, the default), ensure your identity has the appropriate Cosmos DB data plane role.
-  - If using key auth (`cosmos.use_rbac_auth: false`), ensure `cosmos.key` is valid.
-
-- **A source is skipped during upload**
-  - Check source-level required fields:
-    - `container_name`
-    - `partition_key_path`
-    - `documents_root`
-
-- **Missing container during upload**
-  - Auto-create works only when management settings are present:
-    - `cosmos.azure_subscription_id`
-    - `cosmos.cosmos_resource_group`
-    - optional `cosmos.cosmos_account_name`
-
-- **No questions processed / empty output**
-  - Confirm `--questions-path` points to a `.json` file containing a JSON array of question objects.
-  - Each object must have `question_id` and `question_text` fields.
-  - Confirm `--output-root` (or `paths.output_root` in config) is writable.
-
-- **Config error: `cosmos.sources` missing/empty**
-  - Both upload and retrieval now fail fast when `cosmos.sources` is not a non-empty list.
-  - Add at least one source entry under `cosmos.sources` with required properties.
+MIT — see [LICENSE](LICENSE).
