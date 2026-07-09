@@ -1,4 +1,4 @@
-# Knowledge Graph Construction and GPU-Accelerated Retrieval with DFlash
+# Graph Index Construction and GPU-Accelerated Retrieval with DFlash
 
 ## The Problem: RAG Is Slow When Questions Are Complex
 
@@ -8,22 +8,22 @@ The standard approach is **multi-round decomposed RAG**: the LLM reads an initia
 
 The question is: can we match that quality while running **entirely on local GPUs**, and do it **5x faster**?
 
-## The Approach: Pre-computed Knowledge Graph + Speculative Decoding
+## The Approach: Pre-computed Graph Index + Speculative Decoding
 
 We combine two independent accelerations that multiply together:
 
-1. **Offline KG construction** replaces multi-round retrieval with a single graph traversal
+1. **Offline graph index construction** replaces multi-round retrieval with a single graph traversal
 2. **DFlash speculative decoding** replaces standard autoregressive generation with draft-and-verify
 
-Neither technique degrades output quality. The KG provides richer structured context than ad-hoc retrieval, and DFlash is mathematically lossless — it produces the exact same token distribution as standard generation.
+Neither technique degrades output quality. The graph index provides richer structured context than ad-hoc retrieval, and DFlash is mathematically lossless — it produces the exact same token distribution as standard generation.
 
-## Part 1: Building the Knowledge Graph
+## Part 1: Building the Graph Index
 
 ### What goes into the graph
 
 We start with 58,000 food product documents in Azure Cosmos DB. Each document is a JSON object with fields like `product_title`, `ingredients`, `allergens`, `claims`, `pack_size`, and `brand`. The raw documents support vector search and full-text search, but they don't encode the **relationships** between concepts.
 
-The KG adds that relational layer. From those 58K documents, we extract **892,000 triples** — structured (subject, predicate, object) facts with confidence scores. For example:
+The graph index adds that relational layer. From those 58K documents, we extract **892,000 triples** — structured (subject, predicate, object) facts with confidence scores. For example:
 
 ```
 (Reese's Sticks (product_id: 22082110), has_ingredient, peanut butter)     confidence: 0.95
@@ -32,11 +32,11 @@ The KG adds that relational layer. From those 58K documents, we extract **892,00
 (Reese's Sticks (product_id: 22082110), has_portability, pocket sized)         confidence: 0.80
 ```
 
-The first triple is directly extracted from the ingredient list. The last three are **inferred** by the LLM from the product's properties — a 42g chocolate bar with peanut butter is likely high-calorie, good for movies, and fits in a pocket. These inferences are what make the KG powerful: they encode the kind of reasoning that a multi-round RAG system would normally do at query time.
+The first triple is directly extracted from the ingredient list. The last three are **inferred** by the LLM from the product's properties — a 42g chocolate bar with peanut butter is likely high-calorie, good for movies, and fits in a pocket. These inferences are what make the graph index powerful: they encode the kind of reasoning that a multi-round RAG system would normally do at query time.
 
 ### The build pipeline
 
-The KG construction runs on the same GPU hardware used for inference (2x NVIDIA H100) using a locally-served Qwen3.5-27B model via vLLM.
+The graph index construction runs on the same GPU hardware used for inference (2x NVIDIA H100) using a locally-served Qwen3.5-27B model via vLLM.
 
 **Step 1 — Decomposed triple extraction.** Each product document is sent to the LLM with a detailed extraction prompt that specifies the field semantics, extraction rules, and inference categories. The LLM returns a JSON array of triples. This runs in two rounds:
 
@@ -54,9 +54,9 @@ With 20 concurrent extraction tasks, the full 58K-document corpus is processed i
 
 **Step 5 — Storage.** Triples are upserted to Cosmos DB with their embeddings, partitioned by subject name (lowercased) for efficient graph traversal. A separate entity index is built with relation summaries and embeddings for vector search at query time.
 
-### What the graph looks like in Cosmos DB
+### What the graph index looks like in Cosmos DB
 
-The graph occupies two containers:
+The graph index occupies two containers:
 
 **`kg_triples_food`** — 892K documents, each a single triple:
 ```json
@@ -86,11 +86,11 @@ The graph occupies two containers:
 }
 ```
 
-Both containers have **vector indexes** on the `embedding` field (DiskANN, cosine similarity, 1024 dimensions) enabling sub-second semantic search across the entire graph.
+Both containers have **vector indexes** on the `embedding` field (DiskANN, cosine similarity, 1024 dimensions) enabling sub-second semantic search across the entire graph index.
 
-## Part 2: Query-Time KG Traversal
+## Part 2: Query-Time Graph Index Traversal
 
-At query time, the KG replaces multi-round retrieval with a single structured traversal:
+At query time, the graph index replaces multi-round retrieval with a single structured traversal:
 
 ```
 "High-calorie protein snack for running belt"
@@ -129,13 +129,13 @@ At query time, the KG replaces multi-round retrieval with a single structured tr
 
 The original decomposed RAG pipeline makes **4-6 LLM calls** per question (initial answer, gap analysis, sub-question generation, targeted retrievals, final synthesis) and **8-12 Cosmos DB queries** across 2 rounds. Each LLM call to GPT-4.1 via Azure OpenAI takes 10-30 seconds.
 
-The KG pipeline makes **1 LLM call** and **4-5 Cosmos DB queries** — all running in parallel. The KG has already encoded the relationships and inferences that the decomposed pipeline discovers on the fly. When the question asks about "high-calorie protein snack," the graph directly contains triples linking products to `has_nutritional_profile: high protein` and `has_nutritional_profile: high calorie` — no sub-question decomposition needed.
+The graph index pipeline makes **1 LLM call** and **4-5 Cosmos DB queries** — all running in parallel. The graph index has already encoded the relationships and inferences that the decomposed pipeline discovers on the fly. When the question asks about "high-calorie protein snack," the graph directly contains triples linking products to `has_nutritional_profile: high protein` and `has_nutritional_profile: high calorie` — no sub-question decomposition needed.
 
 ### The role of parallel retrieval
 
 The DFlash pipeline runs multiple search paths concurrently using Python's `asyncio.gather`:
 
-- **Entity vector search** — finds the most relevant entity nodes in the KG
+- **Entity vector search** — finds the most relevant entity nodes in the graph index
 - **LLM keyword expansion** — generates 5-8 additional search terms (e.g., "protein bar", "energy gel", "peanut butter", "trail mix")
 - **Graph traversal** — follows entity links through the triple graph (PK-based lookup, sub-second)
 - **Triple vector search** — finds semantically similar triples beyond the graph neighborhood
@@ -150,7 +150,7 @@ After merging results from all search paths, the Cosmos DB Semantic Reranker re-
 
 ## Part 3: DFlash Speculative Decoding on GPU
 
-The KG reduces retrieval from 5+ rounds to 1, but the **LLM generation step** still dominates. Standard autoregressive generation with Qwen3.5-27B produces ~55 tokens/second on 2x H100. A 600-token answer takes ~11 seconds. With the full prompt context (graph triples + source documents + question), actual generation runs at 30-40 tok/s, taking 15-30 seconds.
+The graph index reduces retrieval from 5+ rounds to 1, but the **LLM generation step** still dominates. Standard autoregressive generation with Qwen3.5-27B produces ~55 tokens/second on 2x H100. A 600-token answer takes ~11 seconds. With the full prompt context (graph triples + source documents + question), actual generation runs at 30-40 tok/s, taking 15-30 seconds.
 
 DFlash speculative decoding doubles that throughput without changing the output.
 
@@ -188,11 +188,11 @@ The draft model is small enough that its memory footprint and compute cost are n
 
 ## Results: End-to-End Comparison
 
-Benchmarked on 10 food product questions, 2x NVIDIA H100, Cosmos DB with 58K documents and 892K KG triples.
+Benchmarked on 10 food product questions, 2x NVIDIA H100, Cosmos DB with 58K documents and 892K graph index triples.
 
 ### Timing per question (averaged)
 
-| Stage | Original (GPT-4.1) | KG-RAG | KG-RAG + DFlash |
+| Stage | Original (GPT-4.1) | Graph-RAG | Graph-RAG + DFlash |
 |-------|-------------------|--------|-----------------|
 | Retrieval | 5-15s (multi-round) | 5.4s | 4.7s (parallel) |
 | LLM generation | 60-80s (cloud) | 29-37s (local, standard) | 13-18s (local, DFlash) |
@@ -202,7 +202,7 @@ Benchmarked on 10 food product questions, 2x NVIDIA H100, Cosmos DB with 58K doc
 
 | Comparison | Speedup | Source of Speedup |
 |-----------|---------|-------------------|
-| KG-RAG vs Original | **2.2x** | KG pre-computation eliminates multi-round retrieval + local GPU vs cloud API |
+| Graph-RAG vs Original | **2.2x** | Graph index pre-computation eliminates multi-round retrieval + local GPU vs cloud API |
 | DFlash vs standard decoding | **2.0-2.5x** | Speculative decoding on same model, same hardware |
 | **DFlash vs Original** | **4-5x** | Both techniques combined |
 
@@ -212,26 +212,26 @@ Benchmarked on 10 food product questions, 2x NVIDIA H100, Cosmos DB with 58K doc
 Original (GPT-4.1):          ██████████████████████████████████████████████ 93.7s
                               [  retrieval  ][         LLM (cloud)          ]
 
-KG-RAG (standard):           ██████████████████████ 43.0s
-                              [ KG ][     LLM (local, standard)     ]
+Graph-RAG (standard):        ██████████████████████ 43.0s
+                              [graph][     LLM (local, standard)     ]
 
-KG-RAG + DFlash:             ██████████ 18.9s
-                              [ KG ][ LLM (DFlash) ]
+Graph-RAG + DFlash:          ██████████ 18.9s
+                              [graph][ LLM (DFlash) ]
 ```
 
-LLM generation dominates total time in all three pipelines (77-100%). The KG reduces retrieval time, and DFlash halves the generation time. Together they cut end-to-end latency by 5x.
+LLM generation dominates total time in all three pipelines (77-100%). The graph index reduces retrieval time, and DFlash halves the generation time. Together they cut end-to-end latency by 5x.
 
 ### Quality comparison
 
-| Aspect | Original | KG-RAG | KG-RAG + DFlash |
+| Aspect | Original | Graph-RAG | Graph-RAG + DFlash |
 |--------|----------|--------|-----------------|
 | Products recommended | 10+ | 2-4 | 8-10 |
 | Nutritional detail | Detailed | Good | Good |
-| Reasoning depth | Multi-round gap-filling | Single-pass with KG context | Single-pass with KG + keyword + reranking |
-| Factual grounding | Strong (multi-retrieval) | Strong (KG triples) | Strong (KG + semantic rerank) |
-| Output quality | Highest | High | High (mathematically identical to KG-RAG) |
+| Reasoning depth | Multi-round gap-filling | Single-pass with graph context | Single-pass with graph + keyword + reranking |
+| Factual grounding | Strong (multi-retrieval) | Strong (graph triples) | Strong (graph + semantic rerank) |
+| Output quality | Highest | High | High (mathematically identical to Graph-RAG) |
 
-DFlash output is **identical** to standard KG-RAG generation — the speculative decoding doesn't change the token distribution, only the speed at which tokens are produced.
+DFlash output is **identical** to standard Graph-RAG generation — the speculative decoding doesn't change the token distribution, only the speed at which tokens are produced.
 
 ## Hardware and Infrastructure
 
@@ -242,7 +242,7 @@ DFlash output is **identical** to standard KG-RAG generation — the speculative
 | Qwen3.5-27B | Main LLM | 27B params, FP8 (~27GB across 2 GPUs) |
 | z-lab/Qwen3.5-27B-DFlash | Draft model | ~1B params (~1GB) |
 | Qwen3-Embedding-0.6B | Embedding model | In-process on CPU, no network call |
-| Azure Cosmos DB for NoSQL | Data + KG storage | Vector + full-text indexes, semantic reranker |
+| Azure Cosmos DB for NoSQL | Data + graph index storage | Vector + full-text indexes, semantic reranker |
 
 ### Cost comparison
 
@@ -254,11 +254,11 @@ For batch workloads or sustained throughput, the local GPU approach is significa
 
 ## Summary
 
-The combination of pre-computed knowledge graphs and GPU-accelerated speculative decoding represents a shift in how retrieval systems can use GPU hardware:
+The combination of pre-computed graph indexes and GPU-accelerated speculative decoding represents a shift in how retrieval systems can use GPU hardware:
 
-1. **GPUs for offline knowledge engineering** — Instead of using the LLM only at query time, we invest GPU cycles upfront to extract, normalize, and resolve a structured knowledge graph. This "compiles" the LLM's reasoning into a reusable data structure.
+1. **GPUs for offline index construction** — Instead of using the LLM only at query time, we invest GPU cycles upfront to extract, normalize, and resolve a structured graph index. This "compiles" the LLM's reasoning into a reusable data structure.
 
-2. **GPUs for parallel retrieval + generation** — At query time, the GPU serves the LLM while the CPU runs parallel async queries against Cosmos DB. The KG's structure means retrieval is a graph traversal, not a multi-round LLM conversation.
+2. **GPUs for parallel retrieval + generation** — At query time, the GPU serves the LLM while the CPU runs parallel async queries against Cosmos DB. The graph index structure means retrieval is a graph traversal, not a multi-round LLM conversation.
 
 3. **GPUs for speculative decoding** — The same GPU memory that holds the main model also holds a tiny draft model. The negligible overhead of the draft model unlocks a 2-2.5x throughput improvement by converting sequential token generation into parallel verification.
 
