@@ -28,6 +28,30 @@ from prompts_kg_food import GRAPHRAG_ANSWER_PROMPT, FALLBACK_ANSWER_PROMPT
 from kg_builder import EmbedClient, embed_sync, load_config
 
 
+def build_llm_call_kwargs(llm_cfg: dict, model: str) -> dict:
+    """Return provider-specific kwargs for chat.completions.create.
+
+    Chain-of-thought / reasoning is suppressed differently per model family:
+      * Qwen models served by vLLM accept the `enable_thinking` chat-template
+        kwarg, which turns their thinking mode off for fast, direct answers.
+      * OpenAI-compatible reasoning models (e.g. GLM-5.2) don't take
+        that flag. An optional `llm.reasoning.effort` setting is forwarded as
+        `reasoning_effort` to trade reasoning depth for latency/cost when it is
+        provided; otherwise the model uses its default reasoning behavior.
+    """
+    model_lower = (model or "").lower()
+    reasoning_cfg = llm_cfg.get("reasoning") or {}
+    effort = reasoning_cfg.get("effort")
+
+    extra_body: dict[str, Any] = {}
+    if "qwen" in model_lower:
+        extra_body["chat_template_kwargs"] = {"enable_thinking": False}
+    if effort:
+        extra_body["reasoning_effort"] = str(effort)
+
+    return {"extra_body": extra_body} if extra_body else {}
+
+
 # =============================================================================
 # KG Query Engine
 # =============================================================================
@@ -48,6 +72,7 @@ class KGQueryEngine:
         )
         self._llm_model = llm_cfg.get("model", "Qwen/Qwen2.5-32B-Instruct")
         self._max_tokens = int(cfg.get("query", {}).get("max_answer_tokens", 1024))
+        self._llm_call_kwargs = build_llm_call_kwargs(llm_cfg, self._llm_model)
 
         cosmos_cfg = cfg["cosmos"]
         self._db_name = cosmos_cfg["database_name"]
@@ -258,7 +283,7 @@ class KGQueryEngine:
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
             max_tokens=self._max_tokens,
-            extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+            **self._llm_call_kwargs,
         )
         answer = resp.choices[0].message.content or ""
         timings["llm"] = time.time() - t0

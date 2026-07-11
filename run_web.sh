@@ -1,10 +1,13 @@
 #!/bin/bash
 # Start the Food KG-RAG web UI on port 8080
-# Prerequisites: vLLM server running on port 8000 with Qwen3.5-27B + DFlash
+# Prerequisites: an LLM backend reachable from the chosen config
+#   - config_kg_dflash.yaml -> local vLLM (Qwen3.5-27B + DFlash) on port 8000
+#   - config_kg_glm.yaml     ->  API key set in the config
 #
 # Usage:
-#   ./run_web.sh                  # default port 8080
-#   PORT=9090 ./run_web.sh        # custom port
+#   ./run_web.sh                                  # default port 8080, config_kg_dflash.yaml
+#   PORT=9090 ./run_web.sh                         # custom port
+#   CONFIG_PATH=config_kg_glm.yaml ./run_web.sh    # serve GLM-5.2
 
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -17,8 +20,7 @@ echo "Config: $CONFIG_PATH"
 echo "LLM endpoint: $(grep -A1 'endpoint:' "$CONFIG_PATH" | head -2 | tail -1 | xargs)"
 echo ""
 
-export CONFIG_PATH
-exec python -m uvicorn api:app \
+exec python api.py \
+    --config "$CONFIG_PATH" \
     --host 0.0.0.0 \
-    --port "$PORT" \
-    --log-level info
+    --port "$PORT"

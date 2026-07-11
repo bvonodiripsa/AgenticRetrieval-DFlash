@@ -51,7 +51,6 @@ BACKENDS = {
         "badge_color": "#2563eb",
     },
     "dflash": {
-        "config": "config_kg_dflash.yaml",
         "label": "KG-RAG + DFlash",
         "description": "Knowledge graph RAG — optimized context, DFlash speculative decoding",
         "badge_color": "#059669",
@@ -247,7 +246,7 @@ async def _llm_expand_keywords(question: str, engine) -> list[str]:
             ],
             temperature=0.0,
             max_tokens=80,
-            extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+            **engine._llm_call_kwargs,
         )
         raw = resp.choices[0].message.content.strip()
         terms = [t.strip().lower() for t in raw.split(",") if t.strip()]
@@ -544,7 +543,7 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
             ],
             temperature=0.0,
             max_tokens=engine._max_tokens,
-            extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+            **engine._llm_call_kwargs,
         )
         answer = resp.choices[0].message.content if resp.choices else ""
         timings["llm"] = time.perf_counter() - t_llm
@@ -742,7 +741,7 @@ async def _stream_kg_sse(question: str, engine: KGQueryEngine, backend_id: str =
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
             max_tokens=engine._max_tokens,
-            extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+            **engine._llm_call_kwargs,
         )
         answer = resp.choices[0].message.content if resp.choices else ""
         timings["llm"] = time.perf_counter() - t_llm
@@ -784,13 +783,23 @@ async def lifespan(app: FastAPI):
     kg_engines: dict[str, KGQueryEngine] = {}
     questions: dict[str, list[dict]] = {}
 
-    for bid in ("kg", "dflash"):
-        cfg_path = _ROOT / BACKENDS[bid]["config"]
+    main_cfg = os.environ.get("KG_CONFIG")
+    if not main_cfg:
+        raise RuntimeError(
+            "KG_CONFIG is not set. Start the app with "
+            "'python api.py --config <path-to-config.yaml>'."
+        )
+
+    backend_configs = {
+        "kg": _ROOT / BACKENDS["kg"]["config"],
+        "dflash": Path(main_cfg),
+    }
+    for bid, cfg_path in backend_configs.items():
         if cfg_path.exists():
             cfg = load_config(str(cfg_path))
             kg_engines[bid] = KGQueryEngine(cfg)
             questions[bid] = _load_questions_from_cfg(cfg)
-            log.info("Backend %s loaded: %d questions", bid, len(questions[bid]))
+            log.info("Backend %s loaded from %s: %d questions", bid, cfg_path, len(questions[bid]))
 
     # Original AgenticRetrieval
     try:
@@ -1048,7 +1057,7 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
         ],
         temperature=0.0,
         max_tokens=engine._max_tokens,
-        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+        **engine._llm_call_kwargs,
     )
     timings["llm"] = time.perf_counter() - t_llm
     timings["total"] = time.perf_counter() - t0
@@ -1090,5 +1099,22 @@ async def ask(body: AskRequest):
 
 
 if __name__ == "__main__":
+    import argparse
     import uvicorn
-    uvicorn.run("api:app", host="0.0.0.0", port=8080, reload=False)
+
+    parser = argparse.ArgumentParser(description="Food KG-RAG multi-backend API")
+    parser.add_argument(
+        "--config",
+        required=True,
+        help="Path to the KG backend YAML config (drives the primary model backend).",
+    )
+    parser.add_argument("--host", default="0.0.0.0", help="Host to bind (default: 0.0.0.0).")
+    parser.add_argument("--port", type=int, default=8080, help="Port to bind (default: 8080).")
+    args = parser.parse_args()
+
+    cfg_path = Path(args.config)
+    if not cfg_path.exists():
+        parser.error(f"Config file not found: {cfg_path}")
+    os.environ["KG_CONFIG"] = str(cfg_path.resolve())
+
+    uvicorn.run("api:app", host=args.host, port=args.port, reload=False)

@@ -86,7 +86,7 @@ This document describes the code paths for each of the 3 backends in the Food KG
 - `kg_query.py` — `KGQueryEngine`
 - `prompts_kg_food.py` — prompt templates
 
-**Config**: `config_kg_dflash.yaml`
+**Config**: supplied via the required `--config` argument — e.g. `config_kg_dflash.yaml` (local Qwen3.5-27B + DFlash) or `config_kg_glm.yaml` (hosted GLM-5.2)
 
 ---
 

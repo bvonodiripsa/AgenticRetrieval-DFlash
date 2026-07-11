@@ -1,0 +1,93 @@
+# =============================================================================
+# Food KG Configuration — z.ai GLM-5.2 (hosted inference)
+# =============================================================================
+# Same "food" Cosmos DB database and knowledge graph as the DFlash backend, but
+# the online query path is served by z.ai's GLM-5.2 model hosted on
+# OpenAI-compatible Inference API instead of a self-hosted vLLM server.
+#
+# -----------------------------------------------------------------------------
+# NOTE ON SPECULATIVE DECODING / MTP
+# -----------------------------------------------------------------------------
+# If GLM-5.2 uses multi-token prediction / speculative decoding,
+# it is applied transparently server-side — you cannot turn it on/off or tune it.
+# =============================================================================
+
+cosmos:
+  uri: "https://divdet.documents.azure.com:443/"
+  key: ""
+  database_name: "food"
+  use_rbac_auth: true
+  tenant_id: "43083d15-7273-40c1-b7db-39efd9ccc17a"
+  cosmos_account_name: "divdet"
+  cosmos_resource_group: "ams-cosmos-db"
+  azure_subscription_id: "b7d41fc8-d35d-41db-92ed-1f7f1d32d4d9"
+
+  sources:
+    - id: "food"
+      container_name: "food"
+      partition_key_path: "/country_code"
+      embedding_field: "e"
+      text_fields:
+        - product_title
+        - product_title_translated
+        - brand
+        - claims
+        - claims_translated
+        - ingredients
+        - ingredients_translated
+        - allergens
+        - allergens_translated
+        - pack_size
+
+kg:
+  triples_container: "kg_triples_food"
+  entities_container: "kg_entities_food"
+  partition_key_path: "/pk"
+
+# Embeddings stay in-process (Qwen3-Embedding-0.6B, 1024-dim) to match the
+# vectors already stored in Cosmos. Do NOT swap this for a hosted embedding
+# model unless you rebuild every stored embedding.
+embedding:
+  dimensions: 1024
+  in_process_model: "Qwen/Qwen3-Embedding-0.6B"
+
+llm:
+  # OpenAI-compatible base URL. The app uses the AsyncOpenAI client, which
+  # appends /chat/completions to this base_url.
+  endpoint: "https://api.xxxxxxxx.com/v2/ai/openai"
+  model: "zai-org/GLM-5.2"
+  # Replace with your  API key. Treat it as a secret —
+  # prefer injecting it at deploy time rather than committing a real key here.
+  api_key: "YOUR_API_KEY"
+  # GLM-5.2 is a reasoning model. The answer path runs at temperature 0.0 for
+  # deterministic recommendations.
+  temperature: 0.0
+  max_tokens: 4096
+  max_retries: 3
+  # Optional reasoning control. GLM-5.2 is a reasoning model; lowering the effort
+  # reduces thinking tokens (faster + cheaper). When `effort` is set, the app
+  # forwards `reasoning_effort` in the chat completions request body. Remove the
+  # block (or the `effort` key) to let the model use its default reasoning depth.
+  reasoning:
+    effort: "low"
+
+build:
+  extraction_rounds: 1
+  max_gaps_per_round: 3
+  concurrency: 20
+  entity_merge_threshold: 0.85
+  min_confidence: 0.5
+
+query:
+  seed_entities_k: 10
+  max_hops: 1
+  max_triples: 40
+  max_source_chunks: 15
+  vector_augment_k: 12
+  # Bumped from 1200: GLM-5.2 is a reasoning model, so the output budget must
+  # also cover its thinking tokens to avoid truncating the final answer.
+  max_answer_tokens: 4096
+
+paths:
+  questions_file: "data/food.json"
+  output_root: "out_kg_glm"

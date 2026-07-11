@@ -39,6 +39,7 @@ A unified FastAPI web application (`api.py`) exposes three backend pipelines sid
 | `static/index.html` | Web UI with backend selector, progress log, and timing display |
 | `config_kg_dflash.yaml` | DFlash backend configuration (smaller context, faster inference) |
 | `config_kg_oldqwen.yaml` | KG backend configuration (larger context, standard generation) |
+| `config_kg_glm.yaml` | GLM-5.2 backend configuration (z.ai model via hosted inference) |
 | `config_original_local.yaml` | Original backend configuration (GPT-4.1 via Azure) |
 
 ## How the Pipelines Work
@@ -331,7 +332,18 @@ The Original backend (GPT-4.1) requires no local GPU — it calls Azure OpenAI A
 ```bash
 pip install -r requirements-web.txt
 
+# The KG backend config is a required argument (--config). Point it at the model
+# you want to serve — e.g. config_kg_dflash.yaml (local Qwen3.5-27B + DFlash) or
+# config_kg_glm.yaml (GLM-5.2).
 AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT="https://<account>.westus3.dbinference.azure.com" \
+  python api.py --config config_kg_dflash.yaml --host 0.0.0.0 --port 8080
+```
+
+To launch with uvicorn directly (e.g. to pass extra uvicorn flags), set the
+config via the `KG_CONFIG` environment variable instead:
+
+```bash
+KG_CONFIG=config_kg_dflash.yaml \
   python -m uvicorn api:app --host 0.0.0.0 --port 8080 --timeout-keep-alive 120
 ```
 

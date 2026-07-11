@@ -277,3 +277,4 @@ out_kg/triples_deduped.json
 out_kg/checkpoint_raw_triples.json
 out_kg/upload_checkpoint.json
 out_kg/ray_build/
+my.yaml

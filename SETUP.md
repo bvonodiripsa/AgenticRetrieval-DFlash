@@ -275,7 +275,7 @@ cd /home/azureuser/AgenticRetrieval-DFlash
 source .venv/bin/activate
 
 AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT="https://divdet.westus3.dbinference.azure.com" \
-  python -m uvicorn api:app --host 0.0.0.0 --port 8080 --timeout-keep-alive 120
+  python api.py --config config_kg_dflash.yaml --host 0.0.0.0 --port 8080
 ```
 
 Wait for `Application startup complete`, then verify:
@@ -337,7 +337,7 @@ Access the web UI at `http://<public-ip>:8080`.
 | Service | Port | Command |
 |---------|------|---------|
 | vLLM (Qwen3.5-27B + DFlash) | 8000 | `vllm serve Qwen/Qwen3.5-27B --spec-model z-lab/Qwen3.5-27B-DFlash ...` |
-| Web app (FastAPI) | 8080 | `uvicorn api:app --host 0.0.0.0 --port 8080` |
+| Web app (FastAPI) | 8080 | `python api.py --config config_kg_dflash.yaml --host 0.0.0.0 --port 8080` |
 | Cosmos DB | 443 | Azure cloud (no local process) |
 | Azure OpenAI (Original backend) | 443 | Azure cloud (no local process) |
 
