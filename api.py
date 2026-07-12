@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 """
-KG-RAG API + Web UI — three food backends in one app.
+KG-RAG API + Web UI — single knowledge-graph + LLM backend.
 
-Backends:
-  1. Original AgenticRetrieval  (decomposed RAG, no KG — from github.com/AzureCosmosDB/AgenticRetrieval)
-  2. KG version                 (KG-RAG, Qwen2.5-32B query settings)
-  3. DFlash                     (KG-RAG + Qwen3.5-27B + DFlash speculative decoding)
+Pipeline: entity/triple vector search + graph traversal + LLM keyword expansion +
+semantic rerank, then a single LLM answer call (speculative decoding when the
+configured model/endpoint supports it).
 
-All use the food database (58K products). LLM served by vLLM on localhost:8000.
+Config is a single YAML file (default: my.yaml; override with --config).
 """
 
 from __future__ import annotations
@@ -21,38 +20,21 @@ import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-os.environ.setdefault(
-    "AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT",
-    "https://divdet.westus3.dbinference.azure.com",
-)
-
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from kg_builder import load_config, embed_sync
+from kg_builder import load_config
 from kg_query import KGQueryEngine
 
 _ROOT = Path(__file__).parent
 log = logging.getLogger("food_dflash.api")
 
 BACKENDS = {
-    "original": {
-        "config": "config_original_local.yaml",
-        "label": "Original AgenticRetrieval",
-        "description": "Multi-round decomposed RAG — vector + full-text search, no KG (GPT-4.1)",
-        "badge_color": "#7c3aed",
-    },
     "kg": {
-        "config": "config_kg_oldqwen.yaml",
         "label": "KG-RAG",
-        "description": "Knowledge graph RAG — 892K triples, full context window",
-        "badge_color": "#2563eb",
-    },
-    "dflash": {
-        "label": "KG-RAG + DFlash",
-        "description": "Knowledge graph RAG — optimized context, DFlash speculative decoding",
+        "description": "Knowledge graph RAG + LLM (speculative decoding when supported)",
         "badge_color": "#059669",
     },
 }
@@ -60,11 +42,14 @@ BACKENDS = {
 
 class AskRequest(BaseModel):
     question: str = Field(..., min_length=1)
-    backend: str = Field(default="dflash")
+    # Retained for API compatibility; there is a single backend now.
+    backend: str = Field(default="kg")
 
 
 def _load_questions_from_cfg(cfg: dict) -> list[dict]:
-    qpath = _ROOT / cfg.get("paths", {}).get("questions_file", "data/food.json")
+    paths = cfg.get("paths", {})
+    # Upstream schema uses `questions_path`; keep `questions_file` fallback.
+    qpath = _ROOT / paths.get("questions_path", paths.get("questions_file", "data/food.json"))
     if qpath.exists():
         data = json.loads(qpath.read_text(encoding="utf-8-sig"))
         if isinstance(data, list):
@@ -72,126 +57,8 @@ def _load_questions_from_cfg(cfg: dict) -> list[dict]:
     return []
 
 
-def _load_questions_from_path(path: str) -> list[dict]:
-    p = Path(path)
-    if p.exists():
-        data = json.loads(p.read_text(encoding="utf-8-sig"))
-        if isinstance(data, list):
-            return data
-    return []
-
-
 # ---------------------------------------------------------------------------
-# Original AgenticRetrieval pipeline wrapper
-# ---------------------------------------------------------------------------
-
-_original_pipeline = None
-_original_llm = None
-
-
-async def _init_original():
-    """Import and initialize the original AgenticRetrieval decomposed pipeline.
-
-    Uses config_original_local.yaml which points LLM at the local vLLM
-    endpoint (Qwen3.5-27B) and uses in-process embeddings — no Azure
-    OpenAI or Ollama dependency required.
-    """
-    global _original_pipeline, _original_llm
-
-    orig_root = Path("/home/azureuser/AgenticRetrieval")
-    if not orig_root.exists():
-        log.warning("Original AgenticRetrieval not found at %s", orig_root)
-        return False
-
-    local_cfg_path = _ROOT / "config_original_local.yaml"
-    if not local_cfg_path.exists():
-        log.warning("config_original_local.yaml not found")
-        return False
-
-    if str(orig_root) not in sys.path:
-        sys.path.insert(0, str(orig_root))
-
-    import dynamic_retriever as dr
-    dr.load_config(local_cfg_path)
-
-    from utils.cosmos_retriever import CombinedRetriever, RETRIEVAL_SOURCES
-    retriever = CombinedRetriever(
-        retrieval_sources=RETRIEVAL_SOURCES,
-        k_diverse=dr.CONFIG["retrieval"]["k_diverse"],
-        k_ranker=0,
-        eta=dr.CONFIG["retrieval"]["eta"],
-        rescale_power=dr.CONFIG["retrieval"]["rescale_power"],
-        cosmos_az_login=True,
-    )
-    await retriever.initialize()
-
-    pipeline_cfg = dr.CONFIG.get("pipeline", {})
-    _original_llm = dr.LLMClient(azure_az_login=True)
-    _original_pipeline = dr.DecomposedRAGPipeline(
-        retriever,
-        _original_llm,
-        max_sub_q=pipeline_cfg.get("max_sub_questions", 5),
-        num_rounds=pipeline_cfg.get("rounds", 2),
-        subq_fanout_cap=pipeline_cfg.get("subq_fanout_cap", 3),
-        subq_max_concurrency=pipeline_cfg.get("subq_max_concurrency", 2),
-    )
-    log.info("Original AgenticRetrieval pipeline initialized (local vLLM)")
-    return True
-
-
-async def _run_original_stream(question: str):
-    """Run original decomposed pipeline and stream SSE events."""
-    t0 = time.perf_counter()
-
-    if _original_pipeline is None:
-        yield _sse({"stage": "error", "message": "Original pipeline not initialized"})
-        yield "data: [DONE]\n\n"
-        return
-
-    yield _sse({"stage": "progress", "message": "Starting decomposed RAG pipeline...", "_ts": _elapsed(t0)})
-    yield _sse({"stage": "progress", "message": "Round 1: initial retrieval + preliminary answer...", "_ts": _elapsed(t0)})
-
-    try:
-        result = await _original_pipeline.run(question)
-        t_total = time.perf_counter() - t0
-
-        yield _sse({
-            "stage": "progress",
-            "message": f"Pipeline complete in {t_total:.1f}s",
-            "_ts": _elapsed(t0),
-        })
-
-        rounds = result.get("rounds", [])
-        n_chunks = len(result.get("initial_chunks", []))
-        n_subs = sum(len(r.get("sub_questions", [])) for r in rounds)
-        yield _sse({
-            "stage": "stats",
-            "seed_entities": n_chunks,
-            "triples_found": 0,
-            "source_chunks": n_chunks,
-            "entity_names": [f"{len(rounds)} rounds", f"{n_subs} sub-questions"],
-            "_ts": _elapsed(t0),
-        })
-
-        answer = result.get("final_answer", "")
-        for i in range(0, len(answer), 20):
-            yield _sse({"stage": "token", "text": answer[i:i+20]})
-
-        yield _sse({
-            "stage": "done",
-            "_ts": _elapsed(t0),
-            "timings": {"total": t_total, "llm": t_total},
-        })
-
-    except Exception as e:
-        log.exception("original pipeline error: %s", e)
-        yield _sse({"stage": "error", "message": str(e)})
-
-    yield "data: [DONE]\n\n"
-
-
-# ---------------------------------------------------------------------------
-# KG-RAG streaming (shared by kg and dflash backends)
+# KG-RAG streaming (single KG + LLM backend)
 # ---------------------------------------------------------------------------
 
 DFLASH_ANSWER_PROMPT = """You are a food product expert.
@@ -204,13 +71,6 @@ QUESTION: {question}
 
 Recommend 8-10 products. For each: name, (product_id: XXXXX), one sentence on why it fits. Never say "no products match." End with top pick."""
 
-
-RERANKER_INFERENCE_ENDPOINT = os.environ.get(
-    "AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT",
-    "https://divdet.westus3.dbinference.azure.com",
-)
-RERANKER_FETCH_K = 40
-RERANKER_TOP_K = 25
 
 _STOP_WORDS = frozenset(
     "i me my we our you your he she it they them a an the this that these those "
@@ -248,7 +108,7 @@ async def _llm_expand_keywords(question: str, engine) -> list[str]:
             max_tokens=80,
             **engine._llm_call_kwargs,
         )
-        raw = resp.choices[0].message.content.strip()
+        raw = (resp.choices[0].message.content or "").strip()
         terms = [t.strip().lower() for t in raw.split(",") if t.strip()]
         return terms
     except Exception as e:
@@ -268,10 +128,50 @@ def _build_fulltext_sql(keyword: str) -> str:
     )
 
 
-async def _semantic_rerank(food_ctr, question: str, docs: list[dict], top_k: int = 10) -> list[dict]:
-    """Rerank food documents using Cosmos DB Semantic Reranker. Falls back to original order on failure."""
+_RERANK_URL_SUFFIX = "dbinference.azure.com:443/inference/semanticReranking"
+
+
+async def _rerank_token(engine, scope: str) -> str | None:
+    """Acquire (and cache on the engine) a bearer token for the reranker service."""
+    now = time.time()
+    if getattr(engine, "_ranker_token", None) and now < getattr(engine, "_ranker_token_exp", 0) - 60:
+        return engine._ranker_token
+    try:
+        await engine._get_cosmos()  # ensures engine._cred is set for RBAC configs
+        cred = getattr(engine, "_cred", None)
+        if cred is None:
+            from azure.identity.aio import AzureCliCredential
+            cred = AzureCliCredential()
+        tok = await cred.get_token(scope)
+        engine._ranker_token = tok.token
+        engine._ranker_token_exp = tok.expires_on
+        return tok.token
+    except Exception as e:
+        log.warning("Reranker token acquisition failed: %s", e)
+        return None
+
+
+async def _semantic_rerank(engine, question: str, docs: list[dict]) -> list[dict]:
+    """Rerank food docs via the Cosmos semantic-reranker HTTP endpoint (ranker.* config).
+
+    Mirrors the upstream CombinedRetriever behaviour: every candidate is scored
+    by the ranker and the top ``ranker.k_ranker`` are kept. Falls back to the
+    existing order when the ranker is disabled/unconfigured, on any error, or
+    when there are already <= k_ranker candidates.
+    """
     if not docs:
         return docs
+
+    ranker = engine._cfg.get("ranker", {})
+    account = str(ranker.get("account_name", "")).strip()
+    region = str(ranker.get("region", "")).strip()
+    k_ranker = int(ranker.get("k_ranker", 0) or 0)
+    if not ranker.get("use_ranker", True) or not account or not region or k_ranker <= 0:
+        return docs
+    # Nothing to trim if we already have <= k_ranker candidates.
+    if len(docs) <= k_ranker:
+        return docs
+
     import json as _json
     doc_strings = []
     for doc in docs:
@@ -294,20 +194,61 @@ async def _semantic_rerank(food_ctr, question: str, docs: list[dict], top_k: int
             parts.append(f"Pack size: {pack_size}")
         doc_strings.append(" | ".join(parts) if parts else _json.dumps(doc)[:500])
 
+    # The ranker rejects payloads containing empty strings.
+    if any(not (isinstance(s, str) and s.strip()) for s in doc_strings):
+        return docs
+
+    scope = str(ranker.get("token_scope", "https://dbinference.azure.com/.default")).strip()
+    token = await _rerank_token(engine, scope)
+    if not token:
+        return docs
+
+    url_suffix = str(ranker.get("url_suffix", _RERANK_URL_SUFFIX)).strip()
+    url = f"https://{account}.{region}.{url_suffix}"
+    body = {
+        "query": question,
+        "documents": doc_strings,
+        "return_documents": False,
+        "top_k": k_ranker,
+        "batch_size": int(ranker.get("batch_size", 32)),
+    }
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+
     try:
-        result = await food_ctr.semantic_rerank(
-            context=question,
-            documents=doc_strings,
-            options={"return_documents": False, "top_k": min(top_k, len(docs)), "sort": True},
-        )
-        scores = result.get("Scores", [])
+        import httpx
+        client = getattr(engine, "_ranker_http", None)
+        if client is None:
+            client = httpx.AsyncClient(timeout=30)
+            engine._ranker_http = client
+        resp = await client.post(url, headers=headers, json=body)
+        resp.raise_for_status()
+        scores = resp.json().get("Scores", [])
         if scores:
-            reranked = [docs[s["index"]] for s in scores if s["index"] < len(docs)]
-            return reranked
+            return [docs[s["index"]] for s in scores if s["index"] < len(docs)]
     except Exception as e:
         log.warning("Semantic reranker failed (falling back to vector order): %s", e)
 
-    return docs[:top_k]
+    return docs
+
+
+async def _identify_missing_containers(engine) -> list[str]:
+    """Return configured KG/food containers that don't exist (queried from Cosmos)."""
+    missing: list[str] = []
+    try:
+        cosmos = await engine._get_cosmos()
+        db = cosmos.get_database_client(engine._db_name)
+        kg = engine._kg_cfg
+        for n in (kg.get("entities_container", "entities"),
+                  kg.get("triples_container", "triples"),
+                  "food"):
+            try:
+                await db.get_container_client(n).read()
+            except Exception as e:
+                if "NotFound" in str(e) or "404" in str(e):
+                    missing.append(n)
+    except Exception:
+        pass
+    return missing
 
 
 async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
@@ -343,8 +284,8 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
         async def _entity_search():
             r = []
             async for item in entities_ctr.query_items(
-                query=("SELECT TOP @k c.name, c.description, c.relation_count, c.source_chunks, "
-                       "VectorDistance(c.embedding, @emb) AS score FROM c ORDER BY VectorDistance(c.embedding, @emb)"),
+                query=("SELECT TOP @k c.n AS name, c.t AS description, c.r AS relation_count, c.d AS source_chunks, "
+                       "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
                 parameters=[{"name": "@k", "value": seed_k}, {"name": "@emb", "value": q_emb}]):
                 r.append(item)
             return r
@@ -385,10 +326,10 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
                     visited.add(n)
 
                 async def _fetch_pk(name):
-                    pk = name.lower()[:100]
+                    pk = name
                     r = []
                     async for triple in triples_ctr.query_items(
-                        query="SELECT * FROM c WHERE c.pk = @pk",
+                        query=f"SELECT c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks FROM c WHERE c.{engine._triples_pk_field} = @pk",
                         parameters=[{"name": "@pk", "value": pk}],
                     ):
                         r.append(triple)
@@ -404,8 +345,8 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
         async def _triple_vec():
             r = []
             async for t in triples_ctr.query_items(
-                query=("SELECT TOP @k c.subject, c.predicate, c.object, c.confidence, c.source_chunks, "
-                       "VectorDistance(c.embedding, @emb) AS score FROM c ORDER BY VectorDistance(c.embedding, @emb)"),
+                query=("SELECT TOP @k c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks, "
+                       "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
                 parameters=[{"name": "@k", "value": 30}, {"name": "@emb", "value": q_emb}]):
                 r.append(t)
             return r
@@ -511,7 +452,7 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
 
         # --- Step 4: Rerank ---
         t_rerank = time.perf_counter()
-        source_chunks = await _semantic_rerank(food_ctr, question, source_chunks, top_k=RERANKER_TOP_K)
+        source_chunks = await _semantic_rerank(engine, question, source_chunks)
         timings["rerank"] = time.perf_counter() - t_rerank
 
         yield _sse({
@@ -523,9 +464,9 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
             "_ts": _elapsed(t0),
         })
 
-        # --- Step 5: Build prompt + non-streaming LLM call (DFlash speculative decoding) ---
+        # --- Step 5: Build prompt + non-streaming LLM call ---
         yield _sse({"stage": "progress",
-                     "message": f"Retrieval done in {time.perf_counter() - t0:.1f}s — calling LLM (DFlash)...",
+                     "message": f"Retrieval done in {time.perf_counter() - t0:.1f}s — calling LLM ({engine._llm_model})...",
                      "_ts": _elapsed(t0)})
 
         graph_context = engine._build_graph_context(seed_entities, all_triples)
@@ -561,7 +502,16 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
 
     except Exception as e:
         log.exception("dflash stream error: %s", e)
-        yield _sse({"stage": "error", "message": str(e)})
+        msg = str(e)
+        if "NotFound" in msg or "404" in msg:
+            missing = await _identify_missing_containers(engine)
+            if missing:
+                msg = (
+                    f"Cosmos DB container(s) not found in database '{engine._db_name}': "
+                    f"{', '.join(missing)}. Check kg.triples_container / kg.entities_container "
+                    f"in your config, or (re)build the KG."
+                )
+        yield _sse({"stage": "error", "message": msg})
 
     yield "data: [DONE]\n\n"
 
@@ -590,9 +540,9 @@ async def _stream_kg_sse(question: str, engine: KGQueryEngine, backend_id: str =
 
         t_es = time.perf_counter()
         sql = (
-            "SELECT TOP @k c.name, c.description, c.relation_count, c.source_chunks, "
-            "VectorDistance(c.embedding, @emb) AS score "
-            "FROM c ORDER BY VectorDistance(c.embedding, @emb)"
+            "SELECT TOP @k c.n AS name, c.t AS description, c.r AS relation_count, c.d AS source_chunks, "
+            "VectorDistance(c.e, @emb) AS score "
+            "FROM c ORDER BY VectorDistance(c.e, @emb)"
         )
         seed_entities = []
         async for item in entities_container.query_items(
@@ -625,10 +575,10 @@ async def _stream_kg_sse(question: str, engine: KGQueryEngine, backend_id: str =
         visited_entities: set[str] = set()
 
         async def _fetch_triples(name: str):
-            pk = name.lower()[:100]
+            pk = name
             results = []
             async for triple in triples_container.query_items(
-                query="SELECT * FROM c WHERE c.pk = @pk",
+                query=f"SELECT c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks FROM c WHERE c.{engine._triples_pk_field} = @pk",
                 parameters=[{"name": "@pk", "value": pk}],
             ):
                 results.append(triple)
@@ -650,9 +600,9 @@ async def _stream_kg_sse(question: str, engine: KGQueryEngine, backend_id: str =
                                     if t["object"] not in visited_entities})[:5]
 
         triple_sql = (
-            "SELECT TOP @k c.subject, c.predicate, c.object, c.confidence, c.source_chunks, "
-            "VectorDistance(c.embedding, @emb) AS score "
-            "FROM c ORDER BY VectorDistance(c.embedding, @emb)"
+            "SELECT TOP @k c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks, "
+            "VectorDistance(c.e, @emb) AS score "
+            "FROM c ORDER BY VectorDistance(c.e, @emb)"
         )
         async for triple in triples_container.query_items(
             query=triple_sql,
@@ -777,56 +727,44 @@ def _elapsed(t0: float) -> float:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    log.info("Warming up embedding model...")
-    embed_sync("warmup")
-
-    kg_engines: dict[str, KGQueryEngine] = {}
-    questions: dict[str, list[dict]] = {}
-
-    main_cfg = os.environ.get("KG_CONFIG")
-    if not main_cfg:
+    main_cfg = os.environ.get("KG_CONFIG", str(_ROOT / "my.yaml"))
+    cfg_path = Path(main_cfg)
+    if not cfg_path.exists():
         raise RuntimeError(
-            "KG_CONFIG is not set. Start the app with "
-            "'python api.py --config <path-to-config.yaml>'."
+            f"Config not found: {cfg_path}. Provide --config or create my.yaml."
         )
 
-    backend_configs = {
-        "kg": _ROOT / BACKENDS["kg"]["config"],
-        "dflash": Path(main_cfg),
-    }
-    for bid, cfg_path in backend_configs.items():
-        if cfg_path.exists():
-            cfg = load_config(str(cfg_path))
-            kg_engines[bid] = KGQueryEngine(cfg)
-            questions[bid] = _load_questions_from_cfg(cfg)
-            log.info("Backend %s loaded from %s: %d questions", bid, cfg_path, len(questions[bid]))
+    cfg = load_config(str(cfg_path))
 
-    # Original AgenticRetrieval
+    # Cosmos DB Semantic Reranker endpoint comes from config; an explicit env
+    # var wins. The azure-cosmos SDK reads this env var at rerank time.
+    reranker_endpoint = cfg.get("cosmos", {}).get("semantic_reranker_endpoint")
+    if reranker_endpoint:
+        os.environ.setdefault(
+            "AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT", str(reranker_endpoint)
+        )
+
+    engine = KGQueryEngine(cfg)
+    questions = _load_questions_from_cfg(cfg)
+    log.info("Backend loaded from %s: %d questions", cfg_path, len(questions))
+
+    # Warm up the embedder (loads the in-process model, or checks the HTTP
+    # embedding endpoint). Best-effort — don't fail startup if it errors.
+    log.info("Warming up embedder...")
     try:
-        ok = await _init_original()
-        if ok:
-            questions["original"] = _load_questions_from_path(
-                "/home/azureuser/AgenticRetrieval/data/food.json"
-            )
-            log.info("Backend original loaded: %d questions", len(questions["original"]))
+        await engine._embedder.embed("warmup")
     except Exception as e:
-        log.warning("Could not initialize original pipeline: %s", e)
+        log.warning("Embedding warmup failed: %s", e)
 
-    app.state.kg_engines = kg_engines
+    app.state.engine = engine
     app.state.questions = questions
 
     yield
 
-    for engine in kg_engines.values():
-        await engine.close()
-    if _original_llm:
-        try:
-            await _original_llm.close()
-        except Exception:
-            pass
+    await engine.close()
 
 
-app = FastAPI(title="Food KG-RAG (Multi-Backend)", version="2.0.0", lifespan=lifespan)
+app = FastAPI(title="Food KG-RAG", version="2.0.0", lifespan=lifespan)
 
 
 @app.get("/", include_in_schema=False)
@@ -841,40 +779,22 @@ async def health():
 
 @app.get("/v1/backends")
 async def get_backends():
-    available = []
-    for bid, binfo in BACKENDS.items():
-        is_ready = bid in app.state.questions and (
-            bid == "original" and _original_pipeline is not None
-            or bid in app.state.kg_engines
-        )
-        if is_ready:
-            available.append({
-                "id": bid,
-                "label": binfo["label"],
-                "description": binfo["description"],
-                "badge_color": binfo["badge_color"],
-                "question_count": len(app.state.questions.get(bid, [])),
-            })
-    return JSONResponse(content=available)
+    bid, binfo = next(iter(BACKENDS.items()))
+    return JSONResponse(content=[{
+        "id": bid,
+        "label": binfo["label"],
+        "description": binfo["description"],
+        "badge_color": binfo["badge_color"],
+        "question_count": len(app.state.questions),
+    }])
 
 @app.get("/v1/questions")
-async def get_questions(backend: str = "dflash"):
-    return JSONResponse(content=app.state.questions.get(backend, []))
+async def get_questions(backend: str = "kg"):
+    return JSONResponse(content=app.state.questions)
 
 @app.post("/v1/ask/stream")
 async def ask_stream(body: AskRequest):
-    if body.backend == "original":
-        gen = _run_original_stream(body.question)
-    elif body.backend == "dflash":
-        engine = app.state.kg_engines.get("dflash")
-        if not engine:
-            engine = next(iter(app.state.kg_engines.values()))
-        gen = _stream_dflash_sse(body.question, engine)
-    else:
-        engine = app.state.kg_engines.get(body.backend)
-        if not engine:
-            engine = next(iter(app.state.kg_engines.values()))
-        gen = _stream_kg_sse(body.question, engine, backend_id=body.backend)
+    gen = _stream_dflash_sse(body.question, app.state.engine)
 
     return StreamingResponse(
         gen,
@@ -907,8 +827,8 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
     async def _es():
         r = []
         async for item in entities_ctr.query_items(
-            query=("SELECT TOP @k c.name, c.description, c.relation_count, c.source_chunks, "
-                   "VectorDistance(c.embedding, @emb) AS score FROM c ORDER BY VectorDistance(c.embedding, @emb)"),
+            query=("SELECT TOP @k c.n AS name, c.t AS description, c.r AS relation_count, c.d AS source_chunks, "
+                   "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
             parameters=[{"name": "@k", "value": seed_k}, {"name": "@emb", "value": q_emb}]):
             r.append(item)
         return r
@@ -938,10 +858,10 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
             for n in batch[:10]:
                 visited.add(n)
             async def _fetch_pk(name):
-                pk = name.lower()[:100]
+                pk = name
                 r = []
                 async for triple in triples_ctr.query_items(
-                    query="SELECT * FROM c WHERE c.pk = @pk",
+                    query=f"SELECT c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks FROM c WHERE c.{engine._triples_pk_field} = @pk",
                     parameters=[{"name": "@pk", "value": pk}]):
                     r.append(triple)
                 return r
@@ -955,8 +875,8 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
     async def _tv():
         r = []
         async for t in triples_ctr.query_items(
-            query=("SELECT TOP @k c.subject, c.predicate, c.object, c.confidence, c.source_chunks, "
-                   "VectorDistance(c.embedding, @emb) AS score FROM c ORDER BY VectorDistance(c.embedding, @emb)"),
+            query=("SELECT TOP @k c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks, "
+                   "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
             parameters=[{"name": "@k", "value": 30}, {"name": "@emb", "value": q_emb}]):
             r.append(t)
         return r
@@ -1040,7 +960,7 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
                 seen_ids.add(doc.get("id"))
     timings["source_fetch"] = time.perf_counter() - t_src
 
-    source_chunks = await _semantic_rerank(food_ctr, question, source_chunks, top_k=RERANKER_TOP_K)
+    source_chunks = await _semantic_rerank(engine, question, source_chunks)
 
     graph_context = engine._build_graph_context(seed_entities, all_triples)
     source_text = engine._build_source_text(source_chunks)
@@ -1069,32 +989,8 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
 @app.post("/v1/ask")
 async def ask(body: AskRequest):
     t0 = time.perf_counter()
-
-    if body.backend == "original":
-        if _original_pipeline is None:
-            return JSONResponse(status_code=503, content={"error": "Original pipeline not initialized"})
-        result = await _original_pipeline.run(body.question)
-        wall = time.perf_counter() - t0
-        return JSONResponse(content={
-            "answer": result.get("final_answer", ""),
-            "timings": {"total": wall, "llm": wall},
-            "http_wall_s": round(wall, 4),
-        })
-
-    if body.backend == "dflash":
-        engine = app.state.kg_engines.get("dflash")
-        if not engine:
-            engine = next(iter(app.state.kg_engines.values()))
-        result = await _dflash_answer(body.question, engine)
-        result["http_wall_s"] = round(time.perf_counter() - t0, 4)
-        return JSONResponse(content=result)
-
-    engine = app.state.kg_engines.get(body.backend)
-    if not engine:
-        engine = app.state.kg_engines.get("dflash", next(iter(app.state.kg_engines.values())))
-    result = await engine.answer(body.question)
-    wall = time.perf_counter() - t0
-    result["http_wall_s"] = round(wall, 4)
+    result = await _dflash_answer(body.question, app.state.engine)
+    result["http_wall_s"] = round(time.perf_counter() - t0, 4)
     return JSONResponse(content=result)
 
 
@@ -1102,13 +998,13 @@ if __name__ == "__main__":
     import argparse
     import uvicorn
 
-    parser = argparse.ArgumentParser(description="Food KG-RAG multi-backend API")
+    parser = argparse.ArgumentParser(description="Food KG-RAG API (single KG + LLM backend)")
     parser.add_argument(
         "--config",
-        required=True,
-        help="Path to the KG backend YAML config (drives the primary model backend).",
+        default="my.yaml",
+        help="Path to the YAML config (default: my.yaml).",
     )
-    parser.add_argument("--host", default="0.0.0.0", help="Host to bind (default: 0.0.0.0).")
+    parser.add_argument("--host", default="localhost", help="Host to bind (default: localhost).")
     parser.add_argument("--port", type=int, default=8080, help="Port to bind (default: 8080).")
     args = parser.parse_args()
 

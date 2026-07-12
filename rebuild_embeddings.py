@@ -47,7 +47,7 @@ def generate_embedding_text(doc: dict, text_fields: list[str]) -> str:
     return "\n".join(parts) if parts else json.dumps(doc, ensure_ascii=False)
 
 async def main():
-    with open("config_local.yaml") as f:
+    with open("my.yaml") as f:
         cfg = yaml.safe_load(f)
 
     cosmos_cfg = cfg["cosmos"]

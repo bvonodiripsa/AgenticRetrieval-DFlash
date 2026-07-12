@@ -6,10 +6,10 @@
 <title>Food KG-RAG – Multi-Backend Knowledge Assistant</title>
 <style>
   :root {
-    --bg: #f5f6f8; --surface: #fff; --border: #d1d5db;
-    --text: #1f2937; --text2: #6b7280; --accent: #059669;
-    --accent-hover: #047857; --green: #059669; --amber: #d97706;
-    --red: #dc2626; --code-bg: #f0f1f3; --radius: 8px;
+    --bg: #0f172a; --surface: #1e293b; --border: #334155;
+    --text: #e2e8f0; --text2: #94a3b8; --accent: #10b981;
+    --accent-hover: #059669; --green: #10b981; --amber: #f59e0b;
+    --red: #ef4444; --code-bg: #0b1220; --radius: 8px;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -53,7 +53,7 @@
     transition: all 0.15s; flex: 1; min-width: 160px; text-align: center;
   }
   .backend-btn:hover { border-color: var(--text2); }
-  .backend-btn.active { border-color: var(--accent); background: #ecfdf5; color: #065f46; }
+  .backend-btn.active { border-color: var(--accent); background: rgba(16,185,129,0.12); color: #6ee7b7; }
   .backend-btn .backend-label { font-weight: 600; display: block; }
   .backend-btn .backend-desc { font-size: 0.72rem; color: var(--text2); display: block; margin-top: 2px; }
 
@@ -69,12 +69,35 @@
   .progress-line.done .stage { color: #4ade80; }
 
   .answer-box { background: var(--code-bg); border-radius: 6px; padding: 16px;
-                font-size: 0.9rem; white-space: pre-wrap; word-break: break-word;
+                font-size: 0.9rem; word-break: break-word;
                 max-height: 500px; overflow-y: auto; line-height: 1.65; }
   .answer-box:empty::before { content: '\2014'; color: var(--text2); }
+  .answer-box > *:first-child { margin-top: 0; }
+  .answer-box > *:last-child { margin-bottom: 0; }
+  .answer-box p { margin: 0 0 10px; }
+  .answer-box h1, .answer-box h2, .answer-box h3, .answer-box h4 {
+    margin: 14px 0 8px; line-height: 1.3; }
+  .answer-box h1 { font-size: 1.25rem; }
+  .answer-box h2 { font-size: 1.12rem; }
+  .answer-box h3 { font-size: 1rem; }
+  .answer-box h4 { font-size: 0.92rem; }
+  .answer-box ul, .answer-box ol { margin: 0 0 10px; padding-left: 22px; }
+  .answer-box li { margin-bottom: 4px; }
+  .answer-box strong { font-weight: 700; color: #f1f5f9; }
+  .answer-box em { font-style: italic; }
+  .answer-box a { color: #6ee7b7; text-decoration: underline; }
+  .answer-box code { background: rgba(255,255,255,0.08); border-radius: 4px;
+                     padding: 1px 5px; font-family: 'SF Mono', 'Fira Code', monospace;
+                     font-size: 0.85em; }
+  .answer-box pre { background: rgba(0,0,0,0.35); border-radius: 6px; padding: 12px;
+                    overflow-x: auto; margin: 0 0 10px; }
+  .answer-box pre code { background: none; padding: 0; }
+  .answer-box blockquote { border-left: 3px solid var(--border); margin: 0 0 10px;
+                           padding-left: 12px; color: var(--text2); }
+  .answer-box hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 
   .stats-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-  .stat-chip { background: #d1fae5; color: #065f46; border-radius: 20px; padding: 4px 14px;
+  .stat-chip { background: rgba(16,185,129,0.15); color: #6ee7b7; border-radius: 20px; padding: 4px 14px;
                font-size: 0.8rem; font-weight: 500; }
 
   .timing-bar { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -85,7 +108,7 @@
   .bench-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
   .bench-table th, .bench-table td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; }
   .bench-table th { background: var(--code-bg); font-weight: 600; }
-  .bench-table tr:nth-child(even) { background: #fafafa; }
+  .bench-table tr:nth-child(even) { background: rgba(255,255,255,0.03); }
   .bench-summary-line { font-size: 0.85rem; margin-bottom: 10px; color: var(--text2); }
 
   .hidden { display: none !important; }
@@ -256,6 +279,53 @@ qSelect.addEventListener('change', () => {
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
+// Minimal, dependency-free Markdown -> HTML renderer (bold, italic, code,
+// headings, lists, blockquotes, links, hr). Input is escaped first so raw
+// HTML in the answer can't inject markup.
+function renderMarkdown(src) {
+  if (!src) return '';
+  const lines = esc(src).replace(/\r\n?/g, '\n').split('\n');
+  const inline = (t) => t
+    .replace(/`([^`]+)`/g, (_, c) => '<code>' + c + '</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+    .replace(/(^|[^_])_([^_\n]+)_/g, '$1<em>$2</em>')
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  const html = [];
+  let listType = null, inCode = false, inQuote = false;
+  const closeList = () => { if (listType) { html.push('</' + listType + '>'); listType = null; } };
+  const closeQuote = () => { if (inQuote) { html.push('</blockquote>'); inQuote = false; } };
+  for (let raw of lines) {
+    const fence = raw.match(/^```/);
+    if (fence) {
+      if (inCode) { html.push('</code></pre>'); inCode = false; }
+      else { closeList(); closeQuote(); html.push('<pre><code>'); inCode = true; }
+      continue;
+    }
+    if (inCode) { html.push(raw + '\n'); continue; }
+    if (/^\s*$/.test(raw)) { closeList(); closeQuote(); continue; }
+    const h = raw.match(/^(#{1,4})\s+(.*)$/);
+    if (h) { closeList(); closeQuote(); const n = h[1].length; html.push('<h' + n + '>' + inline(h[2]) + '</h' + n + '>'); continue; }
+    if (/^\s*([-*_])\s*\1\s*\1[-*_\s]*$/.test(raw)) { closeList(); closeQuote(); html.push('<hr>'); continue; }
+    const ol = raw.match(/^\s*\d+[.)]\s+(.*)$/);
+    const ul = raw.match(/^\s*[-*+]\s+(.*)$/);
+    if (ol || ul) {
+      const want = ol ? 'ol' : 'ul';
+      if (listType !== want) { closeList(); html.push('<' + want + '>'); listType = want; }
+      html.push('<li>' + inline((ol || ul)[1]) + '</li>');
+      continue;
+    }
+    const q = raw.match(/^\s*>\s?(.*)$/);
+    if (q) { closeList(); if (!inQuote) { html.push('<blockquote>'); inQuote = true; } html.push(inline(q[1]) + ' '); continue; }
+    closeList(); closeQuote();
+    html.push('<p>' + inline(raw) + '</p>');
+  }
+  if (inCode) html.push('</code></pre>');
+  closeList(); closeQuote();
+  return html.join('');
+}
+
 function addProgress(text, cls, serverTs) {
   const now = serverTs != null ? Number(serverTs).toFixed(1) : ((performance.now() - startTime) / 1000).toFixed(1);
   const div = document.createElement('div');
@@ -325,7 +395,7 @@ async function doStream(question) {
             addProgress('Retrieval done \u2014 streaming answer...', '', ev._ts);
           } else if (ev.stage === 'token') {
             answer += ev.text || '';
-            answerEl.textContent = answer;
+            answerEl.innerHTML = renderMarkdown(answer);
             answerModelBadge.classList.remove('hidden');
           } else if (ev.stage === 'done') {
             const tm = ev.timings || {};
@@ -363,7 +433,7 @@ async function doAsk() {
   btnAsk.disabled = true; btnRunAll.disabled = true;
   btnAsk.innerHTML = '<span class="spinner"></span> Running...';
   btnStop.classList.remove('hidden');
-  logEl.innerHTML = ''; answerEl.textContent = '';
+  logEl.innerHTML = ''; answerEl.innerHTML = '';
   statsCard.classList.add('hidden'); timingCard.classList.add('hidden');
   answerModelBadge.classList.add('hidden');
   startTime = performance.now();
@@ -381,7 +451,7 @@ async function runAllQuestions() {
   batchRunning = true;
   btnAsk.disabled = true; btnRunAll.disabled = true;
   btnStop.classList.remove('hidden');
-  logEl.innerHTML = ''; answerEl.textContent = '\u2014';
+  logEl.innerHTML = ''; answerEl.innerHTML = '';
   statsCard.classList.add('hidden'); timingCard.classList.add('hidden');
   benchmarkCard.classList.add('hidden'); benchmarkTbody.innerHTML = '';
   startTime = performance.now();

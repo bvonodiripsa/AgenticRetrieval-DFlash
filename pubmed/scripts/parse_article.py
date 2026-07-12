@@ -26,6 +26,9 @@ _REPO_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
+import upstream  # noqa: E402
+upstream.ensure_on_path()  # put vendored external/agenticretrieval on sys.path
+
 from xml.etree import ElementTree as ET
 
 from utils.xml_helpers import (

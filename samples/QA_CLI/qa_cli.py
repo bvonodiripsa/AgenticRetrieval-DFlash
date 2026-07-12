@@ -57,6 +57,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+# Upstream modules (dynamic_retriever, utils.*) now live in the vendored clone.
+import upstream  # noqa: E402
+upstream.ensure_on_path()
+
 console = Console()
 
 # Toggled by the --verbose flag; controls extra step output and full tracebacks.

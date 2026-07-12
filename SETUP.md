@@ -66,11 +66,9 @@ sudo apt-get install -y python3.12 python3.12-venv python3.12-dev
 ```bash
 cd /home/azureuser
 
-# Main repo (KG + DFlash)
+# Main repo (KG + DFlash). The "Original" backend now runs from the in-repo
+# dynamic_retriever/utils modules — no separate AgenticRetrieval clone needed.
 git clone https://github.com/bvonodiripsa/AgenticRetrieval-DFlash.git
-
-# Original AgenticRetrieval (needed for the "Original" backend in the web app)
-git clone https://github.com/bvonodiripsa/AgenticRetrieval.git
 ```
 
 ## Step 5: Create Virtual Environment and Install Dependencies
@@ -97,10 +95,6 @@ pip install \
   pydantic==2.12.5 \
   pyyaml \
   numpy
-
-# Symlink the venv into the AgenticRetrieval folder so the Original backend can use it
-cd /home/azureuser/AgenticRetrieval
-ln -s /home/azureuser/AgenticRetrieval-DFlash/.venv .venv
 ```
 
 ### Key package versions
@@ -204,17 +198,15 @@ az role assignment create \
 
 ## Step 8: Update Config Files (if using a different Cosmos DB account)
 
-The configs point to the existing Cosmos DB account (`divdet`) and database (`food`). If you're using the **same** account, no changes needed.
-
-If using a **different** Cosmos DB account, edit these three files:
+The config points to a Cosmos DB account and database. Copy the template and
+edit your settings:
 
 ```bash
 cd /home/azureuser/AgenticRetrieval-DFlash
 
-# Update cosmos.uri, cosmos.database_name, cosmos.tenant_id in each:
-vi config_kg_dflash.yaml
-vi config_kg_oldqwen.yaml
-vi config_original_local.yaml
+# Create your config from the template, then set cosmos.*, embedding.*, llm.*
+cp config.yaml.example my.yaml
+vi my.yaml
 ```
 
 Key fields to update:
@@ -274,8 +266,8 @@ In a **separate terminal**:
 cd /home/azureuser/AgenticRetrieval-DFlash
 source .venv/bin/activate
 
-AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT="https://divdet.westus3.dbinference.azure.com" \
-  python api.py --config config_kg_dflash.yaml --host 0.0.0.0 --port 8080
+# The Cosmos reranker endpoint comes from cosmos.semantic_reranker_endpoint in my.yaml.
+python api.py --config my.yaml --host localhost --port 8080
 ```
 
 Wait for `Application startup complete`, then verify:
@@ -337,7 +329,7 @@ Access the web UI at `http://<public-ip>:8080`.
 | Service | Port | Command |
 |---------|------|---------|
 | vLLM (Qwen3.5-27B + DFlash) | 8000 | `vllm serve Qwen/Qwen3.5-27B --spec-model z-lab/Qwen3.5-27B-DFlash ...` |
-| Web app (FastAPI) | 8080 | `python api.py --config config_kg_dflash.yaml --host 0.0.0.0 --port 8080` |
+| Web app (FastAPI) | 8080 | `python api.py --config my.yaml --host localhost --port 8080` |
 | Cosmos DB | 443 | Azure cloud (no local process) |
 | Azure OpenAI (Original backend) | 443 | Azure cloud (no local process) |
 

@@ -64,19 +64,30 @@ class KGQueryEngine:
         self._embedder = EmbedClient(cfg)
 
         llm_cfg = cfg.get("llm", {})
+        # New upstream schema uses llm_endpoint / llm_model / llm_api_key; keep
+        # the old endpoint / model / api_key names as fallbacks.
         self._llm = AsyncOpenAI(
-            base_url=llm_cfg.get("endpoint", "http://localhost:8000/v1"),
-            api_key=llm_cfg.get("api_key", "dummy"),
+            base_url=llm_cfg.get("llm_endpoint", llm_cfg.get("endpoint", "http://localhost:8000/v1")),
+            api_key=(llm_cfg.get("llm_api_key") or llm_cfg.get("api_key")
+                     or llm_cfg.get("azure_openai_key") or "dummy"),
             timeout=120.0,
-            max_retries=3,
+            max_retries=int(llm_cfg.get("max_retries", 3)),
         )
-        self._llm_model = llm_cfg.get("model", "Qwen/Qwen2.5-32B-Instruct")
-        self._max_tokens = int(cfg.get("query", {}).get("max_answer_tokens", 1024))
+        self._llm_model = llm_cfg.get("llm_model", llm_cfg.get("model", "Qwen/Qwen2.5-32B-Instruct"))
+        # Answer token budget: project-specific query.max_answer_tokens first,
+        # then upstream llm.max_completion_tokens, then a safe default.
+        self._max_tokens = int(
+            cfg.get("query", {}).get("max_answer_tokens")
+            or llm_cfg.get("max_completion_tokens")
+            or llm_cfg.get("max_tokens")
+            or 1024
+        )
         self._llm_call_kwargs = build_llm_call_kwargs(llm_cfg, self._llm_model)
 
         cosmos_cfg = cfg["cosmos"]
         self._db_name = cosmos_cfg["database_name"]
         self._kg_cfg = cfg.get("kg", {})
+        self._triples_pk_field = self._kg_cfg.get("triples_partition_key_path", "/s").lstrip("/")
         self._query_cfg = cfg.get("query", {})
 
     async def _get_cosmos(self) -> CosmosClient:
@@ -94,6 +105,9 @@ class KGQueryEngine:
             await self._cosmos.close()
         if self._cred:
             await self._cred.close()
+        ranker_http = getattr(self, "_ranker_http", None)
+        if ranker_http is not None:
+            await ranker_http.aclose()
 
     async def answer(self, question: str) -> dict[str, Any]:
         """Enhanced KG-RAG pipeline: embed -> entities -> graph -> vector augment -> LLM."""
@@ -116,9 +130,9 @@ class KGQueryEngine:
         seed_k = int(self._query_cfg.get("seed_entities_k", 20))
 
         sql = (
-            "SELECT TOP @k c.name, c.description, c.relation_count, c.source_chunks, "
-            "VectorDistance(c.embedding, @emb) AS score "
-            "FROM c ORDER BY VectorDistance(c.embedding, @emb)"
+            "SELECT TOP @k c.n AS name, c.t AS description, c.r AS relation_count, c.d AS source_chunks, "
+            "VectorDistance(c.e, @emb) AS score "
+            "FROM c ORDER BY VectorDistance(c.e, @emb)"
         )
         seed_entities = []
         async for item in entities_container.query_items(
@@ -153,8 +167,8 @@ class KGQueryEngine:
         visited_entities: set[str] = set()
 
         async def _fetch_triples_for_entity(name: str):
-            pk = name.lower()[:100]
-            query = "SELECT * FROM c WHERE c.pk = @pk"
+            pk = name
+            query = f"SELECT c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks FROM c WHERE c.{self._triples_pk_field} = @pk"
             results = []
             async for triple in triples_container.query_items(
                 query=query,
@@ -184,9 +198,9 @@ class KGQueryEngine:
 
         # Also do a vector search on triples for broader coverage
         triple_sql = (
-            "SELECT TOP @k c.subject, c.predicate, c.object, c.confidence, c.source_chunks, "
-            "VectorDistance(c.embedding, @emb) AS score "
-            "FROM c ORDER BY VectorDistance(c.embedding, @emb)"
+            "SELECT TOP @k c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks, "
+            "VectorDistance(c.e, @emb) AS score "
+            "FROM c ORDER BY VectorDistance(c.e, @emb)"
         )
         async for triple in triples_container.query_items(
             query=triple_sql,
@@ -441,7 +455,7 @@ async def run_benchmark(config_path: str, questions_path: str | None = None):
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="KG-RAG Query Engine for Food")
-    parser.add_argument("--config", default="config_kg.yaml")
+    parser.add_argument("--config", default="my.yaml")
     parser.add_argument("--questions", default=None)
     parser.add_argument("--question", default=None, help="Single question to answer")
     args = parser.parse_args()

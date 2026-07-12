@@ -77,7 +77,7 @@ KG_INDEXING_POLICY = {
 }
 
 
-def load_dflash_config(path: str = "config_kg_dflash.yaml") -> dict:
+def load_dflash_config(path: str = "my.yaml") -> dict:
     with open(path) as f:
         cfg = yaml.safe_load(f)
     cosmos = cfg.get("cosmos", {})
@@ -272,15 +272,15 @@ async def setup(args):
     print(f"  Containers: food, {triples_container}, {entities_container}")
     print()
     print("  Next steps:")
-    print("    1. Build KG:  python kg_builder.py --config config_kg_dflash.yaml --question-driven --question-index all")
-    print("    2. Test:      python test_food_dflash.py --config config_kg_dflash.yaml")
-    print("    3. Benchmark: python kg_query.py --config config_kg_dflash.yaml")
+    print("    1. Build KG:  python kg_builder.py --config my.yaml --question-driven --question-index all")
+    print("    2. Test:      python test_food_dflash.py --config my.yaml")
+    print("    3. Benchmark: python kg_query.py --config my.yaml")
     print("=" * 60)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Set up food-dflash database")
-    parser.add_argument("--config", default="config_kg_dflash.yaml")
+    parser.add_argument("--config", default="my.yaml")
     parser.add_argument("--questions", default="data/food.json")
     parser.add_argument("--k-per-question", type=int, default=30)
     parser.add_argument("--skip-copy", action="store_true")

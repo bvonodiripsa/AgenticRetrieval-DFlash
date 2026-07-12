@@ -34,13 +34,11 @@ A unified FastAPI web application (`api.py`) exposes three backend pipelines sid
 |------|---------|
 | `kg_builder.py` | Offline KG construction: triple extraction, dedup, predicate normalization, entity resolution |
 | `kg_query.py` | Online KG-RAG query engine: graph traversal + vector augment + LLM answer |
-| `api.py` | FastAPI web app hosting all three backends with SSE streaming |
+| `api.py` | FastAPI web app serving the KG-RAG + LLM backend with SSE streaming |
 | `prompts_kg_food.py` | KG-specific prompts for triple extraction and answer generation |
-| `static/index.html` | Web UI with backend selector, progress log, and timing display |
-| `config_kg_dflash.yaml` | DFlash backend configuration (smaller context, faster inference) |
-| `config_kg_oldqwen.yaml` | KG backend configuration (larger context, standard generation) |
-| `config_kg_glm.yaml` | GLM-5.2 backend configuration (z.ai model via hosted inference) |
-| `config_original_local.yaml` | Original backend configuration (GPT-4.1 via Azure) |
+| `static/index.html` | Web UI with progress log and timing display |
+| `config.yaml.example` | Consolidated config template (copy to `my.yaml`, then fill in secrets) |
+| `upstream.py` + `scripts/sync_upstream.*` | Vendor the upstream AgenticRetrieval repo into `external/agenticretrieval` (git-ignored, re-syncable) |
 
 ## How the Pipelines Work
 
@@ -185,16 +183,16 @@ The KG is built offline using `kg_builder.py`. It reads food product documents f
 
 ```bash
 # Full KG build
-python kg_builder.py --config config_kg_dflash.yaml
+python kg_builder.py --config my.yaml
 
 # Question-driven subset (faster for testing)
-python kg_builder.py --config config_kg_dflash.yaml --question-driven --question-k 30
+python kg_builder.py --config my.yaml --question-driven --question-k 30
 
 # Resume from checkpoint
-python kg_builder.py --config config_kg_dflash.yaml --time-limit 3600
+python kg_builder.py --config my.yaml --time-limit 3600
 
 # Skip extraction, only run post-processing
-python kg_builder.py --config config_kg_dflash.yaml --skip-extraction --reprocess
+python kg_builder.py --config my.yaml --skip-extraction --reprocess
 ```
 
 ### Triple schema in Cosmos DB
@@ -226,37 +224,25 @@ Beyond extracting facts directly from product data, the builder infers higher-le
 
 ## Configuration Reference
 
-Three YAML configs control the three backends. All share the same Cosmos DB account (`divdet`) and database (`food`).
+The app is driven by a single YAML config: copy `config.yaml.example` to `my.yaml`
+(git-ignored) and fill in your Cosmos DB, embedding, and LLM settings + secrets.
+Override the path with `--config <file>`.
 
-### Key configuration differences
+### Key query settings (`query:` block)
 
-| Setting | DFlash (`config_kg_dflash.yaml`) | KG (`config_kg_oldqwen.yaml`) | Original (`config_original_local.yaml`) |
-|---------|------|-------|----------|
-| **LLM provider** | Local vLLM | Local vLLM | Azure OpenAI |
-| **LLM model** | Qwen3.5-27B | Qwen3.5-27B | GPT-4.1 |
-| **DFlash draft model** | `z-lab/Qwen3.5-27B-DFlash` | None | None |
-| **Pipeline type** | KG-RAG | KG-RAG | Decomposed multi-round RAG |
-| **seed_entities_k** | 10 | 20 | N/A |
-| **max_hops** | 1 | 2 | N/A |
-| **max_triples** | 40 | 150 | N/A |
-| **max_source_chunks** | 15 | 40 | N/A |
-| **vector_augment_k** | 12 | 15 | N/A |
-| **max_answer_tokens** | 1200 | 2048 | 4096 |
-| **Embedding** | In-process Qwen3-Embedding-0.6B | In-process Qwen3-Embedding-0.6B | In-process Qwen3-Embedding-0.6B |
-| **Semantic reranker** | Yes (via SDK) | No | No |
-| **Keyword search** | LLM-expanded FullTextContains | No | Built-in full-text per source |
-| **Retrieval rounds** | 1 | 1 | 2 |
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| `seed_entities_k` | 10 | Seed entities from vector search |
+| `max_hops` | 1 | Graph traversal depth |
+| `max_triples` | 40 | Triples passed to the LLM |
+| `max_source_chunks` | 15 | Source documents fetched |
+| `vector_augment_k` | 12 | Extra vector-search products |
+| `max_answer_tokens` | 4096 | Answer budget (covers reasoning tokens) |
 
-### DFlash context tradeoffs
-
-DFlash uses smaller context limits than the KG backend to minimize prompt tokens and maximize the speedup from speculative decoding:
-
-- Fewer entities (10 vs 20) — focuses on the most relevant seeds
-- Fewer triples (40 vs 150) — relies on the semantic reranker to surface the best ones
-- Fewer hops (1 vs 2) — reduces graph traversal time
-- Fewer answer tokens (1200 vs 2048) — produces concise, focused answers
-
-The quality gap is compensated by LLM-expanded keyword search and the Cosmos DB semantic reranker, which together bring in products that pure vector search might miss.
+Embeddings are computed in-process (Qwen3-Embedding-0.6B, mean-pool + L2). The
+Cosmos DB semantic reranker reorders sources before the LLM call; if it is
+unavailable the pipeline falls back to vector-search ordering. Keyword search is
+LLM-expanded via `FullTextContains`.
 
 ## Hardware Requirements
 
@@ -324,27 +310,24 @@ The Original backend (GPT-4.1) requires no local GPU — it calls Azure OpenAI A
 1. Azure Cosmos DB account with `food`, `kg_entities_food`, `kg_triples_food` containers populated
 2. vLLM server running on port 8000 (see vLLM configuration above)
 3. Azure CLI logged in (`az login`) for Cosmos DB RBAC
-4. `AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT` environment variable set (for semantic reranker)
-5. For the Original backend: the [AgenticRetrieval](https://github.com/bvonodiripsa/AgenticRetrieval) repo cloned at `/home/azureuser/AgenticRetrieval`
+4. Semantic reranker endpoint set in the config (`cosmos.semantic_reranker_endpoint`); an `AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT` env var overrides it
 
 ### Start the web app
 
 ```bash
 pip install -r requirements-web.txt
 
-# The KG backend config is a required argument (--config). Point it at the model
-# you want to serve — e.g. config_kg_dflash.yaml (local Qwen3.5-27B + DFlash) or
-# config_kg_glm.yaml (GLM-5.2).
-AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT="https://<account>.westus3.dbinference.azure.com" \
-  python api.py --config config_kg_dflash.yaml --host 0.0.0.0 --port 8080
+# The app reads a single config (default my.yaml; override with --config).
+# The Cosmos reranker endpoint comes from cosmos.semantic_reranker_endpoint.
+python api.py --config my.yaml --host localhost --port 8080
 ```
 
 To launch with uvicorn directly (e.g. to pass extra uvicorn flags), set the
 config via the `KG_CONFIG` environment variable instead:
 
 ```bash
-KG_CONFIG=config_kg_dflash.yaml \
-  python -m uvicorn api:app --host 0.0.0.0 --port 8080 --timeout-keep-alive 120
+KG_CONFIG=my.yaml \
+  python -m uvicorn api:app --host localhost --port 8080 --timeout-keep-alive 120
 ```
 
 ### API endpoints
@@ -354,8 +337,8 @@ KG_CONFIG=config_kg_dflash.yaml \
 | `/` | GET | Web UI |
 | `/health` | GET | Health check |
 | `/v1/backends` | GET | Available backends with descriptions |
-| `/v1/questions?backend=dflash` | GET | Benchmark questions for a backend |
-| `/v1/ask/stream` | POST | SSE streaming answer (`{"question": "...", "backend": "dflash"}`) |
+| `/v1/questions` | GET | Benchmark questions |
+| `/v1/ask/stream` | POST | SSE streaming answer (`{"question": "..."}`) |
 | `/v1/ask` | POST | JSON response (non-streaming) |
 
 ### SSE event format
@@ -384,7 +367,12 @@ The DFlash pipeline integrates the [Cosmos DB Semantic Reranker](https://learn.m
      --assignee-principal-type "User" \
      --scope "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.InferenceService/inferenceAccounts/<account>"
    ```
-4. Set the environment variable:
+4. Set the endpoint in your config (recommended):
+   ```yaml
+   cosmos:
+     semantic_reranker_endpoint: "https://<account>.<region>.dbinference.azure.com"
+   ```
+   Or export an env var to override the config:
    ```bash
    export AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT="https://<account>.<region>.dbinference.azure.com"
    ```
@@ -395,14 +383,14 @@ The reranker is called after retrieval and before the LLM, reordering source doc
 
 ```
 AgenticRetrieval-DFlash/
-├── api.py                      # FastAPI web app (three backends)
+├── api.py                      # FastAPI web app (single KG + LLM backend)
 ├── kg_builder.py               # Offline KG construction
 ├── kg_query.py                 # Online KG-RAG query engine
 ├── prompts_kg_food.py          # KG-specific prompts
+├── upstream.py                 # Bootstrap for the vendored upstream clone
 ├── static/index.html           # Web UI
-├── config_kg_dflash.yaml       # DFlash backend config
-├── config_kg_oldqwen.yaml      # KG backend config
-├── config_original_local.yaml  # Original backend config (GPT-4.1)
+├── config.yaml.example         # Consolidated config template (copy to my.yaml)
+├── external/agenticretrieval/  # Vendored upstream (git-ignored; sync_upstream.*)
 ├── data/food.json              # 10 benchmark questions
 ├── ARCHITECTURE.md             # Detailed code-level architecture
 ├── BENCHMARKS.md               # Timing benchmark tables

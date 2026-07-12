@@ -14,7 +14,7 @@ echo ""
 # Quick build: only docs relevant to the 10 benchmark questions
 # ~300 docs, takes ~5-10 minutes
 python -u kg_builder.py \
-    --config config_kg.yaml \
+    --config my.yaml \
     --question-driven \
     --question-index all \
     --question-k 30 \

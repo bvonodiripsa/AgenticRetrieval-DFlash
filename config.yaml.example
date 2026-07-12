@@ -1,30 +1,200 @@
 # =============================================================================
-# Unified RAG configuration template for dynamic_retriever.py
+# Consolidated configuration template — Food KG-RAG (single KG + LLM backend)
+# =============================================================================
+# Copy this file to `my.yaml` (git-ignored) and fill in your own values +
+# secrets. The app defaults to `my.yaml`; override with `--config <path>`.
 #
-# This template supports BOTH paradigms exposed by dynamic_retriever.py:
-#   - tool-use     : agentic LLM-driven tool-calling loop (default)
-#   - decomposed   : multi-round decomposed RAG (DecomposedRAGPipeline)
+# Sections used by the app:
+#   cosmos, kg, embedding, llm, build, query, paths
+# The retrieval/ranker/pipeline/execution sections at the bottom are used only
+# by the vendored decomposed pipeline (external/agenticretrieval, via the
+# samples/QA_CLI demo) — harmless for the KG-RAG app.
 #
-# Select via `pipeline.mode` below or `--mode {tool-use,decomposed}` on the CLI
-# (CLI overrides config).
-#
-# Section comments mark each block as [shared], [tool-use only], or [decomposed only].
+# NOTE: the KG query path embeds in-process (Qwen3-Embedding-0.6B, mean-pool +
+# L2). A configured embedding.embed_endpoint is used only by the upload tool.
 # =============================================================================
 
-# [shared] Paths (relative to working directory)
+cosmos:
+  uri: "https://<your-account>.documents.azure.com:443/"
+  key: ""                       # leave blank when use_rbac_auth: true
+  database_name: "food"
+  use_rbac_auth: true
+  tenant_id: "<your-tenant-id>"
+  # Cosmos DB Semantic Reranker inference endpoint. Sets the
+  # AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT env var at startup (an
+  # explicit env var overrides this). Leave blank to disable the reranker.
+  semantic_reranker_endpoint: "https://<account>.<region>.dbinference.azure.com"
+
+  # Upload settings (used by the vendored cosmos_db_upload tool)
+  cosmos_account_name: "<your-account>"
+  cosmos_resource_group: "<your-resource-group>"
+  azure_subscription_id: "<your-subscription-id>"
+  concurrent_batches: 4
+  embedding_batch_size: 100
+
+  vector_embedding_policy_json: |
+    {
+      "vectorEmbeddings": [
+        {
+          "path": "/e",
+          "dataType": "float32",
+          "dimensions": 1024,
+          "distanceFunction": "cosine"
+        }
+      ]
+    }
+
+  sources:
+    - id: "food"
+      container_name: "food"
+      partition_key_path: "/country_code"
+      embedding_field: "e"
+      documents_root: "data/food/fr_caas.jsonl"
+      context_fields: ["product_id"]
+      embedding_text_fields:
+        - product_title
+        - product_title_translated
+        - brand
+        - claims
+        - claims_translated
+        - ingredients
+        - ingredients_translated
+        - allergens
+        - allergens_translated
+        - pack_size
+        - pack_size_translated
+        - country_code
+      retrieval:
+        search_k: 35
+        fulltext_search_k: 15
+        fulltext_fields:
+          - product_title
+          - product_title_translated
+          - brand
+          - claims
+          - claims_translated
+          - ingredients_translated
+          - country_code
+      indexing_policy_json: |
+        {
+          "indexingMode": "consistent",
+          "automatic": true,
+          "includedPaths": [
+            { "path": "/*" }
+          ],
+          "excludedPaths": [
+            { "path": "/\"_etag\"/?" },
+            { "path": "/e/*" }
+          ],
+          "fullTextIndexes": [
+            { "path": "/product_title" },
+            { "path": "/product_title_translated" },
+            { "path": "/brand" },
+            { "path": "/claims" },
+            { "path": "/claims_translated" },
+            { "path": "/ingredients_translated" },
+            { "path": "/country_code" }
+          ],
+          "vectorIndexes": [
+            {
+              "path": "/e",
+              "type": "diskANN",
+              "quantizationByteSize": 192,
+              "indexingSearchListSize": 100
+            }
+          ]
+        }
+      full_text_policy_json: |
+        {
+          "defaultLanguage": "en-US",
+          "fullTextPaths": [
+            { "path": "/product_title", "language": "it-IT" },
+            { "path": "/product_title_translated", "language": "en-US" },
+            { "path": "/brand", "language": "en-US" },
+            { "path": "/claims", "language": "it-IT" },
+            { "path": "/claims_translated", "language": "en-US" },
+            { "path": "/ingredients_translated", "language": "en-US" },
+            { "path": "/country_code", "language": "en-US" }
+          ]
+        }
+
+kg:
+  # Partition keys are fixed by the query design: triples use /s (subject, for
+  # graph traversal), entities use /id.
+  triples_container: "triples"
+  entities_container: "entities"
+
+embedding:
+  # embed_endpoint / embed_model / api_format are used by the upload tool only.
+  # The KG query path always embeds in-process with Qwen3-Embedding-0.6B.
+  embed_endpoint: "http://localhost:11434/api/embeddings"
+  api_format: "openai"
+  api_version: "2024-12-01-preview"
+  embed_model: "qwen3-embedding:0.6b"
+  embed_dimensions: 1024
+  embed_cache_size: 4096
+  use_rbac_auth: true
+  token_scope: ""
+  embed_api_key: ""
+
+llm:
+  # OpenAI-compatible base URL (local vLLM, or a hosted gateway like Telnyx).
+  endpoint: "https://<your-openai-compatible-endpoint>/v1"
+  model: "zai-org/GLM-5.2"
+  api_key: ""                   # secret — set in my.yaml, never commit
+  temperature: 0.0
+  max_tokens: 4096
+  max_retries: 3
+  # Optional reasoning control for reasoning models (e.g. GLM). When set, the
+  # app forwards `reasoning_effort` in the request body. Remove to use defaults.
+  reasoning:
+    effort: "low"
+
+build:
+  extraction_rounds: 1
+  max_gaps_per_round: 3
+  concurrency: 20
+  entity_merge_threshold: 0.85
+  min_confidence: 0.5
+
+query:
+  seed_entities_k: 10
+  max_hops: 1
+  max_triples: 40
+  max_source_chunks: 15
+  vector_augment_k: 12
+  max_answer_tokens: 4096
+
 paths:
-  questions_path: ""
-  output_root: ""
+  questions_file: "data/food.json"
+  output_root: "out_kg"
 
-# [tool-use only] Max docs to keep after a `prune` tool call / auto-prune
-prune_k: 20
-# [tool-use only] Enable HyDE passage generation before embedding the query
-hyde: false
+# -----------------------------------------------------------------------------
+# Decomposed-pipeline settings (vendored upstream / samples/QA_CLI only)
+# -----------------------------------------------------------------------------
+retrieval:
+  k_fulltext: 10
+  k_diverse: 105
+  eta: 0.0
+  rescale_power: 5.0
+  cache_size: 2000
 
-# [shared] Default pipeline paradigm; CLI `--mode` overrides this value.
+ranker:
+  use_ranker: true
+  rerank_multiplier: 8    # [tool-use only] proportional over-fetch of candidates before reranking
+  k_ranker: 20            # keep the top-N chunks after reranking (fewer = faster)
+  region: "eastus2"
+  account_name: "<your-reranker-account>"
+  read_token_from_path: false
+  access_token_path: "access_token.txt"
+  tenant_id: "<your-tenant-id>"
+  token_scope: "https://dbinference.azure.com/.default"
+  register_account_path: "dbinference.azure.com/account/registerAccount"
+  url_suffix: "dbinference.azure.com:443/inference/semanticReranking"
+  batch_size: 32
+  max_retries: 5
+
 pipeline:
-  mode: tool-use            # {tool-use, decomposed}
-  # [decomposed only] Sub-question decomposition + rounds (DecomposedRAGPipeline)
   max_sub_questions: 5
   subq_fanout_cap: 3
   subq_max_concurrency: 2
@@ -33,192 +203,6 @@ pipeline:
   subquery_prefix: ""
   dataset_description: ""
 
-# [decomposed only] Retrieval parameters for diversity/log-det selection
-retrieval:
-  k_fulltext: 10
-  k_diverse: 0              # 0 = disabled; >0 = select this many diverse chunks via log-det
-  eta: 0.0
-  rescale_power: 5.0
-  cache_size: 2000
-
-# [decomposed only] Concurrency / question-count limits for main_async()
 execution:
-  max_questions: null       # null = process all questions
+  max_questions: null
   max_workers: 8
-
-# Azure OpenAI / LLM settings ([shared]).
-llm:
-  llm_endpoint: "https://<foundry-resource-name>.cognitiveservices.azure.com/"
-  api_version: "2024-12-01-preview"
-  llm_model: "<deployment-name>"
-  temperature: 0.0
-  max_completion_tokens: 2048
-  max_retries: 2
-  premium_max_concurrency: 8
-  prompt_cache_size: 4096
-  use_rbac_auth: true
-  token_scope: "https://cognitiveservices.azure.com/.default"
-  llm_api_key: ""
-  context_limit: 270000     # [tool-use only] explicit context window hint
-
-# [decomposed only] Optional separate LLM endpoint for regeneration steps in efficient pipeline
-llm_regen:
-  use_llm_regen: false
-  llm_endpoint: ""
-  api_version: ""
-  llm_model: ""
-  temperature: 0.0
-  max_completion_tokens: 4096
-  max_retries: 5
-  premium_max_concurrency: 4
-  use_rbac_auth: false
-  token_scope: ""
-  llm_api_key: ""
-
-# [decomposed only] Ollama (or other local) fallback for sub-tasks
-local_llm:
-  local_fallback_endpoint: "http://localhost:11434/api/generate"
-  local_fallback_model: ""
-  use_local_fallback_for_subtasks: false
-  local_max_concurrency: 8
-
-# Embedding settings ([shared])
-embedding:
-  embed_endpoint: "https://<foundry-resource-name>.openai.azure.com/"
-  api_version: "2024-12-01-preview"
-  embed_model: "<deployment-name>"
-  embed_dimensions: 1024
-  embed_cache_size: 4096
-  use_rbac_auth: true
-  token_scope: "https://ai.azure.com/.default"
-  embed_api_key: ""
-
-
-# Semantic ranker ([shared] for use_ranker/region/account_name/tenant_id/token_scope/batch_size/max_retries)
-# - rerank_multiplier : [tool-use only] proportional reranking
-# - k_ranker          : [decomposed only] absolute reranking (after diversity selection)
-ranker:
-  use_ranker: true
-  rerank_multiplier: 8      # [tool-use only]
-  k_ranker: 20              # [decomposed only]
-  region: ""
-  account_name: ""
-  tenant_id: ""
-  token_scope: ""
-  batch_size: 16
-  max_retries: 5
-
-# Cosmos DB settings
-cosmos:
-  uri: ""
-  key: ""
-  database_name: ""
-  use_rbac_auth: false
-
-  # Upload settings
-  cosmos_account_name: ""
-  cosmos_resource_group: ""
-  azure_subscription_id: ""
-  embedding_batch_size: 20
-
-  vector_embedding_policy_json: |
-    {
-      "vectorEmbeddings": [
-        {
-          "path": "/embedding",
-          "dataType": "float32",
-          "dimensions": 1024,
-          "distanceFunction": "cosine"
-        }
-      ]
-    }
-
-  # Configure each source/container independently
-  sources:
-    - id: "source_1"
-      container_name: "container_1"
-      partition_key_path: "/pk"
-      embedding_field: "embedding"
-      documents_root: ""
-      embedding_text_fields:
-        - title
-        - summary
-        - content
-      retrieval:
-        search_k: 10
-        fulltext_search_k: 10
-        fulltext_fields:
-          - title
-      indexing_policy_json: |
-        {
-          "indexingMode": "consistent",
-          "automatic": true,
-          "includedPaths": [
-            { "path": "/*" }
-          ],
-          "excludedPaths": [
-            { "path": "/\"_etag\"/?" },
-            { "path": "/embedding/*" }
-          ],
-          "fullTextIndexes": [
-            { "path": "/title" }
-          ],
-          "vectorIndexes": [
-            {
-              "path": "/embedding",
-              "type": "diskANN",
-              "quantizationByteSize": 192,
-              "indexingSearchListSize": 100
-            }
-          ]
-        }
-      full_text_policy_json: |
-        {
-          "defaultLanguage": "en-US",
-          "fullTextPaths": [
-            { "path": "/title", "language": "en-US" }
-          ]
-        }
-
-    - id: "source_2"
-      container_name: "container_2"
-      partition_key_path: "/pk"
-      embedding_field: "embedding"
-      documents_root: ""
-      embedding_text_fields:
-        - text
-      retrieval:
-        search_k: 25
-        fulltext_search_k: 0
-        fulltext_fields: 
-          - text
-      indexing_policy_json: |
-        {
-          "indexingMode": "consistent",
-          "automatic": true,
-          "includedPaths": [
-            { "path": "/*" }
-          ],
-          "excludedPaths": [
-            { "path": "/\"_etag\"/?" },
-            { "path": "/embedding/*" }
-          ],
-          "fullTextIndexes": [
-            { "path": "/text" }
-          ],
-          "vectorIndexes": [
-            {
-              "path": "/embedding",
-              "type": "diskANN",
-              "quantizationByteSize": 192,
-              "indexingSearchListSize": 100
-            }
-          ]
-        }
-      full_text_policy_json: |
-        {
-          "defaultLanguage": "en-US",
-          "fullTextPaths": [
-            { "path": "/text", "language": "en-US" }
-          ]
-        }
