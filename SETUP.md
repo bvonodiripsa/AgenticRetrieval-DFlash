@@ -162,7 +162,7 @@ from azure.cosmos.aio import CosmosClient
 from azure.identity.aio import AzureCliCredential
 async def test():
     cred = AzureCliCredential(tenant_id='43083d15-7273-40c1-b7db-39efd9ccc17a')
-    client = CosmosClient('https://divdet.documents.azure.com:443/', credential=cred)
+    client = CosmosClient('https://divdet-provisioned.documents.azure.com:443/', credential=cred)
     db = client.get_database_client('food')
     ctr = db.get_container_client('food')
     async for doc in ctr.query_items('SELECT TOP 1 c.id FROM c'):
@@ -176,19 +176,19 @@ asyncio.run(test())
 
 ### Required RBAC roles
 
-Ask your admin to assign these roles on the `divdet` Cosmos DB account:
+Ask your admin to assign these roles on the `divdet-provisioned` Cosmos DB account:
 
 | Role | Scope | Purpose |
 |------|-------|---------|
-| Cosmos DB Built-in Data Contributor | `Microsoft.DocumentDB/databaseAccounts/divdet` | Read/write data |
-| Semantic Reranker User | `Microsoft.InferenceService/inferenceAccounts/divdet` | Semantic reranking |
+| Cosmos DB Built-in Data Contributor | `Microsoft.DocumentDB/databaseAccounts/divdet-provisioned` | Read/write data |
+| Semantic Reranker User | `Microsoft.InferenceService/inferenceAccounts/divdet-provisioned` | Semantic reranking |
 
 Assignment command for the admin:
 
 ```bash
 # Data access
 az cosmosdb sql role assignment create \
-  --account-name divdet \
+  --account-name divdet-provisioned \
   --resource-group ams-cosmos-db \
   --role-definition-name "Cosmos DB Built-in Data Contributor" \
   --principal-id "<your-user-object-id>" \
@@ -199,7 +199,7 @@ az role assignment create \
   --role "Semantic Reranker User" \
   --assignee-object-id "<your-user-object-id>" \
   --assignee-principal-type "User" \
-  --scope "/subscriptions/b7d41fc8-d35d-41db-92ed-1f7f1d32d4d9/resourceGroups/ams-cosmos-db/providers/Microsoft.InferenceService/inferenceAccounts/divdet"
+  --scope "/subscriptions/b7d41fc8-d35d-41db-92ed-1f7f1d32d4d9/resourceGroups/ams-cosmos-db/providers/Microsoft.InferenceService/inferenceAccounts/divdet-provisioned"
 ```
 
 ## Step 8: Update Config Files (if using a different Cosmos DB account)

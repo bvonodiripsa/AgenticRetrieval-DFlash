@@ -116,9 +116,9 @@ class KGQueryEngine:
         seed_k = int(self._query_cfg.get("seed_entities_k", 20))
 
         sql = (
-            "SELECT TOP @k c.name, c.description, c.relation_count, c.source_chunks, "
-            "VectorDistance(c.embedding, @emb) AS score "
-            "FROM c ORDER BY VectorDistance(c.embedding, @emb)"
+            "SELECT TOP @k c.n AS name, c.t AS description, c.r AS relation_count, c.d AS source_chunks, "
+            "VectorDistance(c.e, @emb) AS score "
+            "FROM c ORDER BY VectorDistance(c.e, @emb)"
         )
         seed_entities = []
         async for item in entities_container.query_items(
@@ -154,7 +154,8 @@ class KGQueryEngine:
 
         async def _fetch_triples_for_entity(name: str):
             pk = name.lower()[:100]
-            query = "SELECT * FROM c WHERE c.pk = @pk"
+            query = ("SELECT c.id, c.s AS subject, c.p AS predicate, c.o AS object, "
+                     "c.f AS confidence, c.d AS source_chunks FROM c WHERE c.s = @pk")
             results = []
             async for triple in triples_container.query_items(
                 query=query,
@@ -184,9 +185,9 @@ class KGQueryEngine:
 
         # Also do a vector search on triples for broader coverage
         triple_sql = (
-            "SELECT TOP @k c.subject, c.predicate, c.object, c.confidence, c.source_chunks, "
-            "VectorDistance(c.embedding, @emb) AS score "
-            "FROM c ORDER BY VectorDistance(c.embedding, @emb)"
+            "SELECT TOP @k c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks, "
+            "VectorDistance(c.e, @emb) AS score "
+            "FROM c ORDER BY VectorDistance(c.e, @emb)"
         )
         async for triple in triples_container.query_items(
             query=triple_sql,

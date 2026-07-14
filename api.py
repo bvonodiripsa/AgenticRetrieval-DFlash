@@ -343,8 +343,8 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
         async def _entity_search():
             r = []
             async for item in entities_ctr.query_items(
-                query=("SELECT TOP @k c.name, c.description, c.relation_count, c.source_chunks, "
-                       "VectorDistance(c.embedding, @emb) AS score FROM c ORDER BY VectorDistance(c.embedding, @emb)"),
+                query=("SELECT TOP @k c.n AS name, c.t AS description, c.r AS relation_count, c.d AS source_chunks, "
+                       "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
                 parameters=[{"name": "@k", "value": seed_k}, {"name": "@emb", "value": q_emb}]):
                 r.append(item)
             return r
@@ -388,7 +388,8 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
                     pk = name.lower()[:100]
                     r = []
                     async for triple in triples_ctr.query_items(
-                        query="SELECT * FROM c WHERE c.pk = @pk",
+                        query=("SELECT c.id, c.s AS subject, c.p AS predicate, c.o AS object, "
+                               "c.f AS confidence, c.d AS source_chunks FROM c WHERE c.s = @pk"),
                         parameters=[{"name": "@pk", "value": pk}],
                     ):
                         r.append(triple)
@@ -404,8 +405,8 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
         async def _triple_vec():
             r = []
             async for t in triples_ctr.query_items(
-                query=("SELECT TOP @k c.subject, c.predicate, c.object, c.confidence, c.source_chunks, "
-                       "VectorDistance(c.embedding, @emb) AS score FROM c ORDER BY VectorDistance(c.embedding, @emb)"),
+                query=("SELECT TOP @k c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks, "
+                       "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
                 parameters=[{"name": "@k", "value": 30}, {"name": "@emb", "value": q_emb}]):
                 r.append(t)
             return r
@@ -590,9 +591,9 @@ async def _stream_kg_sse(question: str, engine: KGQueryEngine, backend_id: str =
 
         t_es = time.perf_counter()
         sql = (
-            "SELECT TOP @k c.name, c.description, c.relation_count, c.source_chunks, "
-            "VectorDistance(c.embedding, @emb) AS score "
-            "FROM c ORDER BY VectorDistance(c.embedding, @emb)"
+            "SELECT TOP @k c.n AS name, c.t AS description, c.r AS relation_count, c.d AS source_chunks, "
+            "VectorDistance(c.e, @emb) AS score "
+            "FROM c ORDER BY VectorDistance(c.e, @emb)"
         )
         seed_entities = []
         async for item in entities_container.query_items(
@@ -628,7 +629,8 @@ async def _stream_kg_sse(question: str, engine: KGQueryEngine, backend_id: str =
             pk = name.lower()[:100]
             results = []
             async for triple in triples_container.query_items(
-                query="SELECT * FROM c WHERE c.pk = @pk",
+                query=("SELECT c.id, c.s AS subject, c.p AS predicate, c.o AS object, "
+                       "c.f AS confidence, c.d AS source_chunks FROM c WHERE c.s = @pk"),
                 parameters=[{"name": "@pk", "value": pk}],
             ):
                 results.append(triple)
@@ -650,9 +652,9 @@ async def _stream_kg_sse(question: str, engine: KGQueryEngine, backend_id: str =
                                     if t["object"] not in visited_entities})[:5]
 
         triple_sql = (
-            "SELECT TOP @k c.subject, c.predicate, c.object, c.confidence, c.source_chunks, "
-            "VectorDistance(c.embedding, @emb) AS score "
-            "FROM c ORDER BY VectorDistance(c.embedding, @emb)"
+            "SELECT TOP @k c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks, "
+            "VectorDistance(c.e, @emb) AS score "
+            "FROM c ORDER BY VectorDistance(c.e, @emb)"
         )
         async for triple in triples_container.query_items(
             query=triple_sql,
@@ -907,8 +909,8 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
     async def _es():
         r = []
         async for item in entities_ctr.query_items(
-            query=("SELECT TOP @k c.name, c.description, c.relation_count, c.source_chunks, "
-                   "VectorDistance(c.embedding, @emb) AS score FROM c ORDER BY VectorDistance(c.embedding, @emb)"),
+            query=("SELECT TOP @k c.n AS name, c.t AS description, c.r AS relation_count, c.d AS source_chunks, "
+                   "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
             parameters=[{"name": "@k", "value": seed_k}, {"name": "@emb", "value": q_emb}]):
             r.append(item)
         return r
@@ -941,7 +943,8 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
                 pk = name.lower()[:100]
                 r = []
                 async for triple in triples_ctr.query_items(
-                    query="SELECT * FROM c WHERE c.pk = @pk",
+                    query=("SELECT c.id, c.s AS subject, c.p AS predicate, c.o AS object, "
+                           "c.f AS confidence, c.d AS source_chunks FROM c WHERE c.s = @pk"),
                     parameters=[{"name": "@pk", "value": pk}]):
                     r.append(triple)
                 return r
@@ -955,8 +958,8 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
     async def _tv():
         r = []
         async for t in triples_ctr.query_items(
-            query=("SELECT TOP @k c.subject, c.predicate, c.object, c.confidence, c.source_chunks, "
-                   "VectorDistance(c.embedding, @emb) AS score FROM c ORDER BY VectorDistance(c.embedding, @emb)"),
+            query=("SELECT TOP @k c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks, "
+                   "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
             parameters=[{"name": "@k", "value": 30}, {"name": "@emb", "value": q_emb}]):
             r.append(t)
         return r
