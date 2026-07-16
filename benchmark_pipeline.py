@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Benchmark the DFlash pipeline stages against the new Cosmos DB (divdet-provisioned)."""
+"""Benchmark the DFlash pipeline stages against Cosmos DB (divdet-sweden)."""
 import asyncio
 import json
 import os
