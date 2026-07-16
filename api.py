@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-KG-RAG API + Web UI — single knowledge-graph + LLM backend.
+GI-RAG API + Web UI — single graph-index + LLM backend.
 
 Pipeline: entity/triple vector search + graph traversal + LLM keyword expansion +
 semantic rerank, then a single LLM answer call (speculative decoding when the
@@ -25,16 +25,16 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from kg_builder import load_config
-from kg_query import KGQueryEngine
+from gi_builder import load_config
+from gi_query import GIQueryEngine
 
 _ROOT = Path(__file__).parent
 log = logging.getLogger("food_dflash.api")
 
 BACKENDS = {
-    "kg": {
-        "label": "KG-RAG",
-        "description": "Knowledge graph RAG + LLM (speculative decoding when supported)",
+    "gi": {
+        "label": "GI-RAG",
+        "description": "Graph Index RAG + LLM (speculative decoding when supported)",
         "badge_color": "#059669",
     },
 }
@@ -43,7 +43,7 @@ BACKENDS = {
 class AskRequest(BaseModel):
     question: str = Field(..., min_length=1)
     # Retained for API compatibility; there is a single backend now.
-    backend: str = Field(default="kg")
+    backend: str = Field(default="gi")
 
 
 def _load_questions_from_cfg(cfg: dict) -> list[dict]:
@@ -58,7 +58,7 @@ def _load_questions_from_cfg(cfg: dict) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# KG-RAG streaming (single KG + LLM backend)
+# GI-RAG streaming (single Graph Index + LLM backend)
 # ---------------------------------------------------------------------------
 
 DFLASH_ANSWER_PROMPT = """You are a food product expert.
@@ -232,14 +232,14 @@ async def _semantic_rerank(engine, question: str, docs: list[dict]) -> list[dict
 
 
 async def _identify_missing_containers(engine) -> list[str]:
-    """Return configured KG/food containers that don't exist (queried from Cosmos)."""
+    """Return configured GI/food containers that don't exist (queried from Cosmos)."""
     missing: list[str] = []
     try:
         cosmos = await engine._get_cosmos()
         db = cosmos.get_database_client(engine._db_name)
-        kg = engine._kg_cfg
-        for n in (kg.get("entities_container", "entities"),
-                  kg.get("triples_container", "triples"),
+        gi = engine._gi_cfg
+        for n in (gi.get("entities_container", "entities"),
+                  gi.get("triples_container", "triples"),
                   "food"):
             try:
                 await db.get_container_client(n).read()
@@ -251,8 +251,8 @@ async def _identify_missing_containers(engine) -> list[str]:
     return missing
 
 
-async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
-    """DFlash path: full KG retrieval (same as KG) + non-streaming LLM with speculative decoding."""
+async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
+    """DFlash path: full GI retrieval + non-streaming LLM with speculative decoding."""
     t0 = time.perf_counter()
     timings: dict[str, float] = {}
 
@@ -267,8 +267,8 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
 
         cosmos = await engine._get_cosmos()
         db = cosmos.get_database_client(engine._db_name)
-        entities_ctr = db.get_container_client(engine._kg_cfg.get("entities_container", "kg_entities_food"))
-        triples_ctr = db.get_container_client(engine._kg_cfg.get("triples_container", "kg_triples_food"))
+        entities_ctr = db.get_container_client(engine._gi_cfg.get("entities_container", "entities"))
+        triples_ctr = db.get_container_client(engine._gi_cfg.get("triples_container", "triples"))
         food_ctr = db.get_container_client("food")
 
         cfg = engine._query_cfg
@@ -299,7 +299,7 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
 
         if not seed_entities:
             yield _sse({"stage": "progress", "message": "No entities found.", "_ts": _elapsed(t0)})
-            yield _sse({"stage": "token", "text": "No relevant entities found in the knowledge graph."})
+            yield _sse({"stage": "token", "text": "No relevant entities found in the graph index."})
             timings["total"] = time.perf_counter() - t0
             yield _sse({"stage": "done", "_ts": _elapsed(t0), "timings": timings})
             yield "data: [DONE]\n\n"
@@ -314,7 +314,7 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
         yield _sse({"stage": "progress", "message": "Graph traversal + vector search + keyword search...", "_ts": _elapsed(t0)})
 
         async def _graph_traversal():
-            """PK-based hop traversal like KG path."""
+            """PK-based hop traversal."""
             all_t = []
             visited = set()
             names = list(entity_names)
@@ -408,7 +408,7 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
                      "message": f"Graph: {len(pk_triples)} PK + {len(vec_triples)} vec = {len(all_triples)} unique triples in {timings['graph_traversal']:.2f}s",
                      "_ts": _elapsed(t0)})
 
-        # --- Step 3: Fetch source documents from KG references + merge with vector/keyword results ---
+        # --- Step 3: Fetch source documents from GI references + merge with vector/keyword results ---
         yield _sse({"stage": "progress", "message": "Fetching source documents...", "_ts": _elapsed(t0)})
 
         t_src = time.perf_counter()
@@ -447,7 +447,7 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
         timings["source_fetch"] = time.perf_counter() - t_src
 
         yield _sse({"stage": "progress",
-                     "message": f"Sources: {len(source_ids)} from KG + {len(vec_food)} vector + keyword = {len(source_chunks)} total in {timings['source_fetch']:.2f}s",
+                     "message": f"Sources: {len(source_ids)} from GI + {len(vec_food)} vector + keyword = {len(source_chunks)} total in {timings['source_fetch']:.2f}s",
                      "_ts": _elapsed(t0)})
 
         # --- Step 4: Rerank ---
@@ -508,15 +508,15 @@ async def _stream_dflash_sse(question: str, engine: KGQueryEngine):
             if missing:
                 msg = (
                     f"Cosmos DB container(s) not found in database '{engine._db_name}': "
-                    f"{', '.join(missing)}. Check kg.triples_container / kg.entities_container "
-                    f"in your config, or (re)build the KG."
+                    f"{', '.join(missing)}. Check gi.triples_container / gi.entities_container "
+                    f"in your config, or (re)build the graph index."
                 )
         yield _sse({"stage": "error", "message": msg})
 
     yield "data: [DONE]\n\n"
 
 
-async def _stream_kg_sse(question: str, engine: KGQueryEngine, backend_id: str = "kg"):
+async def _stream_gi_sse(question: str, engine: GIQueryEngine, backend_id: str = "gi"):
     t0 = time.perf_counter()
     timings: dict[str, float] = {}
 
@@ -534,7 +534,7 @@ async def _stream_kg_sse(question: str, engine: KGQueryEngine, backend_id: str =
         db = cosmos.get_database_client(engine._db_name)
 
         entities_container = db.get_container_client(
-            engine._kg_cfg.get("entities_container", "kg_entities_food")
+            engine._gi_cfg.get("entities_container", "entities")
         )
         seed_k = int(engine._query_cfg.get("seed_entities_k", 20))
 
@@ -554,7 +554,7 @@ async def _stream_kg_sse(question: str, engine: KGQueryEngine, backend_id: str =
 
         if not seed_entities:
             yield _sse({"stage": "progress", "message": "No entities found.", "_ts": _elapsed(t0)})
-            yield _sse({"stage": "token", "text": "No relevant entities found in the knowledge graph."})
+            yield _sse({"stage": "token", "text": "No relevant entities found in the graph index."})
             timings["total"] = time.perf_counter() - t0
             yield _sse({"stage": "done", "_ts": _elapsed(t0), "timings": timings})
             yield "data: [DONE]\n\n"
@@ -566,7 +566,7 @@ async def _stream_kg_sse(question: str, engine: KGQueryEngine, backend_id: str =
 
         t_graph = time.perf_counter()
         triples_container = db.get_container_client(
-            engine._kg_cfg.get("triples_container", "kg_triples_food")
+            engine._gi_cfg.get("triples_container", "triples")
         )
         max_hops = int(engine._query_cfg.get("max_hops", 2))
         max_triples = int(engine._query_cfg.get("max_triples", 150))
@@ -678,7 +678,7 @@ async def _stream_kg_sse(question: str, engine: KGQueryEngine, backend_id: str =
         yield _sse({"stage": "progress", "message": f"Retrieval done in {time.perf_counter() - t0:.1f}s — calling LLM...", "_ts": _elapsed(t0)})
 
         t_llm = time.perf_counter()
-        from prompts_kg_food import GRAPHRAG_ANSWER_PROMPT
+        from prompts_gi_food import GRAPHRAG_ANSWER_PROMPT
         graph_context = engine._build_graph_context(seed_entities, all_triples)
         source_text = engine._build_source_text(source_chunks)
         template = DFLASH_ANSWER_PROMPT if backend_id == "dflash" else GRAPHRAG_ANSWER_PROMPT
@@ -727,7 +727,7 @@ def _elapsed(t0: float) -> float:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    main_cfg = os.environ.get("KG_CONFIG", str(_ROOT / "my.yaml"))
+    main_cfg = os.environ.get("GI_CONFIG", str(_ROOT / "my.yaml"))
     cfg_path = Path(main_cfg)
     if not cfg_path.exists():
         raise RuntimeError(
@@ -744,7 +744,7 @@ async def lifespan(app: FastAPI):
             "AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT", str(reranker_endpoint)
         )
 
-    engine = KGQueryEngine(cfg)
+    engine = GIQueryEngine(cfg)
     questions = _load_questions_from_cfg(cfg)
     log.info("Backend loaded from %s: %d questions", cfg_path, len(questions))
 
@@ -764,7 +764,7 @@ async def lifespan(app: FastAPI):
     await engine.close()
 
 
-app = FastAPI(title="Food KG-RAG", version="2.0.0", lifespan=lifespan)
+app = FastAPI(title="Food GI-RAG", version="2.0.0", lifespan=lifespan)
 
 
 @app.get("/", include_in_schema=False)
@@ -789,7 +789,7 @@ async def get_backends():
     }])
 
 @app.get("/v1/questions")
-async def get_questions(backend: str = "kg"):
+async def get_questions(backend: str = "gi"):
     return JSONResponse(content=app.state.questions)
 
 @app.post("/v1/ask/stream")
@@ -802,8 +802,8 @@ async def ask_stream(body: AskRequest):
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
-async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
-    """Non-streaming DFlash: full KG retrieval + non-streaming LLM, returns result dict."""
+async def _dflash_answer(question: str, engine: GIQueryEngine) -> dict:
+    """Non-streaming DFlash: full GI retrieval + non-streaming LLM, returns result dict."""
     t0 = time.perf_counter()
     timings: dict[str, float] = {}
 
@@ -812,8 +812,8 @@ async def _dflash_answer(question: str, engine: KGQueryEngine) -> dict:
 
     cosmos = await engine._get_cosmos()
     db = cosmos.get_database_client(engine._db_name)
-    entities_ctr = db.get_container_client(engine._kg_cfg.get("entities_container", "kg_entities_food"))
-    triples_ctr = db.get_container_client(engine._kg_cfg.get("triples_container", "kg_triples_food"))
+    entities_ctr = db.get_container_client(engine._gi_cfg.get("entities_container", "entities"))
+    triples_ctr = db.get_container_client(engine._gi_cfg.get("triples_container", "triples"))
     food_ctr = db.get_container_client("food")
 
     cfg = engine._query_cfg
@@ -998,7 +998,7 @@ if __name__ == "__main__":
     import argparse
     import uvicorn
 
-    parser = argparse.ArgumentParser(description="Food KG-RAG API (single KG + LLM backend)")
+    parser = argparse.ArgumentParser(description="Food GI-RAG API (single Graph Index + LLM backend)")
     parser.add_argument(
         "--config",
         default="my.yaml",
@@ -1011,6 +1011,6 @@ if __name__ == "__main__":
     cfg_path = Path(args.config)
     if not cfg_path.exists():
         parser.error(f"Config file not found: {cfg_path}")
-    os.environ["KG_CONFIG"] = str(cfg_path.resolve())
+    os.environ["GI_CONFIG"] = str(cfg_path.resolve())
 
     uvicorn.run("api:app", host=args.host, port=args.port, reload=False)

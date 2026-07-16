@@ -30,7 +30,7 @@ if PROJECT_ROOT not in sys.path:
 
 os.environ.setdefault("VLLM_ENABLE_V1_MULTIPROCESSING", "0")
 
-from prompts_kg_food import (
+from prompts_gi_food import (
     INITIAL_EXTRACTION_PROMPT,
     GAP_ANALYSIS_PROMPT,
     TARGETED_EXTRACTION_PROMPT,

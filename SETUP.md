@@ -5,7 +5,7 @@ This guide walks through setting up the full AgenticRetrieval-DFlash environment
 ## Prerequisites
 
 - Azure subscription with H100 GPU quota
-- Azure Cosmos DB account with the `food` database populated (58K products, 892K KG triples)
+- Azure Cosmos DB account with the `food` database populated (58K products, 1.6M graph index triples)
 - Azure CLI access and Entra ID credentials
 
 ## Step 1: Create the Azure VM
@@ -66,7 +66,7 @@ sudo apt-get install -y python3.12 python3.12-venv python3.12-dev
 ```bash
 cd /home/azureuser
 
-# Main repo (KG + DFlash). The "Original" backend now runs from the in-repo
+# Main repo (GI + DFlash). The "Original" backend now runs from the in-repo
 # dynamic_retriever/utils modules — no separate AgenticRetrieval clone needed.
 git clone https://github.com/bvonodiripsa/AgenticRetrieval-DFlash.git
 ```
@@ -353,7 +353,7 @@ Access the web UI at `http://<public-ip>:8080`.
 - **`unrecognized arguments: --speculative-model`**: Use `--spec-model` and `--spec-tokens` instead. The argument names changed in vLLM 0.23.0.
 - **Out of memory**: Reduce `--gpu-memory-utilization` to 0.85 or decrease `--max-model-len` to 8192.
 
-### Web app "Connection error" on DFlash/KG queries
+### Web app "Connection error" on DFlash/GI queries
 
 vLLM is not running on port 8000. Start it first (Step 9) and wait for `Application startup complete`.
 

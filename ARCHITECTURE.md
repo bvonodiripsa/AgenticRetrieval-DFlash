@@ -1,7 +1,7 @@
-# Architecture — Food KG-RAG (single KG + LLM backend)
+# Architecture — Food GI-RAG (single Graph Index + LLM backend)
 
-This document describes the code path for the Food KG-RAG application: a single
-knowledge-graph retrieval + LLM answer pipeline. The upstream AgenticRetrieval
+This document describes the code path for the Food GI-RAG application: a single
+graph-index retrieval + LLM answer pipeline. The upstream AgenticRetrieval
 decomposed-RAG code is vendored (git-ignored) under `external/agenticretrieval`
 (see `scripts/sync_upstream.*`) and used only by the `samples/QA_CLI` demo and
 the tests — not by this app.
@@ -10,18 +10,18 @@ the tests — not by this app.
 
 | LLM | Retrieval | Decoding |
 |-----|-----------|----------|
-| Configurable (local vLLM, or a hosted OpenAI-compatible endpoint such as GLM-5.2) | KG traversal + vector + LLM keyword expansion + semantic rerank | Speculative decoding when the model/endpoint supports it |
+| Configurable (local vLLM, or a hosted OpenAI-compatible endpoint such as GLM-5.2) | Graph Index traversal + vector + LLM keyword expansion + semantic rerank | Speculative decoding when the model/endpoint supports it |
 
 ---
 
-## KG-RAG + LLM pipeline
+## GI-RAG + LLM pipeline
 
 **Routing**: `api.py` → `_stream_dflash_sse()` (streaming) / `_dflash_answer()` (non-streaming)
 
 **Code flow** (`api.py`):
 1. `engine._embedder.embed()` — Qwen3-Embedding-0.6B (in-process, mean-pool + L2)
 2. **Entity search + LLM keyword expansion** — parallel via `asyncio.gather`
-   - Entity vector search on `kg_entities_food`
+   - Entity vector search on `entities`
    - `_llm_expand_keywords()` — lightweight LLM call to extract food search terms
 3. **Parallel retrieval** via `asyncio.gather`:
    - `_graph_traversal()` — PK-based hop traversal
@@ -30,18 +30,18 @@ the tests — not by this app.
    - `_food_fulltext()` × N — per-keyword `FullTextContains` queries
 4. Deduplicate triples (PK + vector)
 5. **Source chunk fetch** — collect IDs from triples/entities, fetch by ID
-6. **Merge** — KG sources + vector + keyword results, deduplicate
+6. **Merge** — GI sources + vector + keyword results, deduplicate
 7. `_semantic_rerank()` — Cosmos DB semantic reranker (falls back to vector order)
 8. Build prompt using `DFLASH_ANSWER_PROMPT` (defined in `api.py`)
 9. **Single LLM call** via the configured OpenAI-compatible endpoint; reasoning /
-   thinking suppression is chosen per model family by `kg_query.build_llm_call_kwargs()`
+   thinking suppression is chosen per model family by `gi_query.build_llm_call_kwargs()`
    (Qwen `enable_thinking=false`; reasoning models get `reasoning_effort` when set)
 10. Stream/replay the answer in 80-char chunks via SSE
 
 **Key files**:
 - `api.py` — `_stream_dflash_sse()`, `_dflash_answer()`, `_llm_expand_keywords()`, `_extract_keywords()`, `_semantic_rerank()`
-- `kg_query.py` — `KGQueryEngine`, `build_llm_call_kwargs()`, `_build_graph_context()`, `_build_source_text()`
-- `prompts_kg_food.py` — prompt templates
+- `gi_query.py` — `GIQueryEngine`, `build_llm_call_kwargs()`, `_build_graph_context()`, `_build_source_text()`
+- `prompts_gi_food.py` — prompt templates
 
 **Config**: a single YAML (default `my.yaml`, from `config.yaml.example`; override with `--config`).
 
@@ -60,7 +60,7 @@ This produces **identical output** to standard generation (mathematically lossle
 
 ## Shared Infrastructure
 
-- **Cosmos DB**: account + `food` database from config — containers: `food` (products), `kg_entities_food`, `kg_triples_food`
+- **Cosmos DB**: account + `food` database from config — containers: `food` (products), `entities`, `triples`
 - **LLM endpoint**: configurable OpenAI-compatible (local vLLM with DFlash, or a hosted gateway such as GLM-5.2)
 - **Embedding**: Qwen3-Embedding-0.6B, loaded in-process (mean-pool + L2)
 - **Web UI**: `static/index.html`, FastAPI on port 8080

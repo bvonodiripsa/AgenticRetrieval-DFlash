@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Food KG-RAG – Multi-Backend Knowledge Assistant</title>
+<title>Food GI-RAG – Graph Index Knowledge Assistant</title>
 <style>
   :root {
     --bg: #0f172a; --surface: #1e293b; --border: #334155;
@@ -125,7 +125,7 @@
 
 <div class="header" id="header">
   <h1>Food Product Knowledge Assistant <span class="badge" id="header-badge">DFlash</span></h1>
-  <p id="header-desc">KG-RAG over 58K food products &middot; 892K knowledge graph triples &middot; Qwen3.5-27B + DFlash speculative decoding</p>
+  <p id="header-desc">GI-RAG over 58K food products &middot; 1.6M graph index triples &middot; Qwen3.5-27B + DFlash speculative decoding</p>
 </div>
 
 <div class="container">
@@ -209,19 +209,17 @@ const backendSelectEl = document.getElementById('backend-select');
 
 let questions = [];
 let backends = [];
-let currentBackend = 'dflash';
+let currentBackend = 'gi';
 let abortCtrl = null;
 let startTime = null;
 let batchRunning = false;
 
 const HEADER_STYLES = {
-  original: { bg: 'linear-gradient(135deg, #312e81 0%, #7c3aed 100%)', badge: 'Original', desc: 'Multi-round decomposed RAG over 58K food products \u00b7 Vector + full-text search, no KG \u00b7 GPT-4.1 (Azure OpenAI)' },
-  kg:       { bg: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)', badge: 'KG-RAG', desc: 'KG-RAG over 58K food products \u00b7 892K knowledge graph triples \u00b7 Qwen3.5-27B' },
-  dflash:   { bg: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)', badge: 'DFlash', desc: 'KG-RAG over 58K food products \u00b7 892K triples \u00b7 Qwen3.5-27B + DFlash speculative decoding' },
+  gi:       { bg: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)', badge: 'GI-RAG + DFlash', desc: 'GI-RAG over 58K food products \u00b7 1.6M graph index triples \u00b7 Qwen3.5-27B + DFlash speculative decoding' },
 };
 
 function updateHeader(bid) {
-  const s = HEADER_STYLES[bid] || HEADER_STYLES.dflash;
+  const s = HEADER_STYLES[bid] || HEADER_STYLES.gi;
   headerEl.style.background = s.bg;
   headerBadge.textContent = s.badge;
   headerDesc.textContent = s.desc;

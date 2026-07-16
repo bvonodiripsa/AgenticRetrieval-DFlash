@@ -1,5 +1,5 @@
 #!/bin/bash
-# Start the Food KG-RAG web UI on port 8080
+# Start the Food GI-RAG web UI on port 8080
 # Prerequisites: an LLM backend reachable from the config (local vLLM or a
 # hosted OpenAI-compatible gateway) + Azure CLI logged in for Cosmos DB RBAC.
 #
@@ -14,7 +14,7 @@ cd "$(dirname "$0")"
 PORT="${PORT:-8080}"
 CONFIG_PATH="${CONFIG_PATH:-my.yaml}"
 
-echo "Starting Food KG-RAG Web UI on port $PORT"
+echo "Starting Food GI-RAG Web UI on port $PORT"
 echo "Config: $CONFIG_PATH"
 echo "LLM endpoint: $(grep -A1 'endpoint:' "$CONFIG_PATH" | head -2 | tail -1 | xargs)"
 echo ""

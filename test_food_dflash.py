@@ -1,14 +1,14 @@
 #!/usr/bin/env python
-"""End-to-end validation for the food-dflash database + KG pipeline.
+"""End-to-end validation for the food-dflash database + Graph Index pipeline.
 
 Checks:
   1. Cosmos DB connectivity and container existence
   2. Document count in the food container
-  3. KG triple and entity counts
+  3. GI triple and entity counts
   4. Vector search works on food docs
-  5. KG entity vector search works
-  6. KG graph traversal (pk-based triple fetch)
-  7. Full KG-RAG query for one question
+  5. GI entity vector search works
+  6. GI graph traversal (pk-based triple fetch)
+  7. Full GI-RAG query for one question
   8. Benchmark all 10 questions and verify answers
 
 Usage:
@@ -29,7 +29,7 @@ from azure.cosmos.aio import CosmosClient
 from azure.identity.aio import AzureCliCredential
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from kg_builder import EmbedClient, embed_sync, load_config
+from gi_builder import EmbedClient, embed_sync, load_config
 
 
 class TestResult:
@@ -89,8 +89,8 @@ async def run_tests(args):
         return results
 
     # Test 2: Containers exist
-    for cname in ["food", kg_cfg.get("triples_container", "kg_triples"),
-                  kg_cfg.get("entities_container", "kg_entities")]:
+    for cname in ["food", kg_cfg.get("triples_container", "triples"),
+                  kg_cfg.get("entities_container", "entities")]:
         try:
             container = db.get_container_client(cname)
             await container.read()
@@ -111,8 +111,8 @@ async def run_tests(args):
     except Exception as e:
         results.fail("Food docs count", str(e)[:120])
 
-    triples_name = kg_cfg.get("triples_container", "kg_triples")
-    entities_name = kg_cfg.get("entities_container", "kg_entities")
+    triples_name = kg_cfg.get("triples_container", "triples")
+    entities_name = kg_cfg.get("entities_container", "entities")
     tc = db.get_container_client(triples_name)
     ec = db.get_container_client(entities_name)
 
@@ -121,21 +121,21 @@ async def run_tests(args):
         async for v in tc.query_items("SELECT VALUE COUNT(1) FROM c"):
             triple_count = v
         if triple_count > 0:
-            results.ok("KG triples present", f"{triple_count} triples")
+            results.ok("GI triples present", f"{triple_count} triples")
         else:
-            results.fail("KG triples present", "0 triples — run kg_builder.py first")
+            results.fail("GI triples present", "0 triples — run gi_builder.py first")
     except Exception as e:
-        results.fail("KG triples count", str(e)[:120])
+        results.fail("GI triples count", str(e)[:120])
 
     try:
         async for v in ec.query_items("SELECT VALUE COUNT(1) FROM c"):
             entity_count = v
         if entity_count > 0:
-            results.ok("KG entities present", f"{entity_count} entities")
+            results.ok("GI entities present", f"{entity_count} entities")
         else:
-            results.fail("KG entities present", "0 entities — run kg_builder.py first")
+            results.fail("GI entities present", "0 entities — run gi_builder.py first")
     except Exception as e:
-        results.fail("KG entities count", str(e)[:120])
+        results.fail("GI entities count", str(e)[:120])
 
     # Test 4: Vector search on food container
     embedder = EmbedClient(cfg)
@@ -197,29 +197,29 @@ async def run_tests(args):
         except Exception as e:
             results.fail("Graph traversal", str(e)[:120])
 
-    # Test 7: Full KG-RAG query
+    # Test 7: Full GI-RAG query
     if triple_count > 0:
         try:
-            from kg_query import KGQueryEngine
-            engine = KGQueryEngine(cfg)
+            from gi_query import GIQueryEngine
+            engine = GIQueryEngine(cfg)
             t0 = time.time()
             result = await engine.answer(test_q)
             elapsed = time.time() - t0
             answer = result.get("answer", "")
             if answer and len(answer) > 20:
-                results.ok("KG-RAG single query",
+                results.ok("GI-RAG single query",
                            f"{elapsed:.1f}s, {result.get('entities_found', 0)} entities, "
                            f"{result.get('triples_found', 0)} triples, {result.get('source_docs', 0)} docs")
             else:
-                results.fail("KG-RAG single query", f"answer too short: '{answer[:50]}'")
+                results.fail("GI-RAG single query", f"answer too short: '{answer[:50]}'")
             await engine.close()
         except Exception as e:
-            results.fail("KG-RAG single query", str(e)[:120])
+            results.fail("GI-RAG single query", str(e)[:120])
 
     # Test 8: Full benchmark
     if not args.quick and triple_count > 0:
         try:
-            from kg_query import run_benchmark
+            from gi_query import run_benchmark
             print("\n  Running full 10-question benchmark...")
             bench_results = await run_benchmark(args.config, "data/food.json")
             non_empty = sum(1 for r in bench_results if len(r.get("answer", "")) > 20)
@@ -242,7 +242,7 @@ async def run_tests(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Validate food-dflash KG pipeline")
+    parser = argparse.ArgumentParser(description="Validate food-dflash GI pipeline")
     parser.add_argument("--config", default="my.yaml")
     parser.add_argument("--quick", action="store_true")
     args = parser.parse_args()

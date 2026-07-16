@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Online KG-RAG query engine for food products.
+"""Online GI-RAG query engine for food products.
 
 Given a question:
   1. Embed the question
@@ -24,8 +24,8 @@ from azure.cosmos.aio import CosmosClient
 from azure.identity.aio import AzureCliCredential
 from openai import AsyncOpenAI
 
-from prompts_kg_food import GRAPHRAG_ANSWER_PROMPT, FALLBACK_ANSWER_PROMPT
-from kg_builder import EmbedClient, embed_sync, load_config
+from prompts_gi_food import GRAPHRAG_ANSWER_PROMPT, FALLBACK_ANSWER_PROMPT
+from gi_builder import EmbedClient, embed_sync, load_config
 
 
 def build_llm_call_kwargs(llm_cfg: dict, model: str) -> dict:
@@ -53,10 +53,10 @@ def build_llm_call_kwargs(llm_cfg: dict, model: str) -> dict:
 
 
 # =============================================================================
-# KG Query Engine
+# GI Query Engine
 # =============================================================================
 
-class KGQueryEngine:
+class GIQueryEngine:
     def __init__(self, cfg: dict):
         self._cfg = cfg
         self._cosmos: CosmosClient | None = None
@@ -86,8 +86,8 @@ class KGQueryEngine:
 
         cosmos_cfg = cfg["cosmos"]
         self._db_name = cosmos_cfg["database_name"]
-        self._kg_cfg = cfg.get("kg", {})
-        self._triples_pk_field = self._kg_cfg.get("triples_partition_key_path", "/s").lstrip("/")
+        self._gi_cfg = cfg.get("kg", {})
+        self._triples_pk_field = self._gi_cfg.get("triples_partition_key_path", "/s").lstrip("/")
         self._query_cfg = cfg.get("query", {})
 
     async def _get_cosmos(self) -> CosmosClient:
@@ -110,7 +110,7 @@ class KGQueryEngine:
             await ranker_http.aclose()
 
     async def answer(self, question: str) -> dict[str, Any]:
-        """Enhanced KG-RAG pipeline: embed -> entities -> graph -> vector augment -> LLM."""
+        """Enhanced GI-RAG pipeline: embed -> entities -> graph -> vector augment -> LLM."""
         timings: dict[str, float] = {}
         t_total = time.time()
 
@@ -125,7 +125,7 @@ class KGQueryEngine:
         # Step 2: Find seed entities via vector search
         t0 = time.time()
         entities_container = db.get_container_client(
-            self._kg_cfg.get("entities_container", "kg_entities_food")
+            self._gi_cfg.get("entities_container", "entities")
         )
         seed_k = int(self._query_cfg.get("seed_entities_k", 20))
 
@@ -148,7 +148,7 @@ class KGQueryEngine:
         if not seed_entities:
             timings["total"] = time.time() - t_total
             return {
-                "answer": "No relevant entities found in the knowledge graph.",
+                "answer": "No relevant entities found in the graph index.",
                 "entities": [],
                 "triples": [],
                 "timings": timings,
@@ -157,7 +157,7 @@ class KGQueryEngine:
         # Step 3: Graph traversal — fetch triples for seed entities (parallelized)
         t0 = time.time()
         triples_container = db.get_container_client(
-            self._kg_cfg.get("triples_container", "kg_triples_food")
+            self._gi_cfg.get("triples_container", "triples")
         )
         max_hops = int(self._query_cfg.get("max_hops", 2))
         max_triples = int(self._query_cfg.get("max_triples", 150))
@@ -369,25 +369,25 @@ class KGQueryEngine:
 
 
 # =============================================================================
-# CLI: run benchmark with KG query
+# CLI: run benchmark with GI query
 # =============================================================================
 
 async def run_benchmark(config_path: str, questions_path: str | None = None):
-    """Run benchmark questions through KG query engine."""
+    """Run benchmark questions through GI query engine."""
     cfg = load_config(config_path)
     qfile = questions_path or cfg.get("paths", {}).get("questions_file", "data/food.json")
 
     with open(qfile) as f:
         questions = json.load(f)
 
-    print(f"KG-RAG Benchmark: {len(questions)} questions")
+    print(f"GI-RAG Benchmark: {len(questions)} questions")
     print(f"Config: {config_path}")
     print("=" * 60)
 
-    engine = KGQueryEngine(cfg)
+    engine = GIQueryEngine(cfg)
 
     # Warm up embedding model
-    from kg_builder import embed_sync
+    from gi_builder import embed_sync
     embed_sync("warmup")
 
     # Run all questions in parallel
@@ -426,7 +426,7 @@ async def run_benchmark(config_path: str, questions_path: str | None = None):
             "ground_truth": q.get("answer", ""),
             "llm_model": cfg["llm"]["model"],
             "embed_model": "Qwen/Qwen3-Embedding-0.6B",
-            "mode": "kg-rag",
+            "mode": "gi-rag",
             "timings": result["timings"],
             "entities_found": result.get("entities_found", 0),
             "triples_found": result.get("triples_found", 0),
@@ -441,10 +441,10 @@ async def run_benchmark(config_path: str, questions_path: str | None = None):
     print("=" * 60)
 
     # Save results
-    out_dir = cfg.get("paths", {}).get("output_root", "out_kg")
+    out_dir = cfg.get("paths", {}).get("output_root", "out_gi")
     os.makedirs(out_dir, exist_ok=True)
     ts = time.strftime("%Y%m%dT%H%M%S")
-    out_file = os.path.join(out_dir, f"kg_answers_{ts}.json")
+    out_file = os.path.join(out_dir, f"gi_answers_{ts}.json")
     with open(out_file, "w") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
     print(f"Results saved to: {out_file}")
@@ -454,7 +454,7 @@ async def run_benchmark(config_path: str, questions_path: str | None = None):
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="KG-RAG Query Engine for Food")
+    parser = argparse.ArgumentParser(description="GI-RAG Query Engine for Food")
     parser.add_argument("--config", default="my.yaml")
     parser.add_argument("--questions", default=None)
     parser.add_argument("--question", default=None, help="Single question to answer")
@@ -462,7 +462,7 @@ def main():
 
     if args.question:
         cfg = load_config(args.config)
-        engine = KGQueryEngine(cfg)
+        engine = GIQueryEngine(cfg)
 
         async def _single():
             result = await engine.answer(args.question)

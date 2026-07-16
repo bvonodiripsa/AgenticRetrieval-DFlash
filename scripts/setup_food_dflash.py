@@ -24,7 +24,7 @@ from azure.cosmos.aio import CosmosClient
 from azure.identity.aio import AzureCliCredential
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from kg_builder import EmbedClient, embed_sync, COSMOS_INTERNAL_FIELDS
+from gi_builder import EmbedClient, embed_sync, COSMOS_INTERNAL_FIELDS
 
 VECTOR_EMBEDDING_POLICY = {
     "vectorEmbeddings": [
@@ -272,9 +272,9 @@ async def setup(args):
     print(f"  Containers: food, {triples_container}, {entities_container}")
     print()
     print("  Next steps:")
-    print("    1. Build KG:  python kg_builder.py --config my.yaml --question-driven --question-index all")
+    print("    1. Build GI:  python gi_builder.py --config my.yaml --question-driven --question-index all")
     print("    2. Test:      python test_food_dflash.py --config my.yaml")
-    print("    3. Benchmark: python kg_query.py --config my.yaml")
+    print("    3. Benchmark: python gi_query.py --config my.yaml")
     print("=" * 60)
 
 

@@ -1,15 +1,15 @@
 #!/usr/bin/env python
-"""Offline Knowledge Graph builder for food product database.
+"""Offline Graph Index builder for food product database.
 
 Reads food product documents from Cosmos DB, extracts structured triples via LLM,
-resolves entities, and stores the resulting KG back into Cosmos DB.
+resolves entities, and stores the resulting graph index back into Cosmos DB.
 
 Usage:
-    python kg_builder.py --config my.yaml                    # full build
-    python kg_builder.py --config my.yaml --dry-run          # extract without writing
-    python kg_builder.py --config my.yaml --question-driven  # build from question-relevant docs
-    python kg_builder.py --config my.yaml --skip-extraction --reprocess  # re-run post-processing
-    python kg_builder.py --config my.yaml --concurrency 32 --extraction-rounds 1
+    python gi_builder.py --config my.yaml                    # full build
+    python gi_builder.py --config my.yaml --dry-run          # extract without writing
+    python gi_builder.py --config my.yaml --question-driven  # build from question-relevant docs
+    python gi_builder.py --config my.yaml --skip-extraction --reprocess  # re-run post-processing
+    python gi_builder.py --config my.yaml --concurrency 32 --extraction-rounds 1
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ from tqdm import tqdm
 from dotenv import load_dotenv
 load_dotenv()
 
-from prompts_kg_food import (
+from prompts_gi_food import (
     INITIAL_EXTRACTION_PROMPT,
     GAP_ANALYSIS_PROMPT,
     TARGETED_EXTRACTION_PROMPT,
@@ -369,8 +369,8 @@ async def read_question_relevant_chunks(
     return all_chunks
 
 
-async def ensure_kg_containers(cosmos: CosmosClient, db_name: str, cfg: dict):
-    """Ensure KG containers exist; create any that are missing.
+async def ensure_gi_containers(cosmos: CosmosClient, db_name: str, cfg: dict):
+    """Ensure GI containers exist; create any that are missing.
 
     Containers are created with minimal autoscale throughput (max 1000 RU/s) and
     a vector-embedding policy on `/e`. Indexing is minimized to only the fields
@@ -725,7 +725,7 @@ async def resolve_entities(
 
 
 # =============================================================================
-# Store KG to Cosmos DB
+# Store graph index to Cosmos DB
 # =============================================================================
 
 async def store_triples(
@@ -823,14 +823,14 @@ async def store_entities(
 # Main build pipeline
 # =============================================================================
 
-async def build_kg(args):
+async def build_gi(args):
     cfg = load_config(args.config)
     cosmos_cfg = cfg["cosmos"]
     build_cfg = cfg.get("build", {})
     kg_cfg = cfg.get("kg", {})
 
     print("=" * 70)
-    print(f"Food Knowledge Graph Builder")
+    print(f"Food Graph Index Builder")
     print("=" * 70)
     print(f"  Cosmos DB: {cosmos_cfg['uri']}")
     print(f"  Database:  {cosmos_cfg['database_name']}")
@@ -895,13 +895,13 @@ async def build_kg(args):
     max_gaps = int(build_cfg.get("max_gaps_per_round", 3))
     concurrency = args.concurrency or int(build_cfg.get("concurrency", 20))
     min_conf = float(build_cfg.get("min_confidence", 0.5))
-    out_path = Path(cfg.get("paths", {}).get("output_root", "out_kg"))
+    out_path = Path(cfg.get("paths", {}).get("output_root", "out_gi"))
     out_path.mkdir(parents=True, exist_ok=True)
     checkpoint_path = out_path / "checkpoint_raw_triples.json"
 
     if not args.dry_run:
-        print("PREP: Ensuring KG containers exist...")
-        await ensure_kg_containers(cosmos, cosmos_cfg["database_name"], cfg)
+        print("PREP: Ensuring GI containers exist...")
+        await ensure_gi_containers(cosmos, cosmos_cfg["database_name"], cfg)
         print()
 
     # Check for checkpoint
@@ -1061,7 +1061,7 @@ async def build_kg(args):
         return
 
     # STEP 6: Store to Cosmos
-    print("STEP 6: Storing final triples + entities to Cosmos DB")
+    print("STEP 6: Storing final triples + entities to Cosmos DB (graph index)")
     triples_pk_field = kg_cfg.get("triples_partition_key_path", "/s").lstrip("/")
     await store_triples(
         cosmos, cosmos_cfg["database_name"],
@@ -1079,7 +1079,7 @@ async def build_kg(args):
 
     entities_count = len({t["subject"] for t in all_triples} | {t["object"] for t in all_triples})
     print("\n" + "=" * 70)
-    print("KG build complete!")
+    print("Graph Index build complete!")
     print(f"  Triples: {len(all_triples)}")
     print(f"  Entities: {entities_count}")
     print("=" * 70)
@@ -1090,7 +1090,7 @@ async def build_kg(args):
 # =============================================================================
 
 def main():
-    parser = argparse.ArgumentParser(description="Build Food Knowledge Graph")
+    parser = argparse.ArgumentParser(description="Build Food Graph Index")
     parser.add_argument("--config", default="my.yaml")
     parser.add_argument("--skip-extraction", action="store_true")
     parser.add_argument("--reprocess", action="store_true")
@@ -1109,7 +1109,7 @@ def main():
     qd.add_argument("--question-k", type=int, default=30)
 
     args = parser.parse_args()
-    asyncio.run(build_kg(args))
+    asyncio.run(build_gi(args))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
-"""Prompt templates for the Food Knowledge Graph pipeline.
+"""Prompt templates for the Food Graph Index pipeline.
 
-OFFLINE prompts  – used during KG construction (multi-round extraction).
+OFFLINE prompts  – used during graph index construction (multi-round extraction).
 ONLINE  prompts  – used at query time (single LLM call with graph context).
 """
 
@@ -8,7 +8,7 @@ ONLINE  prompts  – used at query time (single LLM call with graph context).
 # OFFLINE: Initial triple extraction from a food product document
 # =============================================================================
 
-INITIAL_EXTRACTION_PROMPT = """You are a knowledge graph builder for a food product catalog.
+INITIAL_EXTRACTION_PROMPT = """You are a graph index builder for a food product catalog.
 The source data is a structured JSON document from a product database.
 
 Extract subject-predicate-object triples from ALL fields in this JSON document.
@@ -66,7 +66,7 @@ JSON array of triples:"""
 # OFFLINE: Gap analysis – what triples are missing from the initial extraction
 # =============================================================================
 
-GAP_ANALYSIS_PROMPT = """You are analyzing completeness of knowledge graph extraction for food product data.
+GAP_ANALYSIS_PROMPT = """You are analyzing completeness of graph index extraction for food product data.
 
 Given the original JSON document and triples already extracted, identify MISSING information.
 
@@ -99,7 +99,7 @@ Gap instructions:"""
 # OFFLINE: Targeted re-extraction for a specific gap
 # =============================================================================
 
-TARGETED_EXTRACTION_PROMPT = """You are a knowledge graph builder performing TARGETED extraction from a food product JSON document.
+TARGETED_EXTRACTION_PROMPT = """You are a graph index builder performing TARGETED extraction from a food product JSON document.
 
 Extract ONLY triples related to this specific instruction:
 >>> {gap_instruction} <<<
@@ -122,7 +122,7 @@ JSON array of new triples only:"""
 # OFFLINE: Relationship type normalization
 # =============================================================================
 
-NORMALIZE_PREDICATES_PROMPT = """You are normalizing relationship types in a knowledge graph for food products.
+NORMALIZE_PREDICATES_PROMPT = """You are normalizing relationship types in a graph index for food products.
 
 Given these triples, normalize the predicate (relationship type) to a consistent vocabulary.
 
@@ -153,7 +153,7 @@ Normalized triples:"""
 # OFFLINE: Entity merging decisions
 # =============================================================================
 
-ENTITY_MERGE_PROMPT = """You are resolving entity aliases in a food product knowledge graph.
+ENTITY_MERGE_PROMPT = """You are resolving entity aliases in a food product graph index.
 
 Given pairs of entity names that are embedding-similar, decide if they refer to the SAME real-world entity.
 
@@ -178,9 +178,9 @@ Decisions:"""
 # ONLINE: Single-shot answer from graph context
 # =============================================================================
 
-GRAPHRAG_ANSWER_PROMPT = """You are a creative food product expert and meal planner. Use the knowledge graph and source documents below to give the BEST possible answer.
+GRAPHRAG_ANSWER_PROMPT = """You are a creative food product expert and meal planner. Use the graph index and source documents below to give the BEST possible answer.
 
-KNOWLEDGE GRAPH:
+GRAPH INDEX:
 {graph_context}
 
 SOURCE DOCUMENTS:

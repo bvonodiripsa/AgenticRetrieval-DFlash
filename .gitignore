@@ -277,6 +277,12 @@ data/OneDrive_1_6-16-2026.zip
 data/new/
 
 # Large data files
+out_gi/*.npy
+out_gi/*.log
+out_gi/triples_deduped.json
+out_gi/checkpoint_raw_triples.json
+out_gi/upload_checkpoint.json
+out_gi/ray_build/
 out_kg/*.npy
 out_kg/*.log
 out_kg/triples_deduped.json
@@ -284,6 +290,6 @@ out_kg/checkpoint_raw_triples.json
 out_kg/upload_checkpoint.json
 out_kg/ray_build/
 
-# Generated KG build outputs (hosted-LLM / GLM variant)
+# Generated GI build outputs (hosted-LLM / GLM variant)
 out_kg_glm/
 my.yaml

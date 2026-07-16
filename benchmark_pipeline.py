@@ -8,7 +8,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from kg_builder import EmbedClient, load_config
+from gi_builder import EmbedClient, load_config
 from azure.cosmos.aio import CosmosClient
 from azure.identity.aio import AzureCliCredential
 import openai
@@ -183,9 +183,9 @@ async def benchmark():
             source_lines.append(f"[{doc.get('product_id','?')}] " + " | ".join(parts))
     source_text = "\n".join(source_lines)
 
-    prompt = f"""Based on the following knowledge graph and source documents, answer the question.
+    prompt = f"""Based on the following graph index and source documents, answer the question.
 
-KNOWLEDGE GRAPH:
+GRAPH INDEX:
 {graph_context}
 
 SOURCE DOCUMENTS:

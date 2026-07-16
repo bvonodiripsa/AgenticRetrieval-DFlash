@@ -1,16 +1,16 @@
-# Agentic Retrieval + Knowledge Graph + DFlash
+# Agentic Retrieval + Graph Index + DFlash
 
 ![Agentic Retrieval overview](AgenticRetrievalOverview.png)
 
-This repository extends the [AgenticRetrieval](https://github.com/bvonodiripsa/AgenticRetrieval) project with two major additions: a **Knowledge Graph (KG)** retrieval layer built on Azure Cosmos DB, and **DFlash speculative decoding** for GPU-accelerated LLM inference. Together they deliver faster, higher-quality answers over the same food product dataset (58K documents, 892K KG triples).
+This repository extends the [AgenticRetrieval](https://github.com/bvonodiripsa/AgenticRetrieval) project with two major additions: a **Graph Index (GI)** retrieval layer built on Azure Cosmos DB, and **DFlash speculative decoding** for GPU-accelerated LLM inference. Together they deliver faster, higher-quality answers over the same food product dataset (58K documents, 1.6M graph index triples).
 
 A unified FastAPI web application (`api.py`) exposes three backend pipelines side by side:
 
 | Backend | LLM | Retrieval Strategy | Decoding |
 |---------|-----|--------------------|----------|
 | **Original** | GPT-4.1 (Azure OpenAI) | Multi-round decomposed RAG (vector + full-text) | Standard cloud |
-| **KG-RAG** | Qwen3.5-27B (local vLLM, FP8) | KG graph traversal + vector + source fetch | Standard local |
-| **KG-RAG + DFlash** | Qwen3.5-27B (local vLLM, FP8) | KG traversal + vector + keyword + semantic rerank | DFlash speculative |
+| **GI-RAG** | Qwen3.5-27B (local vLLM, FP8) | Graph Index traversal + vector + source fetch | Standard local |
+| **GI-RAG + DFlash** | Qwen3.5-27B (local vLLM, FP8) | GI traversal + vector + keyword + semantic rerank | DFlash speculative |
 
 ## What Changed from the Original
 
@@ -20,8 +20,8 @@ A unified FastAPI web application (`api.py`) exposes three backend pipelines sid
 |------|--------------------------|------|
 | **LLM** | Azure OpenAI GPT-4.1 (cloud API) | Qwen3.5-27B served locally via vLLM (FP8 quantized) |
 | **Hardware** | No GPU required (cloud LLM) | 2x NVIDIA H100 80GB (Azure ND96isr_H100_v5) |
-| **Retrieval** | Multi-round decomposed RAG: sub-question decomposition, gap-filling re-retrieval over 2+ rounds | Single-pass KG traversal: entity search → graph hop → source fetch |
-| **Knowledge Graph** | None — retrieves directly from document embeddings | 892K triples extracted from 58K documents; stored in Cosmos DB (`kg_triples_food`, `kg_entities_food`) |
+| **Retrieval** | Multi-round decomposed RAG: sub-question decomposition, gap-filling re-retrieval over 2+ rounds | Single-pass GI traversal: entity search → graph hop → source fetch |
+| **Graph Index** | None — retrieves directly from document embeddings | 1.6M triples extracted from 58K documents; stored in Cosmos DB (`triples`, `entities`) |
 | **Embedding** | Azure OpenAI embedding endpoint | In-process `Qwen3-Embedding-0.6B` (1024 dims, no network call) |
 | **Decoding** | Standard autoregressive | DFlash speculative: `z-lab/Qwen3.5-27B-DFlash` draft model proposes 5 tokens per step; main model verifies in a single forward pass |
 | **Semantic Reranker** | Optional (disabled by default) | Integrated via Cosmos DB Semantic Reranker SDK (DFlash path) |
@@ -32,10 +32,10 @@ A unified FastAPI web application (`api.py`) exposes three backend pipelines sid
 
 | File | Purpose |
 |------|---------|
-| `kg_builder.py` | Offline KG construction: triple extraction, dedup, predicate normalization, entity resolution |
-| `kg_query.py` | Online KG-RAG query engine: graph traversal + vector augment + LLM answer |
-| `api.py` | FastAPI web app serving the KG-RAG + LLM backend with SSE streaming |
-| `prompts_kg_food.py` | KG-specific prompts for triple extraction and answer generation |
+| `gi_builder.py` | Offline Graph Index construction: triple extraction, dedup, predicate normalization, entity resolution |
+| `gi_query.py` | Online GI-RAG query engine: graph traversal + vector augment + LLM answer |
+| `api.py` | FastAPI web app serving the GI-RAG + LLM backend with SSE streaming |
+| `prompts_gi_food.py` | GI-specific prompts for triple extraction and answer generation |
 | `static/index.html` | Web UI with progress log and timing display |
 | `config.yaml.example` | Consolidated config template (copy to `my.yaml`, then fill in secrets) |
 | `upstream.py` + `scripts/sync_upstream.*` | Vendor the upstream AgenticRetrieval repo into `external/agenticretrieval` (git-ignored, re-syncable) |
@@ -67,16 +67,16 @@ Question
 - **Strengths**: Highest answer completeness (10+ products, detailed reasoning); gap-aware re-retrieval catches information missed in the first pass
 - **Weakness**: Slowest — multiple LLM calls + multiple retrieval rounds (70-94s total)
 
-### Pipeline 2: KG-RAG (knowledge graph retrieval + single LLM call)
+### Pipeline 2: GI-RAG (graph index retrieval + single LLM call)
 
-Single-pass retrieval through a pre-built knowledge graph, followed by one LLM call.
+Single-pass retrieval through a pre-built graph index, followed by one LLM call.
 
 ```
 Question
   │
   ├─► Embed question (Qwen3-Embedding-0.6B, in-process)
   │
-  ├─► Entity search (vector search on kg_entities_food, top 20)
+  ├─► Entity search (vector search on entities, top 20)
   │
   ├─► Graph traversal (PK-based triple fetch per entity, 2 hops)
   │      └─► Vector triple search (top 30 by similarity)
@@ -88,14 +88,14 @@ Question
 ```
 
 - **LLM**: Qwen3.5-27B via vLLM (local, FP8, ~55 tok/s standard)
-- **KG**: 892K triples linking products, ingredients, allergens, dietary properties, occasions, cooking methods
+- **Graph Index**: 1.6M triples linking products, ingredients, allergens, dietary properties, occasions, cooking methods
 - **Context**: Large window — up to 150 triples + 40 source chunks + 15 vector augment docs
-- **Strengths**: Rich structured context from KG; single LLM call
+- **Strengths**: Rich structured context from graph index; single LLM call
 - **Weakness**: Still relatively slow (~35-43s) because the LLM generates with standard autoregressive decoding over a large context
 
-### Pipeline 3: KG-RAG + DFlash (parallel retrieval + speculative decoding)
+### Pipeline 3: GI-RAG + DFlash (parallel retrieval + speculative decoding)
 
-Same KG retrieval as Pipeline 2 but with two key optimizations: **parallel retrieval** and **DFlash speculative decoding**.
+Same GI retrieval as Pipeline 2 but with two key optimizations: **parallel retrieval** and **DFlash speculative decoding**.
 
 ```
 Question
@@ -123,7 +123,7 @@ Question
 - **Keyword expansion**: LLM generates additional food-related search terms (e.g., "protein bar", "energy", "peanut") run as parallel `FullTextContains` queries
 - **Semantic reranker**: Cosmos DB Semantic Reranker re-orders retrieved documents by relevance before prompting the LLM
 - **Strengths**: Fastest pipeline (17-23s); lossless quality (DFlash output is mathematically identical to standard decoding)
-- **Context limits vs KG**: Smaller context (1200 vs 2048 answer tokens, 40 vs 150 triples) trades some breadth for speed
+- **Context limits vs GI**: Smaller context (1200 vs 2048 answer tokens, 40 vs 150 triples) trades some breadth for speed
 
 ## How DFlash Speculative Decoding Works
 
@@ -164,11 +164,11 @@ vllm serve Qwen/Qwen3.5-27B \
   --port 8000
 ```
 
-## How to Build the Knowledge Graph
+## How to Build the Graph Index
 
-The KG is built offline using `kg_builder.py`. It reads food product documents from Cosmos DB, extracts structured triples via LLM, post-processes them, and stores the KG back to Cosmos DB.
+The graph index is built offline using `gi_builder.py`. It reads food product documents from Cosmos DB, extracts structured triples via LLM, post-processes them, and stores the graph index back to Cosmos DB.
 
-### KG build pipeline
+### GI build pipeline
 
 1. **Read documents** from the `food` container in Cosmos DB (all 58K or a question-driven subset via vector search)
 2. **Extract triples** using Qwen3.5-27B with decomposed extraction:
@@ -177,22 +177,22 @@ The KG is built offline using `kg_builder.py`. It reads food product documents f
 3. **Dedup + confidence boost**: Merge duplicate triples; boost confidence when triples are re-confirmed across documents
 4. **Normalize predicates**: LLM batches standardize free-form predicates into a controlled vocabulary (`has_ingredient`, `contains_allergen`, `suitable_for_occasion`, `has_cooking_method`, etc.)
 5. **Entity resolution**: Embedding-based clustering (cosine similarity > 0.85) + LLM merge verification to unify variant entity names
-6. **Store to Cosmos DB**: Upsert triples and entities with embeddings to `kg_triples_food` and `kg_entities_food` containers
+6. **Store to Cosmos DB**: Upsert triples and entities with embeddings to `triples` and `entities` containers
 
 ### CLI usage
 
 ```bash
-# Full KG build
-python kg_builder.py --config my.yaml
+# Full GI build
+python gi_builder.py --config my.yaml
 
 # Question-driven subset (faster for testing)
-python kg_builder.py --config my.yaml --question-driven --question-k 30
+python gi_builder.py --config my.yaml --question-driven --question-k 30
 
 # Resume from checkpoint
-python kg_builder.py --config my.yaml --time-limit 3600
+python gi_builder.py --config my.yaml --time-limit 3600
 
 # Skip extraction, only run post-processing
-python kg_builder.py --config my.yaml --skip-extraction --reprocess
+python gi_builder.py --config my.yaml --skip-extraction --reprocess
 ```
 
 ### Triple schema in Cosmos DB
@@ -311,7 +311,7 @@ Co-locating Cosmos DB and the VM in the same Azure region reduced retrieval late
 
 ### Prerequisites
 
-1. Azure Cosmos DB account with `food`, `kg_entities_food`, `kg_triples_food` containers populated
+1. Azure Cosmos DB account with `food`, `entities`, `triples` containers populated
 2. vLLM server running on port 8000 (see vLLM configuration above)
 3. Azure CLI logged in (`az login`) for Cosmos DB RBAC
 4. Semantic reranker endpoint set in the config (`cosmos.semantic_reranker_endpoint`); an `AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT` env var overrides it
@@ -327,10 +327,10 @@ python api.py --config my.yaml --host localhost --port 8080
 ```
 
 To launch with uvicorn directly (e.g. to pass extra uvicorn flags), set the
-config via the `KG_CONFIG` environment variable instead:
+config via the `GI_CONFIG` environment variable instead:
 
 ```bash
-KG_CONFIG=my.yaml \
+GI_CONFIG=my.yaml \
   python -m uvicorn api:app --host localhost --port 8080 --timeout-keep-alive 120
 ```
 
@@ -387,10 +387,10 @@ The reranker is called after retrieval and before the LLM, reordering source doc
 
 ```
 AgenticRetrieval-DFlash/
-├── api.py                      # FastAPI web app (single KG + LLM backend)
-├── kg_builder.py               # Offline KG construction
-├── kg_query.py                 # Online KG-RAG query engine
-├── prompts_kg_food.py          # KG-specific prompts
+├── api.py                      # FastAPI web app (single GI + LLM backend)
+├── gi_builder.py               # Offline Graph Index construction
+├── gi_query.py                 # Online GI-RAG query engine
+├── prompts_gi_food.py          # GI-specific prompts
 ├── upstream.py                 # Bootstrap for the vendored upstream clone
 ├── static/index.html           # Web UI
 ├── config.yaml.example         # Consolidated config template (copy to my.yaml)
@@ -398,11 +398,12 @@ AgenticRetrieval-DFlash/
 ├── data/food.json              # 10 benchmark questions
 ├── ARCHITECTURE.md             # Detailed code-level architecture
 ├── BENCHMARKS.md               # Timing benchmark tables
+├── GI_AND_DFLASH.md            # Detailed Graph Index + DFlash explanation
 ├── dynamic_retriever.py        # Original decomposed RAG (shared with upstream)
 ├── cosmos_db_upload.py         # Document ingestion
 ├── requirements-web.txt        # Web app dependencies
 ├── requirements.txt            # Full dependencies
-└── out_kg_dflash/              # DFlash benchmark outputs
+└── out_gi/                     # Benchmark outputs
 ```
 
 ## License

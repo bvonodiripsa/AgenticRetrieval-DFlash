@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-"""Quick validation: run KG extraction on a small batch to compare Qwen3.5-27B + DFlash
+"""Quick validation: run GI extraction on a small batch to compare Qwen3.5-27B + DFlash
 against the Qwen2.5-32B baseline.
 
 Usage:
-    # Start vLLM with DFlash first (see PROGRESS.md), then:
     python test_dflash.py --config my.yaml --num-docs 20
 """
 import argparse
@@ -16,7 +15,7 @@ import time
 import yaml
 from openai import AsyncOpenAI
 
-from prompts_kg_food import INITIAL_EXTRACTION_PROMPT
+from prompts_gi_food import INITIAL_EXTRACTION_PROMPT
 
 SYSTEM_MSG = (
     "Respond directly with the requested JSON array. "

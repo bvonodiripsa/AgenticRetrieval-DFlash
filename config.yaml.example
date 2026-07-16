@@ -1,5 +1,5 @@
 # =============================================================================
-# Consolidated configuration template — Food KG-RAG (single KG + LLM backend)
+# Consolidated configuration template — Food GI-RAG (single Graph Index + LLM backend)
 # =============================================================================
 # Copy this file to `my.yaml` (git-ignored) and fill in your own values +
 # secrets. The app defaults to `my.yaml`; override with `--config <path>`.
@@ -8,9 +8,9 @@
 #   cosmos, kg, embedding, llm, build, query, paths
 # The retrieval/ranker/pipeline/execution sections at the bottom are used only
 # by the vendored decomposed pipeline (external/agenticretrieval, via the
-# samples/QA_CLI demo) — harmless for the KG-RAG app.
+# samples/QA_CLI demo) — harmless for the GI-RAG app.
 #
-# NOTE: the KG query path embeds in-process (Qwen3-Embedding-0.6B, mean-pool +
+# NOTE: the GI query path embeds in-process (Qwen3-Embedding-0.6B, mean-pool +
 # L2). A configured embedding.embed_endpoint is used only by the upload tool.
 # =============================================================================
 
@@ -126,7 +126,7 @@ kg:
 
 embedding:
   # embed_endpoint / embed_model / api_format are used by the upload tool only.
-  # The KG query path always embeds in-process with Qwen3-Embedding-0.6B.
+  # The GI query path always embeds in-process with Qwen3-Embedding-0.6B.
   embed_endpoint: "http://localhost:11434/api/embeddings"
   api_format: "openai"
   api_version: "2024-12-01-preview"
@@ -167,7 +167,7 @@ query:
 
 paths:
   questions_file: "data/food.json"
-  output_root: "out_kg"
+  output_root: "out_gi"
 
 # -----------------------------------------------------------------------------
 # Decomposed-pipeline settings (vendored upstream / samples/QA_CLI only)

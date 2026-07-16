@@ -1,8 +1,8 @@
 #!/bin/bash
 # End-to-end pipeline for food-dflash:
 #   1. Set up database & copy question-relevant docs from food → food-dflash
-#   2. Build KG (question-driven, all 10 questions)
-#   3. Run KG-RAG benchmark
+#   2. Build Graph Index (question-driven, all 10 questions)
+#   3. Run GI-RAG benchmark
 #   4. Run validation test
 #
 # Prerequisites:
@@ -29,9 +29,9 @@ python3 -u scripts/setup_food_dflash.py \
 
 echo ""
 
-# ── Step 2: Build Knowledge Graph ────────────────────────────────────
-echo "── STEP 2: Build Knowledge Graph ──"
-python3 -u kg_builder.py \
+# ── Step 2: Build Graph Index ────────────────────────────────────────
+echo "── STEP 2: Build Graph Index ──"
+python3 -u gi_builder.py \
     --config "$CONFIG" \
     --question-driven \
     --question-index all \
@@ -41,9 +41,9 @@ python3 -u kg_builder.py \
 
 echo ""
 
-# ── Step 3: Run KG-RAG benchmark ─────────────────────────────────────
-echo "── STEP 3: KG-RAG Benchmark (10 questions) ──"
-python3 -u kg_query.py \
+# ── Step 3: Run GI-RAG benchmark ─────────────────────────────────────
+echo "── STEP 3: GI-RAG Benchmark (10 questions) ──"
+python3 -u gi_query.py \
     --config "$CONFIG" \
     --questions data/food.json
 
@@ -55,5 +55,5 @@ python3 -u test_food_dflash.py --config "$CONFIG"
 
 echo ""
 echo "================================================================"
-echo "  Pipeline complete! Check out_kg_dflash/ for results."
+echo "  Pipeline complete! Check out_gi/ for results."
 echo "================================================================"

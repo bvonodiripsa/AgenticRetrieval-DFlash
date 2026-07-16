@@ -58,7 +58,7 @@ With 20 concurrent extraction tasks, the full 58K-document corpus is processed i
 
 The graph index occupies two containers:
 
-**`kg_triples_food`** — 892K documents, each a single triple:
+**`triples`** — 1.6M documents, each a single triple:
 ```json
 {
   "id": "triple-hash",
@@ -73,7 +73,7 @@ The graph index occupies two containers:
 }
 ```
 
-**`kg_entities_food`** — ~120K documents, each an entity node:
+**`entities`** — ~180K documents, each an entity node:
 ```json
 {
   "id": "entity-hash",
