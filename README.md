@@ -267,41 +267,45 @@ The Original backend (GPT-4.1) requires no local GPU — it calls Azure OpenAI A
 
 ## Benchmark Results
 
-**Hardware**: 2x NVIDIA H100 | **Dataset**: 58K food products, 892K KG triples
+**Hardware**: 2x NVIDIA H100 NVL (Sweden Central) | **Database**: Cosmos DB (Sweden Central, co-located) — 58K food products, 1.6M triples, 180K entities
 
 ### Per-question timing (Q1: "high-calorie protein snack for running belt")
 
-| Stage | DFlash | KG | Original |
-|-------|--------|-----|----------|
-| Embed | 0.30s | 0.27s | — |
-| Entity Search | 1.34s | 1.32s | — |
-| Graph Traversal | 1.76s | 2.73s | — |
-| Source Fetch | 0.68s | 1.25s | — |
-| **LLM** | **13.5s** | **37.4s** | **93.7s** |
-| **Total** | **18.9s** | **43.0s** | **93.7s** |
+| Stage | Time |
+|-------|------|
+| Embed | 0.27s |
+| Entity Search | 0.33s |
+| Graph Traversal | 0.83s |
+| Source Fetch | 0.26s |
+| LLM (DFlash) | 7.71s |
+| **Total** | **9.40s** |
 
-### Speedup summary
+### Full pipeline (web app, warm)
 
-| Comparison | LLM Speedup | Total Speedup |
-|-----------|-------------|---------------|
-| DFlash vs KG | **2.8x** | **2.3x** |
-| DFlash vs Original | **6.9x** | **5.0x** |
-| KG vs Original | **2.5x** | **2.2x** |
+| Stage | Time |
+|-------|------|
+| Embed | 0.30s |
+| Entity Search | 0.84s |
+| Graph Traversal (parallel) | 1.40s |
+| Source Fetch | 0.40s |
+| LLM (DFlash) | 3.46s |
+| **Total** | **6.40s** |
 
-### DFlash all-10-question average
+### Region co-location impact
 
-| Metric | Value |
-|--------|-------|
-| Average total time | **22.6s** |
-| Average LLM time | **17.5s** |
-| Retrieval overhead | ~5s |
-| LLM share of total | 77% |
+Co-locating Cosmos DB and the VM in the same Azure region reduced retrieval latency by 5-10x:
 
-### Quality comparison
+| Query | Cross-region | **Co-located** | Speedup |
+|-------|-------------|---------------|---------|
+| Baseline (no vector) | 0.50s | **0.10s** | 5x |
+| Entity vector (180K docs) | 0.51s | **0.30s** | 1.7x |
+| Triple vector (1.6M docs) | 0.52s | **0.35s** | 1.5x |
 
-- **Original** (GPT-4.1): Most comprehensive — 10+ product recommendations with detailed reasoning, nutritional analysis, and packaging considerations. Benefits from multi-round gap-filling retrieval.
-- **KG-RAG**: Comparable quality to Original for well-connected topics in the KG. Answers are slightly less detailed (2-4 products in creative format) but grounded in structured KG triples.
-- **DFlash**: Same model quality as KG-RAG (mathematically identical output). Asks for 8-10 products via a more directive prompt. Keyword expansion and semantic reranking improve product coverage.
+### Quality
+
+- DFlash speculative decoding is **mathematically lossless** — output quality is identical to standard Qwen3.5-27B generation
+- Keyword expansion and semantic reranking improve product coverage
+- Answers include 5-10 product recommendations with reasoning
 
 ## Running the Web Application
 
