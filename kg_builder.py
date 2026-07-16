@@ -5,11 +5,11 @@ Reads food product documents from Cosmos DB, extracts structured triples via LLM
 resolves entities, and stores the resulting KG back into Cosmos DB.
 
 Usage:
-    python kg_builder.py --config config_kg.yaml                    # full build
-    python kg_builder.py --config config_kg.yaml --dry-run          # extract without writing
-    python kg_builder.py --config config_kg.yaml --question-driven  # build from question-relevant docs
-    python kg_builder.py --config config_kg.yaml --skip-extraction --reprocess  # re-run post-processing
-    python kg_builder.py --config config_kg.yaml --concurrency 32 --extraction-rounds 1
+    python kg_builder.py --config my.yaml                    # full build
+    python kg_builder.py --config my.yaml --dry-run          # extract without writing
+    python kg_builder.py --config my.yaml --question-driven  # build from question-relevant docs
+    python kg_builder.py --config my.yaml --skip-extraction --reprocess  # re-run post-processing
+    python kg_builder.py --config my.yaml --concurrency 32 --extraction-rounds 1
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import logging
 import os
 import re
 import sys
@@ -117,8 +118,8 @@ def embed_batch_sync(texts: list[str], dimensions: int = 1024, batch_size: int =
 # Config
 # =============================================================================
 
-def load_config(path: str = "config_kg.yaml") -> dict:
-    with open(path) as f:
+def load_config(path: str = "my.yaml") -> dict:
+    with open(path, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
     cosmos = cfg.get("cosmos", {})
     cosmos["uri"] = os.getenv("COSMOS_ENDPOINT", cosmos.get("uri", ""))
@@ -134,14 +135,19 @@ class LLMClient:
     def __init__(self, cfg: dict):
         llm = cfg.get("llm", {})
         self._temperature = float(llm.get("temperature", 0.0))
-        self._max_tokens = int(llm.get("max_tokens", 2048))
+        # New upstream schema: max_completion_tokens / llm_endpoint / llm_model /
+        # llm_api_key. Keep the old names as fallbacks so existing configs work.
+        self._max_tokens = int(
+            llm.get("max_completion_tokens", llm.get("max_tokens", 2048))
+        )
         self._client = AsyncOpenAI(
-            base_url=llm.get("endpoint", "http://localhost:8000/v1"),
-            api_key=llm.get("api_key") or "dummy",
+            base_url=llm.get("llm_endpoint", llm.get("endpoint", "http://localhost:8000/v1")),
+            api_key=(llm.get("llm_api_key") or llm.get("api_key")
+                     or llm.get("azure_openai_key") or "dummy"),
             timeout=600.0,
             max_retries=int(llm.get("max_retries", 3)),
         )
-        self._model = llm.get("model", "Qwen/Qwen3.5-27B")
+        self._model = llm.get("llm_model", llm.get("model", "Qwen/Qwen3.5-27B"))
 
     async def complete(self, prompt: str) -> str:
         resp = await self._client.chat.completions.create(
@@ -156,22 +162,75 @@ class LLMClient:
 
 
 # =============================================================================
-# Embedding Client (async wrapper around in-process embedding)
+# Embedding Client
 # =============================================================================
 
 class EmbedClient:
+    """Async embedding client.
+
+    Uses the configured HTTP embedding endpoint (Ollama / OpenAI-compatible) when
+    `embedding.embed_endpoint` is set — so query/KG vectors are produced by the
+    same model as the stored document vectors. Falls back to the in-process
+    Qwen3-Embedding-0.6B model (requires `torch`) when no endpoint is configured.
+    """
+
     def __init__(self, cfg: dict):
         emb = cfg.get("embedding", {})
-        self._dimensions = int(emb.get("dimensions", 1024))
+        # New upstream schema uses `embed_dimensions`; keep `dimensions` fallback.
+        self._dimensions = int(
+            emb.get("embed_dimensions", emb.get("dimensions", 1024))
+        )
+        self._endpoint = str(emb.get("embed_endpoint") or emb.get("endpoint") or "").strip()
+        self._model = str(emb.get("embed_model") or emb.get("model") or "").strip()
+        self._use_http = self._endpoint.startswith("http")
+        self._http = None
+
+    def _normalize(self, emb: list) -> list[float]:
+        d = self._dimensions
+        vals = [float(x) for x in emb]
+        if d <= 0:
+            return vals
+        if len(vals) > d:
+            return vals[:d]
+        if len(vals) < d:
+            return vals + [0.0] * (d - len(vals))
+        return vals
+
+    async def _embed_http(self, text: str) -> list[float]:
+        import httpx
+        if self._http is None:
+            self._http = httpx.AsyncClient(timeout=60)
+        resp = await self._http.post(
+            self._endpoint,
+            json={"model": self._model, "prompt": text},
+            headers={"Content-Type": "application/json"},
+        )
+        resp.raise_for_status()
+        emb = resp.json().get("embedding")
+        if not isinstance(emb, list):
+            raise ValueError(f"Invalid embedding response from {self._endpoint}")
+        return self._normalize(emb)
 
     async def embed(self, text: str) -> list[float]:
+        if self._use_http:
+            return await self._embed_http(text)
         return await asyncio.to_thread(embed_sync, text, self._dimensions)
 
     async def embed_batch(self, texts: list[str], batch_size: int = 32) -> list[list[float]]:
+        if self._use_http:
+            sem = asyncio.Semaphore(8)
+
+            async def _one(t: str):
+                async with sem:
+                    return await self._embed_http(t)
+
+            return await asyncio.gather(*[_one(t) for t in texts])
         return await asyncio.to_thread(embed_batch_sync, texts, self._dimensions, batch_size)
 
     async def close(self):
-        pass
+        if self._http is not None:
+            await self._http.aclose()
+            self._http = None
 
 
 # =============================================================================
@@ -204,7 +263,7 @@ async def read_all_chunks(cosmos: CosmosClient, db_name: str, sources: list[dict
     all_chunks = []
     for source in sources:
         container_name = source.get("container_name", "")
-        text_fields = source.get("text_fields", [])
+        text_fields = source.get("embedding_text_fields", source.get("text_fields", []))
         emb_field = source.get("embedding_field", "e")
         container = db.get_container_client(container_name)
         print(f"  Reading from '{container_name}'...")
@@ -265,7 +324,7 @@ async def read_question_relevant_chunks(
         for source in sources:
             container_name = source.get("container_name", "")
             emb_field = source.get("embedding_field", "e")
-            text_fields = source.get("text_fields", [])
+            text_fields = source.get("embedding_text_fields", source.get("text_fields", []))
             container = db.get_container_client(container_name)
 
             sql = (
@@ -311,26 +370,118 @@ async def read_question_relevant_chunks(
 
 
 async def ensure_kg_containers(cosmos: CosmosClient, db_name: str, cfg: dict):
-    """Verify KG containers exist (must be pre-created via Azure CLI due to RBAC)."""
+    """Ensure KG containers exist; create any that are missing.
+
+    Containers are created with minimal autoscale throughput (max 1000 RU/s) and
+    a vector-embedding policy on `/e`. Indexing is minimized to only the fields
+    used in queries:
+      * triples  — partitioned by `/s` (subject, for graph traversal); index
+        only `/s` + the vector index on `/e`.
+      * entities — only vector-searched, so index nothing except the vector on
+        `/e`; the `id` field doubles as the partition key.
+    On a name conflict the desired name is suffixed with 1, 2, … On an RBAC
+    Forbidden error, an Azure CLI hint is printed and the error re-raised.
+    """
     db = cosmos.get_database_client(db_name)
     kg = cfg.get("kg", {})
+    cosmos_cfg = cfg.get("cosmos", {})
+    dims = int(
+        cfg.get("embedding", {}).get(
+            "embed_dimensions", cfg.get("embedding", {}).get("dimensions", 1024)
+        )
+    )
 
-    for cname in [kg.get("triples_container", "kg_triples_food"),
-                  kg.get("entities_container", "kg_entities_food")]:
+    from azure.cosmos import ThroughputProperties
+    # Minimal autoscale throughput: max 1000 RU/s (scales 100–1000).
+    throughput = ThroughputProperties(auto_scale_max_throughput=1000)
+
+    vector_embedding_policy = {
+        "vectorEmbeddings": [
+            {
+                "path": "/e",
+                "dataType": "float32",
+                "dimensions": dims,
+                "distanceFunction": "cosine",
+            }
+        ]
+    }
+    # Triples: only the partition-key path (subject) is filtered during graph
+    # traversal; index just that. Configurable via kg.triples_partition_key_path
+    # (default /s).
+    triples_pk = kg.get("triples_partition_key_path", "/s")
+    triples_index = {
+        "indexingMode": "consistent",
+        "automatic": True,
+        "includedPaths": [{"path": f"{triples_pk}/?"}],
+        "excludedPaths": [{"path": "/*"}],
+        "vectorIndexes": [{"path": "/e", "type": "diskANN"}],
+    }
+    # Entities: only vector-searched (no scalar filter/sort). `id` (the partition
+    # key) is a system property and is always indexed, so include nothing else —
+    # just the vector index on /e.
+    entities_index = {
+        "indexingMode": "consistent",
+        "automatic": True,
+        "includedPaths": [],
+        "excludedPaths": [{"path": "/*"}],
+        "vectorIndexes": [{"path": "/e", "type": "diskANN"}],
+    }
+
+    async def _create(name: str, pk_path: str, indexing_policy: dict) -> None:
+        kwargs = dict(
+            id=name,
+            partition_key=PartitionKey(path=pk_path),
+            indexing_policy=indexing_policy,
+            vector_embedding_policy=vector_embedding_policy,
+        )
         try:
-            container = db.get_container_client(cname)
-            await container.read()
-            print(f"  Container '{cname}' OK")
-        except Exception as e:
-            if "NotFound" in str(e) or "404" in str(e):
-                print(f"  ERROR: Container '{cname}' does not exist. Create it via Azure CLI:")
-                print(f"    az cosmosdb sql container create --account-name divdet "
-                      f"--database-name {db_name} --name {cname} --partition-key-path /pk "
-                      f"--resource-group ams-cosmos-db ...")
-                raise RuntimeError(f"Container '{cname}' must be pre-created")
+            await db.create_container(offer_throughput=throughput, **kwargs)
+        except Exception as ce:
+            # Serverless accounts reject throughput settings — retry without.
+            if "serverless" in str(ce).lower():
+                await db.create_container(**kwargs)
             else:
-                print(f"  Container '{cname}' check: {e}")
                 raise
+
+    async def _ensure(desired: str, pk_path: str, indexing_policy: dict) -> str:
+        container = db.get_container_client(desired)
+        try:
+            await container.read()
+            print(f"  Container '{desired}' OK")
+            return desired
+        except Exception as e:
+            if not ("NotFound" in str(e) or "404" in str(e)):
+                print(f"  Container '{desired}' check: {e}")
+                raise
+
+        name, attempt = desired, 0
+        while True:
+            try:
+                print(f"  Creating '{name}' (autoscale max 1000 RU/s, pk={pk_path}, vector dims={dims})...")
+                await _create(name, pk_path, indexing_policy)
+                print(f"  Container '{name}' created")
+                return name
+            except Exception as ce:
+                msg = str(ce)
+                if "Conflict" in msg or "409" in msg or "already exists" in msg.lower():
+                    attempt += 1
+                    name = f"{desired}{attempt}"
+                    print(f"  Name '{desired}' conflicts; retrying as '{name}'...")
+                    continue
+                if "Forbidden" in msg or "403" in msg:
+                    acct = cosmos_cfg.get("cosmos_account_name", "<account>")
+                    rg = cosmos_cfg.get("cosmos_resource_group", "<resource-group>")
+                    print(f"  ERROR: no permission to create '{name}' via the data plane.")
+                    print(f"  Create it once via Azure CLI, then re-run:")
+                    print(f"    az cosmosdb sql container create --account-name {acct} "
+                          f"--database-name {db_name} --name {name} "
+                          f"--partition-key-path {pk_path} --resource-group {rg}")
+                raise
+
+    # Resolve (and persist in-memory) the actual container names used.
+    kg["triples_container"] = await _ensure(kg.get("triples_container", "triples"), triples_pk, triples_index)
+    kg["entities_container"] = await _ensure(kg.get("entities_container", "entities"), "/id", entities_index)
+    cfg["kg"] = kg
 
 
 # =============================================================================
@@ -583,6 +734,7 @@ async def store_triples(
     container_name: str,
     triples: list[dict],
     embedder: EmbedClient,
+    pk_field: str = "s",
 ):
     """Store triples with embeddings for vector search."""
     db = cosmos.get_database_client(db_name)
@@ -597,15 +749,16 @@ async def store_triples(
     for i, (t, emb) in enumerate(zip(triples, embeddings)):
         doc = {
             "id": f"t_{i:06d}",
-            "pk": t["subject"].lower()[:100],
-            "subject": t["subject"],
-            "predicate": t["predicate"],
-            "object": t["object"],
-            "confidence": t.get("confidence", 0.8),
-            "confirmations": t.get("confirmations", 1),
-            "source_chunks": t.get("source_chunks", []),
-            "embedding": emb,
+            "s": t["subject"],                 # partition key (/s)
+            "p": t["predicate"],
+            "o": t["object"],
+            "f": t.get("confidence", 0.8),
+            "n": t.get("confirmations", 1),
+            "d": t.get("source_chunks", []),
+            "e": emb,
         }
+        if pk_field != "s":
+            doc[pk_field] = t["subject"]
         await container.upsert_item(doc)
         if (i + 1) % 100 == 0:
             elapsed = time.time() - t0
@@ -651,13 +804,12 @@ async def store_entities(
     t0 = time.time()
     for i, (e, emb) in enumerate(zip(entity_list, embeddings)):
         doc = {
-            "id": f"e_{i:06d}",
-            "pk": e["name"].lower()[:100],
-            "name": e["name"],
-            "description": descriptions[i],
-            "relation_count": len(e["relations"]),
-            "source_chunks": list(e["source_chunks"])[:50],
-            "embedding": emb,
+            "id": f"e_{i:06d}",              # doubles as the partition key (/id)
+            "n": e["name"],
+            "t": descriptions[i],
+            "r": len(e["relations"]),
+            "d": list(e["source_chunks"])[:50],
+            "e": emb,
         }
         await container.upsert_item(doc)
         if (i + 1) % 100 == 0:
@@ -683,7 +835,12 @@ async def build_kg(args):
     print(f"  Cosmos DB: {cosmos_cfg['uri']}")
     print(f"  Database:  {cosmos_cfg['database_name']}")
     print(f"  LLM:       {cfg['llm']['endpoint']} ({cfg['llm']['model']})")
-    print(f"  Embedding: in-process Qwen3-Embedding-0.6B")
+    _emb = cfg.get("embedding", {})
+    _emb_ep = _emb.get("embed_endpoint") or _emb.get("endpoint")
+    if _emb_ep and str(_emb_ep).startswith("http"):
+        print(f"  Embedding: {_emb_ep} ({_emb.get('embed_model') or _emb.get('model')})")
+    else:
+        print(f"  Embedding: in-process Qwen3-Embedding-0.6B")
     print()
 
     llm = LLMClient(cfg)
@@ -707,7 +864,7 @@ async def build_kg(args):
         print("(skipping extraction — loading triples from disk)\n")
     elif args.question_driven:
         qfile = args.questions_file or cfg.get("paths", {}).get("questions_file", "data/food.json")
-        with open(qfile) as f:
+        with open(qfile, encoding="utf-8") as f:
             questions = json.load(f)
         print(f"  Loaded {len(questions)} questions from {qfile}")
 
@@ -752,14 +909,20 @@ async def build_kg(args):
     processed_chunk_ids: set[str] = set()
 
     if not args.skip_extraction and checkpoint_path.exists():
-        with open(checkpoint_path) as f:
-            saved = json.load(f)
-        all_triples = saved.get("triples", [])
-        processed_chunk_ids = set(saved.get("processed_chunk_ids", []))
-        remaining = [c for c in chunks if c["chunk_id"] not in processed_chunk_ids]
-        print(f"RESUME: {len(processed_chunk_ids)} docs done, {len(all_triples)} raw triples, "
-              f"{len(remaining)} remaining\n")
-        chunks = remaining
+        try:
+            with open(checkpoint_path, encoding="utf-8") as f:
+                saved = json.load(f)
+            all_triples = saved.get("triples", [])
+            processed_chunk_ids = set(saved.get("processed_chunk_ids", []))
+            remaining = [c for c in chunks if c["chunk_id"] not in processed_chunk_ids]
+            print(f"RESUME: {len(processed_chunk_ids)} docs done, {len(all_triples)} raw triples, "
+                  f"{len(remaining)} remaining\n")
+            chunks = remaining
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"WARNING: checkpoint {checkpoint_path.name} is corrupt/incomplete "
+                  f"({type(e).__name__}); starting fresh.\n")
+            all_triples = []
+            processed_chunk_ids = set()
 
     if not args.skip_extraction:
         print(f"STEP 2: Extract triples (rounds={extraction_rounds}, concurrency={concurrency})")
@@ -813,14 +976,14 @@ async def build_kg(args):
                 break
 
             if doc_num % 50 == 0:
-                with open(checkpoint_path, "w") as f:
+                with open(checkpoint_path, "w", encoding="utf-8") as f:
                     json.dump({
                         "triples": all_triples,
                         "processed_chunk_ids": list(processed_chunk_ids),
                     }, f, ensure_ascii=False)
 
         # Final checkpoint
-        with open(checkpoint_path, "w") as f:
+        with open(checkpoint_path, "w", encoding="utf-8") as f:
             json.dump({
                 "triples": all_triples,
                 "processed_chunk_ids": list(processed_chunk_ids),
@@ -841,7 +1004,7 @@ async def build_kg(args):
 
         if args.skip_post_processing:
             print("STEPS 3-5: Skipped. Raw triples saved.")
-            with open(out_path / "triples_raw.json", "w") as f:
+            with open(out_path / "triples_raw.json", "w", encoding="utf-8") as f:
                 json.dump(all_triples, f, ensure_ascii=False)
             return
     else:
@@ -851,7 +1014,7 @@ async def build_kg(args):
         if not triples_path.exists():
             print(f"ERROR: No triples file found in {out_path}")
             return
-        with open(triples_path) as f:
+        with open(triples_path, encoding="utf-8") as f:
             data = json.load(f)
         all_triples = data if isinstance(data, list) else data.get("triples", [])
         print(f"  Loaded {len(all_triples)} triples from {triples_path}\n")
@@ -878,10 +1041,10 @@ async def build_kg(args):
     print(f"  After entity resolution: {len(all_triples)} triples in {time.time() - t0:.1f}s\n")
 
     # Save locally
-    with open(out_path / "triples.json", "w") as f:
+    with open(out_path / "triples.json", "w", encoding="utf-8") as f:
         json.dump(all_triples, f, indent=2, ensure_ascii=False)
     if mapping:
-        with open(out_path / "entity_mapping.json", "w") as f:
+        with open(out_path / "entity_mapping.json", "w", encoding="utf-8") as f:
             json.dump(mapping, f, indent=2, ensure_ascii=False)
 
     if args.dry_run:
@@ -899,10 +1062,11 @@ async def build_kg(args):
 
     # STEP 6: Store to Cosmos
     print("STEP 6: Storing final triples + entities to Cosmos DB")
+    triples_pk_field = kg_cfg.get("triples_partition_key_path", "/s").lstrip("/")
     await store_triples(
         cosmos, cosmos_cfg["database_name"],
         kg_cfg.get("triples_container", "kg_triples_food"),
-        all_triples, embedder,
+        all_triples, embedder, pk_field=triples_pk_field,
     )
     await store_entities(
         cosmos, cosmos_cfg["database_name"],
@@ -927,7 +1091,7 @@ async def build_kg(args):
 
 def main():
     parser = argparse.ArgumentParser(description="Build Food Knowledge Graph")
-    parser.add_argument("--config", default="config_kg.yaml")
+    parser.add_argument("--config", default="my.yaml")
     parser.add_argument("--skip-extraction", action="store_true")
     parser.add_argument("--reprocess", action="store_true")
     parser.add_argument("--dry-run", action="store_true")

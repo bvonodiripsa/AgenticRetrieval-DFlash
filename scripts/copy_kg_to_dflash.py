@@ -21,7 +21,7 @@ CONCURRENCY = 100
 MAX_RETRIES = 8
 
 
-def load_config(path: str = "config_kg_dflash.yaml") -> dict:
+def load_config(path: str = "my.yaml") -> dict:
     with open(path) as f:
         return yaml.safe_load(f)
 

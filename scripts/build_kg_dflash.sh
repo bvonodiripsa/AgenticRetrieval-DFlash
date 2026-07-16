@@ -13,7 +13,7 @@ set -e
 cd "$(dirname "$0")/.."
 source .venv/bin/activate 2>/dev/null || true
 
-CONFIG="config_kg_dflash.yaml"
+CONFIG="my.yaml"
 
 echo "================================================================"
 echo "  Food-DFlash: Full Pipeline"

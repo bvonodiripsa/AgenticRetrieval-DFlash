@@ -12,8 +12,8 @@ Checks:
   8. Benchmark all 10 questions and verify answers
 
 Usage:
-    python test_food_dflash.py --config config_kg_dflash.yaml
-    python test_food_dflash.py --config config_kg_dflash.yaml --quick
+    python test_food_dflash.py --config my.yaml
+    python test_food_dflash.py --config my.yaml --quick
 """
 from __future__ import annotations
 
@@ -243,7 +243,7 @@ async def run_tests(args):
 
 def main():
     parser = argparse.ArgumentParser(description="Validate food-dflash KG pipeline")
-    parser.add_argument("--config", default="config_kg_dflash.yaml")
+    parser.add_argument("--config", default="my.yaml")
     parser.add_argument("--quick", action="store_true")
     args = parser.parse_args()
     result = asyncio.run(run_tests(args))

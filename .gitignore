@@ -253,6 +253,12 @@ out/*.*
 data/skf_full.json
 
 config.igmetall.yaml
+
+# Runtime config with secrets (use config.yaml.example as the template)
+my.yaml
+
+# Vendored upstream AgenticRetrieval (re-syncable clone; see scripts/sync_upstream.*)
+external/
 data/annotations.json
 data/annotations/
 
@@ -277,4 +283,7 @@ out_kg/triples_deduped.json
 out_kg/checkpoint_raw_triples.json
 out_kg/upload_checkpoint.json
 out_kg/ray_build/
+
+# Generated KG build outputs (hosted-LLM / GLM variant)
+out_kg_glm/
 my.yaml

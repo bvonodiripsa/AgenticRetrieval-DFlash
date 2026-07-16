@@ -9,7 +9,7 @@ DFlash provides 3-4x lossless speedup via block diffusion drafting.
 Usage:
   # On head node (10.0.0.4):
   export RAY_ADDRESS=auto
-  python scripts/build_kg_ray.py --config config_ray_build.yaml
+  python scripts/build_kg_ray.py --config my.yaml
 """
 from __future__ import annotations
 
@@ -359,7 +359,7 @@ def run_build(cfg: dict, time_limit: int | None = None):
 
 def main():
     parser = argparse.ArgumentParser(description="Food KG Build via Ray")
-    parser.add_argument("--config", default="config_ray_build.yaml")
+    parser.add_argument("--config", default="my.yaml")
     parser.add_argument("--time-limit", type=int, default=None,
                         help="Stop after N seconds")
     args = parser.parse_args()

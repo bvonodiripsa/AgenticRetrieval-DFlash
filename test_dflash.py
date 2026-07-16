@@ -4,7 +4,7 @@ against the Qwen2.5-32B baseline.
 
 Usage:
     # Start vLLM with DFlash first (see PROGRESS.md), then:
-    python test_dflash.py --config config_kg.yaml --num-docs 20
+    python test_dflash.py --config my.yaml --num-docs 20
 """
 import argparse
 import asyncio
@@ -84,7 +84,7 @@ async def extract_triples(client: AsyncOpenAI, model: str, doc: dict) -> tuple[l
 
 async def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="config_kg.yaml")
+    parser.add_argument("--config", default="my.yaml")
     parser.add_argument("--num-docs", type=int, default=20)
     args = parser.parse_args()
 

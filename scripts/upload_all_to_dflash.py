@@ -28,7 +28,7 @@ PROGRESS_EVERY = 500
 MAX_RETRIES = 8
 
 
-def load_config(path: str = "config_kg_dflash.yaml") -> dict:
+def load_config(path: str = "my.yaml") -> dict:
     with open(path) as f:
         cfg = yaml.safe_load(f)
     cosmos = cfg.get("cosmos", {})
@@ -177,7 +177,7 @@ async def _cleanup(*clients):
 
 def main():
     parser = argparse.ArgumentParser(description="Copy all docs from food → food-dflash")
-    parser.add_argument("--config", default="config_kg_dflash.yaml")
+    parser.add_argument("--config", default="my.yaml")
     parser.add_argument("--concurrency", type=int, default=CONCURRENCY)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
