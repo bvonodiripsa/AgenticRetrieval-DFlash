@@ -1,8 +1,20 @@
 # Progress and H100 handoff
 
-Branch `feat/gpu-graph-index` @ `8f3a65a`. Written 2026-07-27 after a day on
-the GB10 dev box. Purpose of this file: pick the work up tomorrow on the
-2x H100 machine without rediscovering anything.
+Branch `feat/gpu-graph-index`. Written 2026-07-27 after a day on the GB10 dev
+box; **updated 2026-07-28 with real H100 results** — see
+`results/h100_comparison.md` for full detail. Short version: retrieval
+optimization is fully validated (2.06s -> 0.003s, matches GB10 prediction
+almost exactly). End-to-end came in at 5.66s, not the projected 3.53s, because
+the traversal bug fix feeds the LLM a richer prompt (12 PK triples instead of
+0) and that costs more decode time than retrieval saves. Not yet isolated from
+ordinary LLM variance — see "Recommended next step" in that file.
+
+Two operational issues hit and fixed on H100, unrelated to this branch's code:
+vLLM crashed on first start (`Flashinfer allreduce workspace` assertion, root
+cause: missing `ninja` binary — `pip install ninja` fixes it), and
+`--gpu-memory-utilization 0.92` (documented value) OOM'd once the local index
+and GPU embedder were loaded alongside it on this box's 96GB-per-GPU pair —
+dropped to `0.85` and it fit with ~11.5GB/GPU to spare.
 
 ---
 
