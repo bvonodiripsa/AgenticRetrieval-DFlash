@@ -209,6 +209,43 @@ microseconds. Try 2 or 3 and see whether answer quality improves.
 system of record and the snapshot is rebuilt manually. An incremental update
 path via the Cosmos change feed would remove the staleness problem.
 
+**The "8-9 hour build" is two unrelated things, and only one is shortenable
+the way it sounds.** Extraction (`gi_builder.py` steps 1-4: LLM triple
+extraction, dedup, normalization, entity resolution) is fully in-memory —
+`GI_AND_DFLASH.md` documents it as ~8h on 2x H100 at concurrency 20, and it
+never touches Cosmos until the end. That part is not Cosmos-bound; it only
+gets faster with more concurrency, a faster model, or fewer rounds.
+
+Storage (step 5-6, `store_triples`/`store_entities` at `gi_builder.py:735-772`)
+is a different story: a **serial** loop, one `upsert_item` at a time, over
+~1.77M documents, into containers created with a **1000 RU/s autoscale
+ceiling** (`gi_builder.py:400`). This is very likely eating real, unaccounted
+wall-clock time beyond the documented 8h extraction figure. Strong supporting
+evidence: five separate ad-hoc scripts already exist
+(`fast_upload.py`, `fast_upload_gi.py`, `parallel_upload.py`, `shard_upload.py`,
+`turbo_upload.py`) that independently reimplement a `Semaphore`-based
+concurrent uploader (concurrency 30-300) with 429 retry/backoff — clear
+evidence this was already hit and hand-patched multiple times, but never
+folded back into the main pipeline's `store_triples`/`store_entities`.
+`migrate_to_provisioned.py` exists for the same upstream reason (moved off a
+serverless Cosmos account that couldn't sustain bulk vector writes).
+
+**Fix, not yet done:** add `asyncio.Semaphore` concurrency to
+`store_triples`/`store_entities` (pattern already proven in the scripts
+above), and check whether `divdet-sweden`'s GI containers are still capped at
+autoscale-1000. Needs a real extraction+upload run to validate the time saved
+— an 8h+ commitment, so deliberately deferred rather than done blind.
+
+**Separately, a background hot-swap for cold start.** `index.mode: local`
+currently blocks the first query on the full ~10min snapshot load. Proposed
+fix: `_get_backend()` returns a `CosmosBackend` immediately, loads the local
+index in a background `asyncio.create_task`, and swaps `self._backend` to
+`LocalBackend` the moment it's ready — no downtime, no blocked first request.
+Small, safe, testable without an 8h run. The same swap-on-ready mechanism is
+also what a future blue-green full-rebuild (new extraction run swapped in
+without downtime) would use, just at a much longer timescale. Not implemented
+yet — deliberately deferred so today stays focused on the H100 comparison.
+
 ---
 
 ## Environment notes
