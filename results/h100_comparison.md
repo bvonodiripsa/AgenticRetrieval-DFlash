@@ -92,11 +92,34 @@ work because the graph context is genuinely richer. Whether that trade is
 worth it depends on whether the richer answers are actually better, which
 wasn't evaluated here.
 
+## Follow-up: isolating retrieval speed from the reverse-edges content change
+
+Ran three same-process, same-question, warm-call configs back to back so the
+only thing that changes between adjacent rows is one variable:
+
+| Config | LLM stage | **Total (warm)** |
+|---|---|---|
+| OLD Cosmos (0 PK triples, forward-only) | 3.65s | **5.98s** |
+| NEW local, forward-only (0 PK, same content as Cosmos) | 3.46s | **3.87s** |
+| NEW local, forward+reverse (12 PK, richer content) | 4.20-4.58s | **4.62s** |
+
+Holding graph-traversal content constant (row 1 vs row 2: both `0 PK`, so the
+LLM sees the same triples either way), **the local index alone is worth ~2.1s,
+~1.55x** — not the ~0.42s/1.08x the first same-prompt comparison suggested.
+That first comparison conflated two effects: the index speedup (real, ~1.55x)
+and the reverse-edges content change (real, separate, costs ~0.75s here).
+
+Caveat: the LLM stage alone spanned 3.46s-4.58s across these nominally
+identical warm calls — ~1.1s of run-to-run decode variance (speculative
+decoding's acceptance rate isn't deterministic). Each number above is a
+single sample sitting inside that noise band, not a tight estimate. A
+defensible number for a writeup would need ~5 repeats per config for a mean
+and stddev, not one sample each.
+
 ## Recommended next step
 
-A same-prompt A/B with `reverse_edges: false` vs `true` (local index both
-times, so retrieval cost is negligible either way) would cleanly separate "the
-local index is fast" (already proven) from "reverse edges make answers richer
-but slower" (hypothesis, not yet isolated). Also worth quoting the
-keyword-expansion removal experiment from `PROGRESS.md`'s open questions
-against this real end-to-end number rather than the GB10 projection.
+Re-run the three-way comparison above with N=5+ repeats per config to get
+confidence intervals tight enough to actually defend "1.55x" or "0.75s" as
+numbers rather than single samples. Also worth quoting the keyword-expansion
+removal experiment from `PROGRESS.md`'s open questions against this real
+end-to-end number rather than the GB10 projection.
