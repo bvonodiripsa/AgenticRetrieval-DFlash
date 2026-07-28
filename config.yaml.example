@@ -124,6 +124,27 @@ kg:
   triples_container: "triples"
   entities_container: "entities"
 
+# Retrieval backend for the query path.
+#
+#   cosmos — query the Cosmos DB Graph Index over the network (original)
+#   local  — serve the whole Graph Index from GPU memory
+#
+# The local snapshot is a read-only copy built by
+# scripts/build_local_index.py; Cosmos remains the system of record and the
+# snapshot must be rebuilt whenever the Graph Index changes. It needs ~3.8 GB
+# of GPU memory for the full 1.83M-document corpus, which fits alongside vLLM
+# at the documented --gpu-memory-utilization 0.92.
+index:
+  mode: "cosmos"
+  snapshot_path: "data/local_index"
+  device: "cuda"
+  # Local BM25 over the food container, replacing Cosmos FullTextContains.
+  enable_bm25: true
+  # Traverse object -> subject as well as subject -> object. Cosmos cannot do
+  # this cheaply because `o` is not the partition key, so forward-only
+  # traversal returns nothing for ingredient-level seed entities.
+  reverse_edges: true
+
 embedding:
   # embed_endpoint / embed_model / api_format are used by the upload tool only.
   # The GI query path always embeds in-process with Qwen3-Embedding-0.6B.

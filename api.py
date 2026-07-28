@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field
 
 from gi_builder import load_config
 from gi_query import GIQueryEngine
+from retrieval import retrieve
 
 _ROOT = Path(__file__).parent
 log = logging.getLogger("food_dflash.api")
@@ -810,155 +811,34 @@ async def _dflash_answer(question: str, engine: GIQueryEngine) -> dict:
     q_emb = await engine._embedder.embed(question)
     timings["embed"] = time.perf_counter() - t0
 
-    cosmos = await engine._get_cosmos()
-    db = cosmos.get_database_client(engine._db_name)
-    entities_ctr = db.get_container_client(engine._gi_cfg.get("entities_container", "entities"))
-    triples_ctr = db.get_container_client(engine._gi_cfg.get("triples_container", "triples"))
-    food_ctr = db.get_container_client("food")
-
-    cfg = engine._query_cfg
-    seed_k = int(cfg.get("seed_entities_k", 20))
-    max_hops = int(cfg.get("max_hops", 2))
-    max_triples = int(cfg.get("max_triples", 150))
-    max_source = int(cfg.get("max_source_chunks", 30))
-    vec_k = int(cfg.get("vector_augment_k", 15))
-
-    # Entity search + keyword expansion
-    async def _es():
-        r = []
-        async for item in entities_ctr.query_items(
-            query=("SELECT TOP @k c.n AS name, c.t AS description, c.r AS relation_count, c.d AS source_chunks, "
-                   "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
-            parameters=[{"name": "@k", "value": seed_k}, {"name": "@emb", "value": q_emb}]):
-            r.append(item)
-        return r
-
+    # Keyword expansion is an LLM call, so start it now and let it run
+    # alongside retrieval; its results are only needed for the full-text merge.
     basic_kw = _extract_keywords(question)
-    t_es = time.perf_counter()
-    seed_entities, llm_keywords = await asyncio.gather(
-        _es(), _llm_expand_keywords(question, engine)
-    )
-    timings["entity_search"] = time.perf_counter() - t_es
+    kw_task = asyncio.create_task(_llm_expand_keywords(question, engine))
+
+    backend = await engine._get_backend()
+    result = await retrieve(backend, q_emb, engine._cfg)
+    timings.update(result.timings)
+    seed_entities = result.seed_entities
+    all_triples = result.triples
+    source_chunks = result.source_chunks
 
     if not seed_entities:
+        kw_task.cancel()
         timings["total"] = time.perf_counter() - t0
         return {"answer": "No relevant entities found.", "timings": timings}
 
-    entity_names = [e["name"] for e in seed_entities[:10]]
-
-    # Graph traversal + vector + keyword (parallel)
-    async def _graph_traversal():
-        all_t = []
-        visited = set()
-        names = list(entity_names)
-        for hop in range(max_hops):
-            batch = [n for n in names if n not in visited]
-            if not batch:
-                break
-            for n in batch[:10]:
-                visited.add(n)
-            async def _fetch_pk(name):
-                pk = name
-                r = []
-                async for triple in triples_ctr.query_items(
-                    query=f"SELECT c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks FROM c WHERE c.{engine._triples_pk_field} = @pk",
-                    parameters=[{"name": "@pk", "value": pk}]):
-                    r.append(triple)
-                return r
-            results = await asyncio.gather(*[_fetch_pk(n) for n in batch[:10]])
-            for r in results:
-                all_t.extend(r)
-            if hop == 0 and len(all_t) < max_triples:
-                names = list({t["object"] for t in all_t if t["object"] not in visited})[:5]
-        return all_t
-
-    async def _tv():
-        r = []
-        async for t in triples_ctr.query_items(
-            query=("SELECT TOP @k c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks, "
-                   "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
-            parameters=[{"name": "@k", "value": 30}, {"name": "@emb", "value": q_emb}]):
-            r.append(t)
-        return r
-
-    async def _fv():
-        r = []
-        async for doc in food_ctr.query_items(
-            query=("SELECT TOP @k c.id, c.product_id, c.product_title_translated, c.brand, "
-                   "c.claims_translated, c.ingredients_translated, c.allergens_translated, "
-                   "c.pack_size_translated, c.product_title, c.claims, c.ingredients, c.allergens, c.pack_size, "
-                   "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
-            parameters=[{"name": "@k", "value": vec_k}, {"name": "@emb", "value": q_emb}]):
-            for k in ("_rid", "_self", "_etag", "_attachments", "_ts"):
-                doc.pop(k, None)
-            r.append(doc)
-        return r
-
-    async def _ft(keyword: str):
-        r = []
-        try:
-            sql = _build_fulltext_sql(keyword)
-            async for doc in food_ctr.query_items(
-                query=sql, parameters=[{"name": "@k", "value": 10}, {"name": "@kw", "value": keyword}]):
-                for k in ("_rid", "_self", "_etag", "_attachments", "_ts", "e"):
-                    doc.pop(k, None)
-                r.append(doc)
-        except Exception:
-            pass
-        return r
-
+    llm_keywords = await kw_task
     all_kw = list(set(basic_kw[:5] + (llm_keywords or [])[:6]))
-    ft_tasks = [_ft(kw) for kw in all_kw]
+    log.info("Keywords basic=%s llm=%s combined=%s", basic_kw[:5], llm_keywords, all_kw)
 
-    t_graph = time.perf_counter()
-    graph_results = await asyncio.gather(_graph_traversal(), _tv(), _fv(), *ft_tasks)
-    pk_triples = graph_results[0]
-    vec_triples = graph_results[1]
-    vec_food = graph_results[2]
-    ft_results = graph_results[3:]
-
-    seen_keys: set[str] = set()
-    all_triples = []
-    for t in pk_triples + vec_triples:
-        key = f"{t.get('subject','')}|{t.get('predicate','')}|{t.get('object','')}"
-        if key not in seen_keys:
-            seen_keys.add(key)
-            all_triples.append(t)
-    all_triples = all_triples[:max_triples]
-    timings["graph_traversal"] = time.perf_counter() - t_graph
-
-    # Source chunk fetch + merge
-    t_src = time.perf_counter()
-    source_chunk_ids: set[str] = set()
-    for t in all_triples:
-        for cid in t.get("source_chunks", []):
-            source_chunk_ids.add(cid)
-    for e in seed_entities[:5]:
-        for cid in e.get("source_chunks", []):
-            source_chunk_ids.add(cid)
-
-    source_ids = list(source_chunk_ids)[:max_source]
-    source_chunks: list[dict] = []
-    if source_ids:
-        for batch_start in range(0, len(source_ids), 20):
-            batch = source_ids[batch_start:batch_start + 20]
-            ids_param = ", ".join(f'"{sid}"' for sid in batch)
-            async for doc in food_ctr.query_items(query=f"SELECT * FROM c WHERE c.id IN ({ids_param})"):
-                for k in ("e", "_rid", "_self", "_etag", "_attachments", "_ts"):
-                    doc.pop(k, None)
-                source_chunks.append(doc)
-
+    t_ft = time.perf_counter()
     seen_ids = {doc.get("id") for doc in source_chunks}
-    for doc in vec_food:
+    for doc in await backend.fulltext_food(all_kw, 10):
         if doc.get("id") not in seen_ids:
             source_chunks.append(doc)
             seen_ids.add(doc.get("id"))
-    for batch in ft_results:
-        for doc in batch:
-            if doc.get("id") not in seen_ids:
-                source_chunks.append(doc)
-                seen_ids.add(doc.get("id"))
-    timings["source_fetch"] = time.perf_counter() - t_src
+    timings["source_fetch"] += time.perf_counter() - t_ft
 
     source_chunks = await _semantic_rerank(engine, question, source_chunks)
 

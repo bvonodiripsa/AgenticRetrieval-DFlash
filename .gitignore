@@ -293,3 +293,7 @@ out_kg/ray_build/
 # Generated GI build outputs (hosted-LLM / GLM variant)
 out_kg_glm/
 my.yaml
+
+# Local Graph Index snapshot — ~3.8 GB of vectors. Rebuild it with
+# scripts/build_local_index.py instead of committing it.
+data/local_index/

@@ -71,6 +71,10 @@ def _get_embed_model():
             model_id, trust_remote_code=True,
             torch_dtype=torch.float16, low_cpu_mem_usage=True
         )
+        # Every question pays this cost before retrieval can start: ~30 ms on
+        # GPU against ~200 ms on CPU. Call sites read the device off the model.
+        if os.environ.get("GI_EMBED_DEVICE", "cuda") != "cpu" and torch.cuda.is_available():
+            _embed_model = _embed_model.to("cuda")
         _embed_model.eval()
         return _embed_model, _embed_tokenizer
 
