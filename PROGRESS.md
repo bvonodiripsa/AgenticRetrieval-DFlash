@@ -2,12 +2,22 @@
 
 Branch `feat/gpu-graph-index`. Written 2026-07-27 after a day on the GB10 dev
 box; updated 2026-07-28 with a full day of real H100 validation (see
-`results/h100_comparison.md`); **updated again 2026-07-29 with a second GB10
-pass** — three items from "Not done"/"Open questions" below got closed out
-before returning to H100 benchmarking (see "2026-07-29: second GB10 pass").
+`results/h100_comparison.md`); updated again 2026-07-29 with a second GB10
+pass (see "2026-07-29: second GB10 pass") and then **with the web UI put in
+front of real users on H100** (see "2026-07-29: H100 web app + UI
+duplicate-submission fix").
 
 ## Where things actually stand (end of 2026-07-29)
 
+- **The web app is live on H100 and one real-usage bug got found and fixed:
+  duplicate form submissions from the UI, not backend slowness.** A user
+  pressing Enter and then also clicking "Ask" fired two concurrent
+  `/v1/ask/stream` requests; retrieval blocks the single asyncio event loop
+  (`torch.topk`, BM25), so the second request stalled behind the first
+  instead of running in parallel — presenting as "first question 4s, second
+  question waits ~20s then shows 3.3s." Fixed with a re-entrancy guard in
+  `static/index.html`'s `doAsk()`. See "2026-07-29: H100 web app + UI
+  duplicate-submission fix" below. Confirmed fixed by the user.
 - **Graph traversal had a second, bigger bug than the one fixed on
   2026-07-27, found while investigating why `max_hops` seemed to do nothing.**
   With `reverse_edges: true`, seed entities found by vector search are
@@ -28,15 +38,15 @@ before returning to H100 benchmarking (see "2026-07-29: second GB10 pass").
   loading the snapshot, and a snapshot-freshness check against live Cosmos.
   Both are local-only changes, fully testable without H100 or an LLM — see
   below.
-- **H100 state as of the end of 2026-07-28** (unchanged today, GB10-only
-  session): retrieval optimization fully validated on real hardware
-  (2.06s -> 0.003s), streaming endpoint fixed to use the local index and
-  real token streaming (ttft ~0.48-0.50s). vLLM and `api.py` were shut down
-  on the H100 box at the end of that session to avoid idle cost — **nothing
-  is currently running on H100**; it needs to be started again before the
-  next round of H100 benchmarking, which should also pull in today's two
-  traversal/retrieval fixes (they live in `retrieval.py`, shared by both
-  backends).
+- **H100 state as of the end of 2026-07-28**: retrieval optimization fully
+  validated on real hardware (2.06s -> 0.003s), streaming endpoint fixed to
+  use the local index and real token streaming (ttft ~0.48-0.50s). vLLM and
+  `api.py` were shut down at the end of that session to avoid idle cost.
+  2026-07-29 restarted both (picking up the second GB10 pass's traversal fix,
+  hot-swap and freshness guard — all shared via `retrieval.py`), rebound
+  `api.py` to `--host 0.0.0.0` so the public IP actually reaches it (was
+  `127.0.0.1`-only), and put the web UI in front of a real user, which
+  surfaced and fixed the duplicate-submission bug above.
 
 - **Retrieval optimization: fully validated, real hardware, real load.**
   2.06s (Cosmos) -> 0.003s (local index), matching the GB10 prediction almost
@@ -66,13 +76,14 @@ before returning to H100 benchmarking (see "2026-07-29: second GB10 pass").
   ninja` fixes it), and `--gpu-memory-utilization 0.92` (documented value)
   OOM'd once the local index and GPU embedder loaded alongside it on this
   box's 96GB-per-GPU pair — dropped to `0.85`, fits with ~11.5GB/GPU to
-  spare. `SETUP.md` should probably be updated with both.
+  spare. Both are now documented in `SETUP.md` and `config.yaml.example`.
 
-**Live state right now:** vLLM (port 8000) and `api.py` (port 8080,
-localhost-only) are both still running on the H100 box, left up in case
-testing continues tonight. **They cost real money idling** (~$30-40/hr for
-the VM per `GI_AND_DFLASH.md`'s own cost note) — worth killing before
-walking away for the night unless there's a reason to keep them warm.
+**Live state right now:** vLLM (port 8000) and `api.py` (port 8080, bound to
+`0.0.0.0` so the web UI is reachable at `http://<h100-public-ip>:8080`) are
+both still running on the H100 box, left up in case testing continues
+tonight. **They cost real money idling** (~$30-40/hr for the VM per
+`GI_AND_DFLASH.md`'s own cost note) — worth killing before walking away for
+the night unless there's a reason to keep them warm.
 
 ---
 
@@ -182,7 +193,7 @@ Because search is a single GEMV, pin the index to GPU 0 rather than sharding.
 
 **Resolved:** `nvidia-smi` on the actual box confirms `SETUP.md`/`BENCHMARKS.md`
 were right — 2x H100 NVL, 96GB each, hostname `ams-agentic-h100`. `README.md`'s
-80GB figure is stale. This mattered in practice: `--gpu-memory-utilization 0.92`
+80GB figure was stale and has been corrected. This mattered in practice: `--gpu-memory-utilization 0.92`
 claims proportionally more absolute memory on the bigger pair than the 12.8GB
 headroom estimated above assumed, and the local index + GPU embedder OOM'd at
 0.92 with only 11MiB free. Fixed by dropping to `0.85` (~11.5GB/GPU free) — see
@@ -313,6 +324,65 @@ manifest: correctly flagged `STALE`, exit code 1.
 
 ---
 
+## 2026-07-29: H100 web app + UI duplicate-submission fix
+
+Pulled the branch (including the traversal fix and hot-swap/freshness guard
+above) onto the H100 box, rebuilt the local snapshot, and put the web app in
+front of a real user for manual testing instead of scripted benchmarks.
+
+**"Site cannot be reached" on the public IP.** `api.py` was started bound to
+`127.0.0.1` (localhost-only); the NSG rule (`Allow-Web-8080`) already allowed
+inbound traffic from the test IP, but nothing was listening on the external
+interface. Fixed by restarting with `--host 0.0.0.0`.
+
+**"Very big delay before answering" on the second question, not the
+first.** Reported pattern: select question 1, run — immediate, 4s total.
+Select question 2, run — ~20s of nothing, then completes showing a 3.3s
+`timings.total`. Clicking stop and re-running immediately during the delay
+made it run right away. Investigated in this order:
+
+1. Repeated direct `curl` against both `127.0.0.1` and the public IP,
+   including after idle periods — consistently 3.7-4.7s, never ~20s. Ruled
+   out cold starts (vLLM prefix cache, snapshot paging, etc).
+2. Simulated a client abort mid-request — vLLM correctly cancelled the
+   server-side generation, no orphaned request left running. Ruled out
+   "previous request never actually finished."
+3. Read `api.py`'s access logs: real user requests were arriving in **pairs
+   of near-simultaneous connections** (e.g. ports `58936` and `58940` a few
+   milliseconds apart) for what the user experienced as one click.
+4. Traced to `static/index.html`: the "Ask" button disables itself while a
+   request is in flight, but the Enter-key handler on the question textbox
+   didn't check anything before calling `doAsk()`. Pressing Enter and then
+   also clicking Ask (or double-pressing Enter) fired two concurrent
+   `/v1/ask/stream` requests for the same question.
+5. Retrieval performs blocking GPU/CPU work directly on the single asyncio
+   event loop (`torch.topk` for vector search, BM25 fulltext) — two
+   concurrent requests don't run in parallel, they serialize and stall each
+   other. That reproduces exactly the reported shape: one request completes
+   fast, the other's wall-clock time balloons while its actual
+   (`timings.total`) processing time stays small, because most of the ~20s
+   was spent waiting for the event loop, not computing.
+
+**Fix** (`static/index.html`, commit `f778834`): added a re-entrancy guard
+to `doAsk()` — it now returns immediately if a request is already in flight
+(`abortCtrl` set), checked regardless of which trigger (button or Enter)
+called it. No backend change needed; this was a pure UI bug. Verified live:
+pulled the updated `index.html` onto H100 (no `api.py` restart required —
+it's served fresh off disk), user hard-refreshed, confirmed fixed.
+
+**Broader takeaway:** the retrieval path being synchronous-and-fast (sub-
+10ms typically) is exactly what made this bug easy to hide — it never shows
+up in single-request benchmarking (`benchmark_compare.py`, `sweep_max_hops.py`,
+curl loops), only under concurrent load from a real UI. Worth keeping in mind
+if/when the retrieval path is asked to serve genuinely concurrent users
+(batching section in "Open questions" below) — the current implementation is
+fine for one request at a time but will need `asyncio.to_thread` (already
+used for the local index's initial load) or a thread/process pool around the
+blocking numpy/BM25 calls to actually parallelize multiple in-flight
+requests, not just avoid one UI bug.
+
+---
+
 ## H100 runbook
 
 ### 1. Get the branch
@@ -404,6 +474,12 @@ curl -N -X POST http://localhost:8080/v1/ask/stream -H 'Content-Type: applicatio
 Watch the `done` event's `timings.ttft` — should be well under 1s. If it
 equals `timings.llm`, streaming silently broke and reverted to buffering.
 
+Use `--host 0.0.0.0` instead of `localhost` if the app needs to be reachable
+from outside the box (e.g. a real browser hitting the public IP) — the NSG
+rule alone isn't enough if nothing is listening on the external interface.
+`static/index.html` already has the duplicate-submission fix (commit
+`f778834`); no action needed there, it's served fresh off disk.
+
 ---
 
 ## Not done
@@ -417,6 +493,18 @@ enough to defend as anything but "roughly."
 
 **~~Snapshot freshness has no guard.~~ Done 2026-07-29** — see
 `snapshot_freshness.py` / "second GB10 pass" above.
+
+**Concurrent requests serialize instead of running in parallel.**
+`LocalGraphIndex`'s vector search (`torch.topk`) and BM25 fulltext run
+synchronously on the single asyncio event loop, so two truly-concurrent
+requests stall each other rather than overlapping — see "H100 web app + UI
+duplicate-submission fix" above, where this is exactly what made a client-
+side double-submit bug look like a 20s server hang. Not a problem for one
+user clicking through the UI (fixed by the re-entrancy guard), but it will
+matter the moment more than one user hits the app at once. Fix would be
+`asyncio.to_thread` (or a small thread pool) around the blocking numpy/BM25
+calls in `gi_index.py`, the same pattern already used for the initial
+snapshot load in `gi_query.py::_build_and_swap`. Not yet done.
 
 **Answer quality with reverse edges was never evaluated.** Reverse edges make
 answers longer and slower (measured). Whether they're actually *better* — not

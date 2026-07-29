@@ -2,15 +2,28 @@
 
 ![Agentic Retrieval overview](AgenticRetrievalOverview.png)
 
-This repository extends the [AgenticRetrieval](https://github.com/bvonodiripsa/AgenticRetrieval) project with two major additions: a **Graph Index (GI)** retrieval layer built on Azure Cosmos DB, and **DFlash speculative decoding** for GPU-accelerated LLM inference. Together they deliver faster, higher-quality answers over the same food product dataset (58K documents, 1.6M graph index triples).
+This repository extends the [AgenticRetrieval](https://github.com/bvonodiripsa/AgenticRetrieval) project with two major additions: a **Graph Index (GI)** retrieval layer, and **DFlash speculative decoding** for GPU-accelerated LLM inference. Together they deliver faster, higher-quality answers over the same food product dataset (58K documents, 1.6M graph index triples).
 
-A unified FastAPI web application (`api.py`) exposes three backend pipelines side by side:
+A FastAPI web application (`api.py`) serves a single pipeline — GI-RAG
+retrieval + a speculative-decoding-capable LLM call — with a **retrieval
+backend switch** (`index.mode` in the config) rather than separate app
+backends:
 
-| Backend | LLM | Retrieval Strategy | Decoding |
-|---------|-----|--------------------|----------|
-| **Original** | GPT-4.1 (Azure OpenAI) | Multi-round decomposed RAG (vector + full-text) | Standard cloud |
-| **GI-RAG** | Qwen3.5-27B (local vLLM, FP8) | Graph Index traversal + vector + source fetch | Standard local |
-| **GI-RAG + DFlash** | Qwen3.5-27B (local vLLM, FP8) | GI traversal + vector + keyword + semantic rerank | DFlash speculative |
+| `index.mode` | Where the Graph Index lives | Retrieval speed (measured, co-located H100, warm) |
+|---|---|---|
+| `cosmos` | Azure Cosmos DB, queried over the network (original) | ~2.06-2.26s |
+| `local` **(default in `my.yaml`)** | GPU memory + host RAM, a read-only snapshot exported from Cosmos | ~0.003-0.03s |
+
+Cosmos DB remains the system of record either way; `local` mode serves a
+snapshot built by `scripts/build_local_index.py` and swaps in automatically
+in the background the first time it's missing (see "Local GPU-resident
+Graph Index" below and `PROGRESS.md` for the full story, including the
+traversal bug fix that made `reverse_edges` actually work). The older
+"Original" (GPT-4.1 decomposed RAG) and plain "GI-RAG" (no DFlash) backends
+described in earlier revisions of this README have been folded into the
+single DFlash-capable pipeline below; the vendored upstream decomposed-RAG
+code still exists at `external/agenticretrieval` and is exercised by
+`samples/QA_CLI`, not by this app.
 
 ## What Changed from the Original
 
@@ -19,13 +32,13 @@ A unified FastAPI web application (`api.py`) exposes three backend pipelines sid
 | Area | Original ([AgenticRetrieval](https://github.com/bvonodiripsa/AgenticRetrieval)) | This repo (AgenticRetrieval-DFlash) |
 |------|--------------------------|------|
 | **LLM** | Azure OpenAI GPT-4.1 (cloud API) | Qwen3.5-27B served locally via vLLM (FP8 quantized) |
-| **Hardware** | No GPU required (cloud LLM) | 2x NVIDIA H100 80GB (Azure ND96isr_H100_v5) |
-| **Retrieval** | Multi-round decomposed RAG: sub-question decomposition, gap-filling re-retrieval over 2+ rounds | Single-pass GI traversal: entity search → graph hop → source fetch |
-| **Graph Index** | None — retrieves directly from document embeddings | 1.6M triples extracted from 58K documents; stored in Cosmos DB (`triples`, `entities`) |
+| **Hardware** | No GPU required (cloud LLM) | 2x NVIDIA H100 NVL 96GB (Azure Standard_NC80adis_H100_v5) |
+| **Retrieval** | Multi-round decomposed RAG: sub-question decomposition, gap-filling re-retrieval over 2+ rounds | Single-pass GI traversal: entity search → graph hop → source fetch, against Cosmos DB or a GPU-resident local snapshot (`index.mode`) |
+| **Graph Index** | None — retrieves directly from document embeddings | 1.6M triples extracted from 58K documents; Cosmos DB is the system of record, optionally mirrored into GPU memory for query-time speed |
 | **Embedding** | Azure OpenAI embedding endpoint | In-process `Qwen3-Embedding-0.6B` (1024 dims, no network call) |
 | **Decoding** | Standard autoregressive | DFlash speculative: `z-lab/Qwen3.5-27B-DFlash` draft model proposes 5 tokens per step; main model verifies in a single forward pass |
 | **Semantic Reranker** | Optional (disabled by default) | Integrated via Cosmos DB Semantic Reranker SDK (DFlash path) |
-| **Keyword Search** | Built-in full-text search per source | LLM-expanded keyword generation + parallel `FullTextContains` queries |
+| **Keyword Search** | Built-in full-text search per source | LLM-expanded keyword generation + local BM25 or Cosmos `FullTextContains` (`index.mode`) |
 | **Web UI** | CLI only (`dynamic_retriever.py`) | FastAPI + SSE streaming web app with real-time progress and timing |
 
 ### New files (not in the original)
@@ -33,14 +46,32 @@ A unified FastAPI web application (`api.py`) exposes three backend pipelines sid
 | File | Purpose |
 |------|---------|
 | `gi_builder.py` | Offline Graph Index construction: triple extraction, dedup, predicate normalization, entity resolution |
-| `gi_query.py` | Online GI-RAG query engine: graph traversal + vector augment + LLM answer |
-| `api.py` | FastAPI web app serving the GI-RAG + LLM backend with SSE streaming |
+| `gi_query.py` | Online GI-RAG query engine: backend selection/hot-swap, LLM answer assembly |
+| `retrieval.py` | Single retrieval implementation (`retrieve()`) shared by both backends and both API endpoints |
+| `gi_index.py` | GPU-resident local Graph Index backend: vector search, CSR graph traversal, local BM25 |
+| `scripts/build_local_index.py` | Exports the Cosmos Graph Index into the local GPU-resident snapshot |
+| `snapshot_freshness.py` + `scripts/check_snapshot_freshness.py` | Compares a local snapshot's manifest against live Cosmos counts/timestamps |
+| `api.py` | FastAPI web app serving the GI-RAG + LLM pipeline with real SSE token streaming |
 | `prompts_gi_food.py` | GI-specific prompts for triple extraction and answer generation |
 | `static/index.html` | Web UI with progress log and timing display |
 | `config.yaml.example` | Consolidated config template (copy to `my.yaml`, then fill in secrets) |
 | `upstream.py` + `scripts/sync_upstream.*` | Vendor the upstream AgenticRetrieval repo into `external/agenticretrieval` (git-ignored, re-syncable) |
+| `PROGRESS.md` / `results/*.md` | Dev log and measured benchmarks for the local Graph Index work (GB10 dev box + H100) |
 
-## How the Pipelines Work
+## How the Pipeline Works
+
+This app runs a single pipeline end to end (`api.py` → `retrieval.py` →
+LLM call). Pipelines 2 and 3 from earlier revisions of this README — a
+plain "GI-RAG" backend without DFlash, and a separate "GI-RAG + DFlash"
+backend — have been merged: retrieval is always the parallel/keyword-
+expanded/reranked version below, and the LLM call always uses whatever
+speculative-decoding config the endpoint offers (DFlash, when the vLLM
+server is started with `--spec-model`). What varies at runtime is only the
+**retrieval backend** (`index.mode: cosmos` vs `local`, see above), not the
+pipeline shape. Pipeline 1 (the original decomposed RAG) is kept below as
+the quality/latency baseline this whole repo is measured against; it still
+runs, unmodified, via the vendored `external/agenticretrieval` code and
+`samples/QA_CLI`, not through `api.py`.
 
 ### Pipeline 1: Original AgenticRetrieval (decomposed multi-round RAG)
 
@@ -62,40 +93,16 @@ Question
 ```
 
 - **LLM**: GPT-4.1 via Azure OpenAI (cloud, ~30-40 tok/s)
-- **Retrieval**: `CombinedRetriever` from `dynamic_retriever.py` — vector search (k=35) + full-text search (k=15) per source container, with diversity selection
+- **Retrieval**: `CombinedRetriever` from the vendored `dynamic_retriever.py` (`external/agenticretrieval`) — vector search (k=35) + full-text search (k=15) per source container, with diversity selection
 - **Rounds**: 2 decompose/retrieve/synthesize rounds by default
 - **Strengths**: Highest answer completeness (10+ products, detailed reasoning); gap-aware re-retrieval catches information missed in the first pass
 - **Weakness**: Slowest — multiple LLM calls + multiple retrieval rounds (70-94s total)
 
-### Pipeline 2: GI-RAG (graph index retrieval + single LLM call)
+### Pipeline 2: GI-RAG + DFlash (this repo's pipeline — parallel retrieval + speculative decoding)
 
-Single-pass retrieval through a pre-built graph index, followed by one LLM call.
-
-```
-Question
-  │
-  ├─► Embed question (Qwen3-Embedding-0.6B, in-process)
-  │
-  ├─► Entity search (vector search on entities, top 20)
-  │
-  ├─► Graph traversal (PK-based triple fetch per entity, 2 hops)
-  │      └─► Vector triple search (top 30 by similarity)
-  │
-  ├─► Source fetch (document IDs from triples/entities → batch read)
-  │      └─► Vector augment (additional food container search, top 15)
-  │
-  └─► Single LLM call (Qwen3.5-27B, standard decoding) → answer
-```
-
-- **LLM**: Qwen3.5-27B via vLLM (local, FP8, ~55 tok/s standard)
-- **Graph Index**: 1.6M triples linking products, ingredients, allergens, dietary properties, occasions, cooking methods
-- **Context**: Large window — up to 150 triples + 40 source chunks + 15 vector augment docs
-- **Strengths**: Rich structured context from graph index; single LLM call
-- **Weakness**: Still relatively slow (~35-43s) because the LLM generates with standard autoregressive decoding over a large context
-
-### Pipeline 3: GI-RAG + DFlash (parallel retrieval + speculative decoding)
-
-Same GI retrieval as Pipeline 2 but with two key optimizations: **parallel retrieval** and **DFlash speculative decoding**.
+Single-pass retrieval through the Graph Index (Cosmos DB or the local
+GPU-resident snapshot — `index.mode`), with parallel retrieval paths and
+speculative decoding.
 
 ```
 Question
@@ -107,23 +114,22 @@ Question
   │      └─► LLM keyword expansion (5-8 food-related search terms)
   │
   ├─► PARALLEL:
-  │      ├─► Graph traversal (PK fetch + vector triples)
+  │      ├─► Graph traversal (`index.mode: local` — CSR adjacency, forward + reverse hops; `cosmos` — PK-based hop, forward only)
   │      ├─► Food vector search
-  │      └─► Full-text keyword search (per expanded keyword)
+  │      └─► Full-text keyword search (local BM25, or Cosmos `FullTextContains`)
   │
   ├─► Merge + deduplicate all results
   │
   ├─► Semantic reranker (Cosmos DB AI reranker, top 25)
   │
-  └─► Single LLM call (Qwen3.5-27B + DFlash draft model) → answer
+  └─► Single LLM call (Qwen3.5-27B + DFlash draft model, real token streaming) → answer
 ```
 
 - **LLM**: Qwen3.5-27B via vLLM with DFlash speculative decoding (~110-140 tok/s, 2-2.5x speedup)
-- **Retrieval**: All search paths run concurrently via `asyncio.gather`; reduced context limits (40 triples, 15 source chunks) to minimize prompt tokens
-- **Keyword expansion**: LLM generates additional food-related search terms (e.g., "protein bar", "energy", "peanut") run as parallel `FullTextContains` queries
+- **Retrieval**: All search paths run concurrently via `asyncio.gather`, implemented once in `retrieval.py` for both backends; reduced context limits (40 triples, 15 source chunks) to minimize prompt tokens. Retrieval itself is ~2s on Cosmos vs ~sub-30ms on the local GPU index — see `PROGRESS.md` / `results/h100_comparison.md`
+- **Keyword expansion**: LLM generates additional food-related search terms (e.g., "protein bar", "energy", "peanut") merged into the full-text search above
 - **Semantic reranker**: Cosmos DB Semantic Reranker re-orders retrieved documents by relevance before prompting the LLM
-- **Strengths**: Fastest pipeline (17-23s); lossless quality (DFlash output is mathematically identical to standard decoding)
-- **Context limits vs GI**: Smaller context (1200 vs 2048 answer tokens, 40 vs 150 triples) trades some breadth for speed
+- **Strengths**: Fastest pipeline; lossless quality (DFlash output is mathematically identical to standard decoding); real token streaming (time-to-first-token ~0.5s, not a wait-for-full-completion-then-chunk fake stream)
 
 ## How DFlash Speculative Decoding Works
 
@@ -163,6 +169,10 @@ vllm serve Qwen/Qwen3.5-27B \
   --enable-prefix-caching \
   --port 8000
 ```
+
+Drop `--gpu-memory-utilization` to `0.85` if `index.mode: local` and the GPU
+embedder are also loaded on the same GPUs — `0.92` OOM'd in that
+configuration on a 2x H100 NVL 96GB box (see `SETUP.md`).
 
 ## How to Build the Graph Index
 
@@ -228,32 +238,50 @@ The app is driven by a single YAML config: copy `config.yaml.example` to `my.yam
 (git-ignored) and fill in your Cosmos DB, embedding, and LLM settings + secrets.
 Override the path with `--config <file>`.
 
+### Retrieval backend (`index:` block)
+
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| `mode` | `"cosmos"` or `"local"` | Query Cosmos DB over the network, or a GPU-resident snapshot |
+| `snapshot_path` | `"data/local_index"` | Where the local snapshot lives (git-ignored; built by `scripts/build_local_index.py`) |
+| `device` | `"cuda"` | Device for the local index's vectors |
+| `enable_bm25` | `true` | Local BM25 full-text search (replaces `FullTextContains` in local mode) |
+| `reverse_edges` | `true` | Also traverse `object -> subject`; needs the local index (Cosmos can't do this cheaply) |
+| `auto_build` | `true` | If the snapshot is missing, serve Cosmos immediately and build the snapshot in the background, swapping in once ready |
+| `check_freshness` | `true` | Background warning (not an automatic rebuild) if the snapshot is stale vs. live Cosmos |
+
+See `config.yaml.example` for full inline documentation of each setting, and
+`PROGRESS.md` for how the hot-swap and freshness check behave in practice.
+
 ### Key query settings (`query:` block)
 
 | Setting | Value | Purpose |
 |---------|-------|---------|
 | `seed_entities_k` | 10 | Seed entities from vector search |
-| `max_hops` | 1 | Graph traversal depth |
+| `max_hops` | 2 | Graph traversal depth |
 | `max_triples` | 40 | Triples passed to the LLM |
 | `max_source_chunks` | 15 | Source documents fetched |
 | `vector_augment_k` | 12 | Extra vector-search products |
 | `max_answer_tokens` | 4096 | Answer budget (covers reasoning tokens) |
 
-Embeddings are computed in-process (Qwen3-Embedding-0.6B, mean-pool + L2). The
-Cosmos DB semantic reranker reorders sources before the LLM call; if it is
-unavailable the pipeline falls back to vector-search ordering. Keyword search is
-LLM-expanded via `FullTextContains`.
+Embeddings are computed in-process (Qwen3-Embedding-0.6B, mean-pool + L2, GPU
+if available). The Cosmos DB semantic reranker reorders sources before the
+LLM call; if it is unavailable the pipeline falls back to vector-search
+ordering. Keyword search is LLM-expanded, then run against local BM25 or
+Cosmos `FullTextContains` depending on `index.mode`.
 
 ## Hardware Requirements
 
 | Component | Specification |
 |-----------|--------------|
-| **GPU** | 2x NVIDIA H100 80GB (for vLLM with tensor parallelism) |
-| **VM** | Azure ND96isr_H100_v5 (96 vCPU, 1.9TB RAM) |
+| **GPU** | 2x NVIDIA H100 NVL 96GB (for vLLM with tensor parallelism); a single GPU dev box (e.g. NVIDIA GB10) works for retrieval-only development and testing, see `PROGRESS.md` |
+| **VM** | Azure Standard_NC80adis_H100_v5 (96 vCPU, 1.9TB RAM) |
 | **Disk** | 256GB+ for model weights and checkpoints |
 | **Network** | Azure VNet with NSG rules for port 8080 (web UI) |
 
-The Original backend (GPT-4.1) requires no local GPU — it calls Azure OpenAI APIs. However, all three backends share the same Azure Cosmos DB account and in-process embedding model.
+vLLM (the LLM) needs the GPU(s); Cosmos DB access is needed either for live
+`index.mode: cosmos` queries or, in `local` mode, only to (re)build the
+snapshot — day-to-day queries in `local` mode don't touch Cosmos at all.
 
 ### vLLM memory layout (2x H100)
 
@@ -266,6 +294,12 @@ The Original backend (GPT-4.1) requires no local GPU — it calls Azure OpenAI A
 | **Total** | ~88 GB / 160 GB available |
 
 ## Benchmark Results
+
+**For the current local-GPU-index numbers** (retrieval 2.06s → 0.003-0.03s,
+end-to-end ~1.55x on top of that), see `PROGRESS.md` and
+`results/h100_comparison.md` / `results/optimization_gb10.md`. The tables
+below are the `index.mode: cosmos`-only numbers from before that work
+landed, kept for historical comparison.
 
 **Hardware**: 2x NVIDIA H100 NVL (Sweden Central) | **Database**: Cosmos DB (Sweden Central, co-located) — 58K food products, 1.6M triples, 180K entities
 
@@ -311,10 +345,11 @@ Co-locating Cosmos DB and the VM in the same Azure region reduced retrieval late
 
 ### Prerequisites
 
-1. Azure Cosmos DB account with `food`, `entities`, `triples` containers populated
+1. Azure Cosmos DB account with `food`, `entities`, `triples` containers populated. Required always as the system of record; with `index.mode: local` and an existing snapshot, live Cosmos access is no longer needed on the query path (only to rebuild the snapshot)
 2. vLLM server running on port 8000 (see vLLM configuration above)
 3. Azure CLI logged in (`az login`) for Cosmos DB RBAC
 4. Semantic reranker endpoint set in the config (`cosmos.semantic_reranker_endpoint`); an `AZURE_COSMOS_SEMANTIC_RERANKER_INFERENCE_ENDPOINT` env var overrides it
+5. If using `index.mode: local` for the first time: either build the snapshot up front (`python scripts/build_local_index.py --config my.yaml --out data/local_index`) or leave `index.auto_build: true` and let the app build it in the background on first start (serves from Cosmos in the meantime, swaps over automatically)
 
 ### Start the web app
 
@@ -387,23 +422,31 @@ The reranker is called after retrieval and before the LLM, reordering source doc
 
 ```
 AgenticRetrieval-DFlash/
-├── api.py                      # FastAPI web app (single GI + LLM backend)
-├── gi_builder.py               # Offline Graph Index construction
-├── gi_query.py                 # Online GI-RAG query engine
-├── prompts_gi_food.py          # GI-specific prompts
-├── upstream.py                 # Bootstrap for the vendored upstream clone
-├── static/index.html           # Web UI
-├── config.yaml.example         # Consolidated config template (copy to my.yaml)
-├── external/agenticretrieval/  # Vendored upstream (git-ignored; sync_upstream.*)
-├── data/food.json              # 10 benchmark questions
-├── ARCHITECTURE.md             # Detailed code-level architecture
-├── BENCHMARKS.md               # Timing benchmark tables
-├── GI_AND_DFLASH.md            # Detailed Graph Index + DFlash explanation
-├── dynamic_retriever.py        # Original decomposed RAG (shared with upstream)
-├── cosmos_db_upload.py         # Document ingestion
-├── requirements-web.txt        # Web app dependencies
-├── requirements.txt            # Full dependencies
-└── out_gi/                     # Benchmark outputs
+├── api.py                      # FastAPI web app (single GI-RAG + LLM pipeline)
+├── retrieval.py                 # Single retrieval implementation, shared by both backends
+├── gi_index.py                  # GPU-resident local Graph Index backend (vectors, CSR traversal, BM25)
+├── gi_query.py                  # Query engine: backend selection/hot-swap, LLM answer assembly
+├── gi_builder.py                # Offline Graph Index construction
+├── snapshot_freshness.py        # Local-snapshot-vs-live-Cosmos staleness check
+├── prompts_gi_food.py           # GI-specific prompts
+├── upstream.py                  # Bootstrap for the vendored upstream clone
+├── static/index.html            # Web UI
+├── config.yaml.example          # Consolidated config template (copy to my.yaml)
+├── scripts/build_local_index.py       # Cosmos -> local GPU snapshot exporter
+├── scripts/check_snapshot_freshness.py # CLI wrapper for snapshot_freshness.py
+├── scripts/sweep_max_hops.py          # query.max_hops tuning helper
+├── benchmark_compare.py         # Cosmos vs. local-index retrieval comparison
+├── external/agenticretrieval/   # Vendored upstream (git-ignored; sync_upstream.*)
+├── data/local_index/            # Local GPU-index snapshot (git-ignored; built, not committed)
+├── data/questions-answers.json  # Benchmark questions
+├── PROGRESS.md                  # Dev log: local Graph Index work, GB10 + H100 findings
+├── results/*.md                 # Measured benchmark tables (baseline, optimization, H100 comparison)
+├── ARCHITECTURE.md              # Detailed code-level architecture
+├── BENCHMARKS.md                # Historical timing benchmark tables (Cosmos-only, pre-local-index)
+├── GI_AND_DFLASH.md             # Detailed Graph Index + DFlash explanation
+├── requirements-web.txt         # Web app dependencies
+├── requirements.txt             # Full dependencies
+└── out_gi/                      # Benchmark outputs
 ```
 
 ## License
