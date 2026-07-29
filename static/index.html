@@ -426,6 +426,16 @@ async function doStream(question) {
 }
 
 async function doAsk() {
+  // Guards re-entrancy from doAsk() being reachable through two independent
+  // triggers -- the "Ask" button (which disables itself) and Enter-in-textbox
+  // (which didn't check anything). Pressing Enter and then also clicking Ask
+  // fired two concurrent /v1/ask/stream requests for the same question.
+  // Retrieval does blocking GPU/CPU work directly on the single asyncio event
+  // loop (vector search, BM25), so two concurrent requests don't run in
+  // parallel so much as stall each other -- one appears to hang for many
+  // seconds before both finish back to back. abortCtrl is non-null exactly
+  // while a request is in flight, so it doubles as the re-entrancy lock.
+  if (abortCtrl) return;
   const question = qInput.value.trim();
   if (!question) { qInput.focus(); return; }
   btnAsk.disabled = true; btnRunAll.disabled = true;
