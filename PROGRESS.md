@@ -1,20 +1,47 @@
 # Progress and H100 handoff
 
 Branch `feat/gpu-graph-index`. Written 2026-07-27 after a day on the GB10 dev
-box; **updated 2026-07-28 with real H100 results** — see
-`results/h100_comparison.md` for full detail. Short version: retrieval
-optimization is fully validated (2.06s -> 0.003s, matches GB10 prediction
-almost exactly). End-to-end came in at 5.66s, not the projected 3.53s, because
-the traversal bug fix feeds the LLM a richer prompt (12 PK triples instead of
-0) and that costs more decode time than retrieval saves. Not yet isolated from
-ordinary LLM variance — see "Recommended next step" in that file.
+box; **updated 2026-07-28 with a full day of real H100 validation** — see
+`results/h100_comparison.md` for full detail, this file is now the short
+version + what's left.
 
-Two operational issues hit and fixed on H100, unrelated to this branch's code:
-vLLM crashed on first start (`Flashinfer allreduce workspace` assertion, root
-cause: missing `ninja` binary — `pip install ninja` fixes it), and
-`--gpu-memory-utilization 0.92` (documented value) OOM'd once the local index
-and GPU embedder were loaded alongside it on this box's 96GB-per-GPU pair —
-dropped to `0.85` and it fit with ~11.5GB/GPU to spare.
+## Where things actually stand (end of 2026-07-28)
+
+- **Retrieval optimization: fully validated, real hardware, real load.**
+  2.06s (Cosmos) -> 0.003s (local index), matching the GB10 prediction almost
+  exactly. Same correctness signature (exact search beats Cosmos's diskANN),
+  same traversal fix (`0 PK -> 12 PK` with reverse edges).
+- **End-to-end impact is real but smaller than the naive comparison
+  suggests, and the confound is now isolated.** Holding graph-traversal
+  content constant (comparing Cosmos forward-only against local forward-only,
+  same LLM input either way), the index alone is worth **~2.1s / ~1.55x**
+  (5.98s -> 3.87s). Turning reverse edges back on costs ~0.75s back (richer
+  prompt, longer answer) — a real, separate, correctness-vs-latency tradeoff,
+  not a flaw in the index. Caveat: LLM decode itself has ~1.1s of run-to-run
+  variance on nominally identical calls, so both of those numbers are
+  single-sample estimates, not tight ones. **N=5+ repeats per config is the
+  first thing to do tomorrow if these numbers need to be defensible.**
+- **The production streaming endpoint (`/v1/ask/stream`) is now actually
+  fixed and using the local index.** It had its own hardcoded Cosmos queries
+  all day yesterday and today until this evening — none of the above ever
+  reached real users regardless of `index.mode`. Also switched from fake
+  streaming (buffer full completion, chunk the string) to real `stream=True`.
+  Measured `ttft` (time-to-first-token) ~0.48-0.50s vs the ~4-5s the old fake
+  path made users wait before seeing anything. Validated against the live
+  H100 vLLM instance, not a script. Commits `d7241e8` / `c55cfe0`.
+- **Two environment issues found and fixed on H100, unrelated to this
+  branch's code:** vLLM crashed on first start (`Flashinfer allreduce
+  workspace` assertion, root cause: missing `ninja` binary — `pip install
+  ninja` fixes it), and `--gpu-memory-utilization 0.92` (documented value)
+  OOM'd once the local index and GPU embedder loaded alongside it on this
+  box's 96GB-per-GPU pair — dropped to `0.85`, fits with ~11.5GB/GPU to
+  spare. `SETUP.md` should probably be updated with both.
+
+**Live state right now:** vLLM (port 8000) and `api.py` (port 8080,
+localhost-only) are both still running on the H100 box, left up in case
+testing continues tonight. **They cost real money idling** (~$30-40/hr for
+the VM per `GI_AND_DFLASH.md`'s own cost note) — worth killing before
+walking away for the night unless there's a reason to keep them warm.
 
 ---
 
@@ -78,7 +105,25 @@ pipeline from `0 PK + 30 vec -> 30 triples` to `12 PK + 30 vec -> 40 triples`.
 
 ---
 
-## Expected on H100
+## Measured on H100 (superseded the projection below)
+
+Full detail in `results/h100_comparison.md`. Same-process, same-question,
+warm-call, holding graph content constant so only retrieval speed differs:
+
+| | Cosmos | Local index |
+|---|---|---|
+| Retrieval | 2.06-2.26s | 0.003-0.03s |
+| LLM (DFlash) | 3.65s | 3.46s (same content) / 4.2-4.6s (w/ reverse edges) |
+| **End to end** | **5.98s** | **3.87s (same content, ~1.55x) / 4.62s (w/ reverse edges)** |
+
+The 1.8x projection below assumed the LLM stage would be unchanged. It isn't
+quite unchanged once reverse edges are on — see the top-of-file summary. The
+`entity_search`-gated-by-keyword-expansion effect predicted below is real but
+smaller than expected: measured at ~0.15-0.27s unaccounted time on H100
+(warm), not the ~0.84s estimated from GB10.
+
+<details>
+<summary>Original 2026-07-27 projection (kept for record)</summary>
 
 Against the README's co-located baseline:
 
@@ -90,6 +135,7 @@ Against the README's co-located baseline:
 
 It is not larger because `entity_search` on the web path is gated by the
 `_llm_expand_keywords` LLM call, not by Cosmos — see "Open questions" below.
+</details>
 
 ### Memory
 
@@ -103,10 +149,13 @@ Only the float vectors go on GPU. Triple strings, entity descriptions, food
 document text and the CSR arrays live in host RAM, and the VM has 1.9 TB.
 Because search is a single GEMV, pin the index to GPU 0 rather than sharding.
 
-**Unresolved:** `README.md` says the VM is `ND96isr_H100_v5` (2x H100 80GB)
-while `SETUP.md` and `BENCHMARKS.md` say `Standard_NC80adis_H100_v5`
-(2x H100 NVL 96GB). Numbers above assume the smaller. Confirm with
-`nvidia-smi` before sizing anything precisely.
+**Resolved:** `nvidia-smi` on the actual box confirms `SETUP.md`/`BENCHMARKS.md`
+were right — 2x H100 NVL, 96GB each, hostname `ams-agentic-h100`. `README.md`'s
+80GB figure is stale. This mattered in practice: `--gpu-memory-utilization 0.92`
+claims proportionally more absolute memory on the bigger pair than the 12.8GB
+headroom estimated above assumed, and the local index + GPU embedder OOM'd at
+0.92 with only 11MiB free. Fixed by dropping to `0.85` (~11.5GB/GPU free) — see
+top-of-file summary and `results/h100_comparison.md`.
 
 ---
 
@@ -178,44 +227,74 @@ edges, plus a correctness check. Watch for:
 
 ### 7. Web app
 
-`api.py::_dflash_answer` is converted. The two streaming paths are not — see
-below. Start vLLM per `SETUP.md` and confirm the local index loads alongside it
-without OOM.
+`api.py::_dflash_answer` (non-streaming `/v1/ask`) and `_stream_dflash_sse`
+(`/v1/ask/stream`, what the actual UI uses) are both converted as of
+2026-07-28 evening. `_stream_gi_sse` was dead code (no route referenced it)
+and got deleted rather than converted. Start vLLM per `SETUP.md` (remember
+`--gpu-memory-utilization 0.85`, not the documented `0.92`, and make sure
+`ninja` is on `PATH` — see environment notes) and confirm the local index
+loads alongside it without OOM.
+
+```bash
+python api.py --config my.yaml --host localhost --port 8080
+curl -N -X POST http://localhost:8080/v1/ask/stream -H 'Content-Type: application/json' \
+  -d '{"question": "..."}'
+```
+
+Watch the `done` event's `timings.ttft` — should be well under 1s. If it
+equals `timings.llm`, streaming silently broke and reverted to buffering.
 
 ---
 
 ## Not done
 
-**`_stream_dflash_sse` and `_stream_gi_sse` in `api.py`** still carry their own
-copies of the retrieval logic and still query Cosmos directly. They interleave
-SSE progress events between stages, so consolidating them changes the
-granularity of what the web UI shows mid-query. That needs the UI exercised
-against a running LLM to verify, which was not possible on GB10 (no LLM
-served). Until they are converted, the streaming web paths get no speedup.
-
-**No end-to-end LLM measurement on GB10.** Nothing was served on `:8000`, so
-only retrieval stages were measured. Every optimization here is retrieval-side,
-so this does not affect the result, but the 6.40s to 4.6s figure is a
-projection until tomorrow.
+**No N-repeat measurement.** Every H100 number in this file and
+`results/h100_comparison.md` is a single sample or a 2-3 run average, and the
+LLM stage alone showed ~1.1s of spread across nominally identical warm calls.
+The retrieval numbers are solid (sub-10ms is sub-10ms, noise doesn't matter
+at that scale); the end-to-end and reverse-edges-cost numbers are not tight
+enough to defend as anything but "roughly."
 
 **Snapshot freshness has no guard.** If the Graph Index is rebuilt in Cosmos,
 the local snapshot silently goes stale. `manifest.json` records `built_at` but
 nothing checks it.
 
+**Answer quality with reverse edges was never evaluated.** Reverse edges make
+answers longer and slower (measured). Whether they're actually *better* — not
+just different — was never checked. This is the open question that actually
+matters for whether `reverse_edges: true` should stay the default.
+
 ---
 
 ## Open questions
 
-**The keyword-expansion LLM call is now the retrieval bottleneck.** On the web
-path `entity_search` is `asyncio.gather(_es(), _llm_expand_keywords(...))`, so
-its 0.84s is gated by an LLM round trip, not by Cosmos. Local search makes the
-vector half 4ms and the LLM half unchanged. Dropping that call would take the
-projection from ~4.6s to ~3.7s, and local BM25 may make it unnecessary since it
-existed to compensate for weak keyword matching. Worth A/B testing tomorrow.
+**The keyword-expansion LLM call costs less than expected but isn't free.**
+Measured on H100 (warm vLLM) at ~0.15-0.27s unaccounted time per
+`_dflash_answer`/`_stream_dflash_sse` call — smaller than GB10's 0.84s
+estimate because vLLM itself is fast and warm at this small task, but still a
+second LLM round trip per question. Local BM25 may make it droppable now that
+it's not compensating for weak Cosmos keyword matching. Worth A/B testing.
 
 **`max_hops` can now be raised.** It is pinned at 1 in `my.yaml` because each
 extra hop cost another wave of 10 Cosmos queries. Against CSR a hop is
 microseconds. Try 2 or 3 and see whether answer quality improves.
+
+**DFlash/LLM-stage tuning, not yet done (see chat for full reasoning):**
+- Pull real acceptance-rate metrics from vLLM's `/metrics` before touching
+  `--spec-tokens` — `GI_AND_DFLASH.md`'s "3-4 of 5 accepted" is a general
+  claim, not measured on this model/prompt distribution.
+- Tighten the output-length prompt (`DFLASH_ANSWER_PROMPT` in `api.py`
+  currently asks for "8-10 products" with full descriptions). Output length
+  is the single biggest lever on the LLM stage's wall-clock time and it's a
+  one-line prompt edit, not an infra change — try 5 products / 1-2 sentence
+  justifications and measure the LLM-stage delta.
+- Check whether vLLM 0.23.0 now supports fp8 KV-cache (SETUP.md's
+  troubleshooting notes say it was removed as unsupported with fp8
+  checkpoints in an earlier version) — would claw back some of the memory
+  headroom lost going from `0.92` to `0.85`.
+- Batching (`--max-num-seqs`, continuous batching) is a throughput lever for
+  concurrent users, not a single-request latency lever — don't expect it to
+  move the numbers in this file, which are all single-request timings.
 
 **Whether to keep Cosmos in the loop at all for reads.** Currently it stays as
 system of record and the snapshot is rebuilt manually. An incremental update
@@ -276,3 +355,27 @@ Things that cost time on GB10 and will likely recur:
 - GitHub push from GB10 required an SSH key. The OAuth device flow fails with
   "you don't have permissions to access this resource" when the browser is
   signed into an NVIDIA Enterprise Managed User account.
+
+On H100 (`ams-agentic-h100`, 2x H100 NVL 96GB, box already had a `.venv`
+symlinked to a sibling repo's venv with everything but `pyarrow`/`pandas`/
+`rank_bm25` preinstalled — much less setup friction than GB10):
+
+- **vLLM crash on first start**: `AssertionError: Flashinfer allreduce
+  workspace must be initialized when using flashinfer`. Root cause, several
+  layers down in the traceback: `ninja` binary missing, so FlashInfer's JIT
+  compilation of its allreduce workspace and GDN prefill kernels silently
+  fails (logged as a warning, not an error) and something downstream asserts
+  on it later. Fix: `pip install ninja`, and make sure it's actually on
+  `PATH` for the vLLM process (`pip install` puts the binary in
+  `.venv/bin/ninja`, which isn't on `PATH` unless the venv is activated or
+  you prepend it explicitly — a plain `.venv/bin/python -m pip install ninja`
+  followed by `.venv/bin/vllm serve ...` without `PATH` adjustment will still
+  fail the same way).
+- **`git remote -v` on this box printed a live GitHub PAT in plaintext** in
+  the origin URL. Flagged to revoke it; did not reuse it. If pushing from
+  H100 directly is ever wanted, reconfigure the remote with SSH or a
+  credential helper first, the same fix used on GB10.
+- The repo checkout at `/home/azureuser/AgenticRetrieval-DFlash` already had
+  `az` authenticated and a working `.venv` — if this box gets reimaged or a
+  fresh clone is needed, budget time for all the GB10 environment notes above
+  too, since none of that is guaranteed to carry over.
