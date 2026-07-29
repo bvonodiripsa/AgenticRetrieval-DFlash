@@ -413,13 +413,22 @@ async def lifespan(app: FastAPI):
     questions = _load_questions_from_cfg(cfg)
     log.info("Backend loaded from %s: %d questions", cfg_path, len(questions))
 
-    # Warm up the embedder (loads the in-process model, or checks the HTTP
-    # embedding endpoint). Best-effort — don't fail startup if it errors.
-    log.info("Warming up embedder...")
-    try:
-        await engine._embedder.embed("warmup")
-    except Exception as e:
-        log.warning("Embedding warmup failed: %s", e)
+    # Warm up the embedder and the retrieval backend concurrently. Best-effort
+    # — don't fail startup if either errors, so an unreachable Cosmos or a
+    # missing snapshot doesn't take the whole app down; failures surface on
+    # first request instead. Warming the backend here specifically matters
+    # for index.mode: local — loading the snapshot (numpy -> GPU, BM25 build)
+    # takes a few seconds, and without this it happens inside whichever
+    # request arrives first instead of before the app starts accepting them.
+    log.info("Warming up embedder + retrieval backend...")
+    results = await asyncio.gather(
+        engine._embedder.embed("warmup"),
+        engine._get_backend(),
+        return_exceptions=True,
+    )
+    for label, result in zip(("embedder", "backend"), results):
+        if isinstance(result, Exception):
+            log.warning("%s warmup failed: %s", label, result)
 
     app.state.engine = engine
     app.state.questions = questions

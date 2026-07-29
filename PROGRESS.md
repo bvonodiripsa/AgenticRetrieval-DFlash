@@ -1,11 +1,42 @@
 # Progress and H100 handoff
 
 Branch `feat/gpu-graph-index`. Written 2026-07-27 after a day on the GB10 dev
-box; **updated 2026-07-28 with a full day of real H100 validation** — see
-`results/h100_comparison.md` for full detail, this file is now the short
-version + what's left.
+box; updated 2026-07-28 with a full day of real H100 validation (see
+`results/h100_comparison.md`); **updated again 2026-07-29 with a second GB10
+pass** — three items from "Not done"/"Open questions" below got closed out
+before returning to H100 benchmarking (see "2026-07-29: second GB10 pass").
 
-## Where things actually stand (end of 2026-07-28)
+## Where things actually stand (end of 2026-07-29)
+
+- **Graph traversal had a second, bigger bug than the one fixed on
+  2026-07-27, found while investigating why `max_hops` seemed to do nothing.**
+  With `reverse_edges: true`, seed entities found by vector search are
+  frequently claims/tags ("post-workout", "high protein snack") rather than
+  product names — they were discovered *as objects*. The hop-2 frontier logic
+  only ever looked at `t["object"]`, which for an object-discovered seed is
+  just the seed itself (already visited), so hop 2 silently found nothing,
+  on every question, regardless of `max_hops`. Fixed to consider both triple
+  endpoints as candidate frontier. Measured effect: **PK triples per query
+  ~11 -> ~184 (16x)** for +0.3ms of `graph_traversal` (still ~20ms total,
+  still dominated by the vector search, not the traversal). Validated
+  end-to-end against the real streaming endpoint: the "vegan breakfast
+  options" query used as a running example throughout this doc went from
+  `0 PK + 30 vec` in the original baseline to `160 PK + 30 vec` today. See
+  "2026-07-29: second GB10 pass" below.
+- **The other two 2026-07-28 "Not done" items are also closed**: a
+  background hot-swap so `index.mode: local` never blocks a request on
+  loading the snapshot, and a snapshot-freshness check against live Cosmos.
+  Both are local-only changes, fully testable without H100 or an LLM — see
+  below.
+- **H100 state as of the end of 2026-07-28** (unchanged today, GB10-only
+  session): retrieval optimization fully validated on real hardware
+  (2.06s -> 0.003s), streaming endpoint fixed to use the local index and
+  real token streaming (ttft ~0.48-0.50s). vLLM and `api.py` were shut down
+  on the H100 box at the end of that session to avoid idle cost — **nothing
+  is currently running on H100**; it needs to be started again before the
+  next round of H100 benchmarking, which should also pull in today's two
+  traversal/retrieval fixes (they live in `retrieval.py`, shared by both
+  backends).
 
 - **Retrieval optimization: fully validated, real hardware, real load.**
   2.06s (Cosmos) -> 0.003s (local index), matching the GB10 prediction almost
@@ -159,6 +190,129 @@ top-of-file summary and `results/h100_comparison.md`.
 
 ---
 
+## 2026-07-29: second GB10 pass
+
+Picked up three items flagged "not done" on 2026-07-28, all deliberately
+scoped to not need H100 or a live LLM:
+
+### 1. Graph traversal frontier bug (the big one)
+
+`retrieval.py::retrieve()`'s multi-hop loop had two bugs, found by adding
+`scripts/sweep_max_hops.py` (retrieval-only, no LLM) and seeing `max_hops`
+1 through 5 produce *identical* PK-triple counts — which should be
+impossible if hops beyond 1 were doing anything at all.
+
+- **Bug A:** the "compute next hop's frontier" step only ran when
+  `hop == 0`. So `max_hops > 2` was a silent no-op regardless of data: by
+  hop 2 the frontier (`names`) was stuck at whatever hop 0 computed, every
+  name in it was already `visited`, `batch` came back empty, and the loop
+  always broke there.
+- **Bug B, the one that actually mattered:** even the one hop that *did*
+  run (hop 0 -> hop 1) used `t["object"]` as the next frontier. That's only
+  correct if the seed was matched as a triple's *subject*. With
+  `reverse_edges: true` (the whole point of the local index, since Cosmos
+  can't serve reverse edges), seed entities are routinely matched as an
+  *object* — inspecting an actual run showed the seed entities were things
+  like `"post-workout"` and `"high protein snack"` (claims/tags), and the
+  hop-0 triples found were `<product> -[has_claim]-> <seed>`. The object
+  *is* the seed itself; the new, useful node is the *subject* (the actual
+  product). Every hop-2 attempt was discarding exactly the nodes worth
+  exploring.
+
+  Fix: collect both `t["subject"]` and `t["object"]` per triple, drop
+  whatever's already visited, use the rest as the next frontier.
+
+**Measured effect** (`scripts/sweep_max_hops.py`, 3 questions x 3 runs,
+local index, GB10):
+
+| max_hops | PK triples (avg) | graph_traversal |
+|---|---|---|
+| 1 (old default) | 11.3 | 13.3ms |
+| 2 | **183.7** | 13.7ms |
+| 3-5 | 183.7 (plateaus — `max_triples: 40` caps the traversal early) | ~13.6ms |
+
+16x more grounding triples found per query for +0.3ms. `my.yaml` and
+`config.yaml.example` now default to `max_hops: 2` (3+ currently plateaus
+because of the `max_triples` cap, not because there's nothing further to
+find — raising `max_triples` too would be the next experiment if `hops: 3+`
+turns out to matter for answer quality).
+
+Validated three ways: `scripts/sweep_max_hops.py` (aggregate), a targeted
+inspection script that printed the actual seed entities / hop-0 triples /
+would-be hop-1 frontier for one question (confirmed the claims-not-products
+pattern directly, not just inferred it from counts), and the live streaming
+endpoint (`/v1/ask/stream`) on the "vegan breakfast options" question:
+`0 PK + 30 vec` (2026-07-27 baseline) -> `160 PK + 30 vec` (today).
+`benchmark_compare.py --skip-cosmos` still shows the expected
+`0 PK` on the forward-only row (parity with Cosmos, unchanged) and now
+`193 PK` on the forward+reverse row (was ~11-12 before today).
+
+### 2. Background hot-swap for `index.mode: local`
+
+Previously `_get_backend()` always blocked on `LocalGraphIndex.__init__`
+(numpy -> GPU, BM25 build over 58k food docs), whether or not the snapshot
+already existed. Two different problems collapsed into "hot-swap":
+
+- **Snapshot already on disk** (the common case): the load only takes
+  ~2.5-3s, but it happened inside whichever request arrived first, not
+  before the server started accepting traffic. Fixed by calling
+  `engine._get_backend()` eagerly in `api.py`'s `lifespan()`, concurrently
+  with the existing embedder warmup (`asyncio.gather`). Verified in the
+  startup log: `[gi_index] loaded in ...` now prints *before*
+  `Application startup complete`, so the cost is off the request path
+  entirely.
+- **Snapshot missing** (fresh deployment, or Cosmos rebuilt and nobody's
+  re-exported yet): blocking here means blocking on a 7-10 minute Cosmos
+  export. Fixed properly this time: `_get_backend()` returns a
+  `CosmosBackend` immediately (construction is lazy, no network call yet)
+  and kicks off `scripts/build_local_index.py`'s export (now refactored
+  into an importable `build()` function) as a background `asyncio.Task`.
+  Once it finishes, the local index load runs via `asyncio.to_thread` (so
+  the blocking numpy/GPU work doesn't stall the event loop while
+  Cosmos-backed requests are still being served) and swaps
+  `self._backend` to `LocalBackend`. New config: `index.auto_build`
+  (default `true`; set `false` to fail loudly instead of an unattended
+  multi-minute export on first use).
+
+  Deliberately *not* done: falling back to Cosmos when the snapshot is merely
+  *stale* rather than *missing*. Reasoning: Cosmos's own cold-connection cost
+  was measured earlier in this project at up to ~14s (`results/baseline_gb10.md`),
+  worse than the ~3s local load it would be avoiding — so auto-falling-back-
+  to-Cosmos would only be a net win for the "doesn't exist yet" case, which
+  is the case this implements. Confirmed the mechanism directly (not just by
+  reading the code): pointed `index.snapshot_path` at an empty scratch
+  directory, called `_get_backend()`, confirmed it returned a `CosmosBackend`
+  in 0.05s with a real background export task running (visible in the Cosmos
+  SDK's request logs), cancelled the task after 8s once the mechanism was
+  confirmed rather than waiting out the full rebuild (which would have just
+  re-produced the existing, already-validated snapshot).
+
+### 3. Snapshot freshness guard
+
+New `snapshot_freshness.py`: `check_freshness(cfg, snapshot_path)` compares
+`manifest.json`'s `built_at` and per-container `counts` against two cheap
+live Cosmos aggregates — `SELECT VALUE COUNT(1) FROM c` and
+`SELECT VALUE MAX(c._ts) FROM c`. Either a count mismatch or a newer write
+than `built_at` marks the snapshot stale. `scripts/check_snapshot_freshness.py`
+is a standalone CLI (exit 1 if stale, for cron/monitoring); `_get_backend()`
+also fires it as a non-blocking background task whenever it loads an
+existing local backend, logging a warning rather than doing anything
+automatic — staleness here is a signal for an operator, not a rebuild
+trigger, since the failure modes of "hallucinate outdated food data
+silently" and "rebuild unprompted based on a maybe-buggy heuristic" both
+seem worse than a log line.
+
+Tested against the real GB10 snapshot and live Cosmos: correctly reports
+"Fresh" (entities/triples counts match, no newer writes since
+`built_at: 2026-07-27T17:09:15-0700`), and correctly flags `food` as
+*unrecorded* — a real, pre-existing gap where the manifest's `counts` dict
+only has `entities`/`triples` even though `food.vecs.npy` exists (the
+export was apparently run in two passes on GB10). Also tested the stale
+path with a deliberately-wrong count injected into a scratch copy of the
+manifest: correctly flagged `STALE`, exit code 1.
+
+---
+
 ## H100 runbook
 
 ### 1. Get the branch
@@ -189,7 +343,13 @@ index:
   device: "cuda"
   enable_bm25: true
   reverse_edges: true
+  auto_build: true        # added 2026-07-29 — see "second GB10 pass"
+  check_freshness: true    # added 2026-07-29
 ```
+
+Also pull `query.max_hops: 2` from `config.yaml.example` (was `1`) — it does
+nothing without the `retrieval.py` frontier fix also landing, which it does
+as part of this same branch update.
 
 ### 4. Build the snapshot
 
@@ -255,14 +415,19 @@ The retrieval numbers are solid (sub-10ms is sub-10ms, noise doesn't matter
 at that scale); the end-to-end and reverse-edges-cost numbers are not tight
 enough to defend as anything but "roughly."
 
-**Snapshot freshness has no guard.** If the Graph Index is rebuilt in Cosmos,
-the local snapshot silently goes stale. `manifest.json` records `built_at` but
-nothing checks it.
+**~~Snapshot freshness has no guard.~~ Done 2026-07-29** — see
+`snapshot_freshness.py` / "second GB10 pass" above.
 
 **Answer quality with reverse edges was never evaluated.** Reverse edges make
 answers longer and slower (measured). Whether they're actually *better* — not
 just different — was never checked. This is the open question that actually
-matters for whether `reverse_edges: true` should stay the default.
+matters for whether `reverse_edges: true` should stay the default. **More
+important after today's frontier fix**: the H100 reverse-edges numbers in
+this file were measured against the *buggy* traversal (~11-12 PK triples).
+With the fix, the same questions now surface ~16x more PK triples before the
+`max_triples: 40` cap trims them, which changes which 40 triples make it into
+the prompt. The H100 reverse-edges-cost numbers should be re-measured against
+the fixed traversal, not assumed unchanged.
 
 ---
 
@@ -275,9 +440,11 @@ estimate because vLLM itself is fast and warm at this small task, but still a
 second LLM round trip per question. Local BM25 may make it droppable now that
 it's not compensating for weak Cosmos keyword matching. Worth A/B testing.
 
-**`max_hops` can now be raised.** It is pinned at 1 in `my.yaml` because each
-extra hop cost another wave of 10 Cosmos queries. Against CSR a hop is
-microseconds. Try 2 or 3 and see whether answer quality improves.
+**~~`max_hops` can now be raised.~~ Done 2026-07-29** — raising it alone did
+nothing until the frontier bug above was fixed; with the fix, `max_hops: 2`
+is now the default and measured to matter (16x more PK triples). Whether it
+should go to 3+ depends on also raising `max_triples` past 40, since that's
+what's capping the benefit today — not yet tried.
 
 **DFlash/LLM-stage tuning, not yet done (see chat for full reasoning):**
 - Pull real acceptance-rate metrics from vLLM's `/metrics` before touching
@@ -327,15 +494,12 @@ above), and check whether `divdet-sweden`'s GI containers are still capped at
 autoscale-1000. Needs a real extraction+upload run to validate the time saved
 — an 8h+ commitment, so deliberately deferred rather than done blind.
 
-**Separately, a background hot-swap for cold start.** `index.mode: local`
-currently blocks the first query on the full ~10min snapshot load. Proposed
-fix: `_get_backend()` returns a `CosmosBackend` immediately, loads the local
-index in a background `asyncio.create_task`, and swaps `self._backend` to
-`LocalBackend` the moment it's ready — no downtime, no blocked first request.
-Small, safe, testable without an 8h run. The same swap-on-ready mechanism is
-also what a future blue-green full-rebuild (new extraction run swapped in
-without downtime) would use, just at a much longer timescale. Not implemented
-yet — deliberately deferred so today stays focused on the H100 comparison.
+**~~Separately, a background hot-swap for cold start.~~ Done 2026-07-29** —
+see "second GB10 pass" above. The same swap-on-ready mechanism
+(`_build_and_swap` in `gi_query.py`) is also what a future blue-green
+full-rebuild (new extraction run swapped in without downtime) could reuse,
+just triggered manually/on a schedule rather than only when the snapshot is
+missing.
 
 ---
 

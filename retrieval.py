@@ -180,9 +180,28 @@ async def retrieve(backend, q_emb, cfg: dict, *, keywords: list[str] | None = No
         if not batch:
             break
         visited.update(batch)
-        pk_triples += await backend.triples_for(batch)
-        if hop == 0 and len(pk_triples) < max_triples:
-            names = [t["object"] for t in pk_triples if t["object"] not in visited][:5]
+        new_triples = await backend.triples_for(batch)
+        pk_triples += new_triples
+        if len(pk_triples) >= max_triples:
+            break
+        # Frontier for the *next* hop is this hop's own new nodes, not the
+        # hop-0 objects reused forever. Previously this only ran when
+        # hop == 0, so any max_hops > 2 was silently a no-op: `names` never
+        # advanced past hop 1's frontier, and by hop 2 every name in it was
+        # already in `visited`, so `batch` came back empty and the loop
+        # always broke there regardless of how high max_hops was set.
+        #
+        # It also only looked at `t["object"]`, which is wrong for anything
+        # discovered through a reverse edge: with reverse_edges on, seed
+        # entities are frequently *objects* (claims/tags like "post-workout",
+        # "high protein snack") rather than product names, so the triples
+        # found are `<product> -[has_claim]-> <seed>` -- the object *is* the
+        # seed itself (already visited), and the actually-new node worth
+        # exploring next is the subject (the product). Collecting both
+        # endpoints and dropping whichever one is already visited handles
+        # forward- and reverse-discovered triples the same way.
+        frontier = {t.get("subject", "") for t in new_triples} | {t.get("object", "") for t in new_triples}
+        names = [n for n in frontier if n and n not in visited][:5]
 
     vec_triples = await backend.search_triples(q_emb, 30)
 

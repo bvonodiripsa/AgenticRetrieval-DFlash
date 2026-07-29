@@ -148,6 +148,47 @@ def build_csr(out_dir):
           f"{len(f_indices):,} forward + {len(r_indices):,} reverse edges", flush=True)
 
 
+async def build(cosmos_cfg: dict, out_dir: str, containers: list[str] | None = None) -> dict:
+    """Export `containers` (default entities,triples,food) to `out_dir` and return the manifest.
+
+    Callable from a running server (e.g. the background auto-build path in
+    `gi_query.py`), not just the CLI below — takes the already-parsed
+    `cosmos:` config dict rather than a file path.
+    """
+    containers = containers or ["entities", "triples", "food"]
+    os.makedirs(out_dir, exist_ok=True)
+
+    cred = AzureCliCredential(tenant_id=cosmos_cfg["tenant_id"])
+    client = CosmosClient(cosmos_cfg["uri"], credential=cred)
+    db = client.get_database_client(cosmos_cfg["database_name"])
+
+    print(f"Exporting {cosmos_cfg['uri']} -> {out_dir}", flush=True)
+    t0 = time.perf_counter()
+    counts = {}
+    try:
+        for name in containers:
+            counts[name] = await export_container(db, name, out_dir)
+    finally:
+        await client.close()
+        await cred.close()
+
+    if "triples" in counts:
+        build_csr(out_dir)
+
+    manifest = {
+        "source": cosmos_cfg["uri"],
+        "database": cosmos_cfg["database_name"],
+        "dim": DIM,
+        "counts": counts,
+        "built_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "elapsed_min": round((time.perf_counter() - t0) / 60, 2),
+    }
+    with open(os.path.join(out_dir, "manifest.json"), "w") as fh:
+        json.dump(manifest, fh, indent=2)
+    print(f"\nDone in {manifest['elapsed_min']:.1f} min -> {out_dir}", flush=True)
+    return manifest
+
+
 async def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", default="my.yaml")
@@ -155,35 +196,8 @@ async def main():
     ap.add_argument("--containers", default="entities,triples,food")
     args = ap.parse_args()
 
-    cfg = yaml.safe_load(open(args.config))["cosmos"]
-    os.makedirs(args.out, exist_ok=True)
-
-    cred = AzureCliCredential(tenant_id=cfg["tenant_id"])
-    client = CosmosClient(cfg["uri"], credential=cred)
-    db = client.get_database_client(cfg["database_name"])
-
-    print(f"Exporting {cfg['uri']} -> {args.out}", flush=True)
-    t0 = time.perf_counter()
-    counts = {}
-    for name in args.containers.split(","):
-        counts[name] = await export_container(db, name, args.out)
-    await client.close()
-    await cred.close()
-
-    if "triples" in counts:
-        build_csr(args.out)
-
-    manifest = {
-        "source": cfg["uri"],
-        "database": cfg["database_name"],
-        "dim": DIM,
-        "counts": counts,
-        "built_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-        "elapsed_min": round((time.perf_counter() - t0) / 60, 2),
-    }
-    with open(os.path.join(args.out, "manifest.json"), "w") as fh:
-        json.dump(manifest, fh, indent=2)
-    print(f"\nDone in {manifest['elapsed_min']:.1f} min -> {args.out}", flush=True)
+    cosmos_cfg = yaml.safe_load(open(args.config))["cosmos"]
+    await build(cosmos_cfg, args.out, args.containers.split(","))
 
 
 if __name__ == "__main__":

@@ -144,6 +144,17 @@ index:
   # this cheaply because `o` is not the partition key, so forward-only
   # traversal returns nothing for ingredient-level seed entities.
   reverse_edges: true
+  # If no snapshot exists yet at snapshot_path, serve from Cosmos immediately
+  # and build one in the background (~7-10 min), swapping to it the moment
+  # it's ready. Set false to fail loudly instead of an unattended multi-minute
+  # Cosmos export on first use.
+  auto_build: true
+  # On every backend load, fire a background (non-blocking) check comparing
+  # the snapshot's manifest against live Cosmos counts/timestamps and log a
+  # warning if it's stale. Does not trigger an automatic rebuild -- staleness
+  # here is a signal for an operator, not a rebuild trigger. See
+  # snapshot_freshness.py / scripts/check_snapshot_freshness.py.
+  check_freshness: true
 
 embedding:
   # embed_endpoint / embed_model / api_format are used by the upload tool only.
@@ -180,7 +191,11 @@ build:
 
 query:
   seed_entities_k: 10
-  max_hops: 1
+  # 2+ hops only helps if retrieval.py's traversal considers both triple
+  # endpoints as the next frontier (fixed 2026-07-29) -- with reverse edges
+  # on, seed entities are often claims/tags, and hop 1 is what reaches the
+  # actual products carrying them. See scripts/sweep_max_hops.py.
+  max_hops: 2
   max_triples: 40
   max_source_chunks: 15
   vector_augment_k: 12

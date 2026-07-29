@@ -108,3 +108,35 @@ copies of the retrieval logic. They interleave SSE progress events between
 stages, so converting them changes the granularity of the progress messages the
 web UI shows. Worth doing, but it needs the UI exercised against a running LLM
 to verify.
+
+**Resolved 2026-07-28**: `_stream_dflash_sse` now uses `retrieve()` and real
+token streaming; `_stream_gi_sse` was dead code (no route referenced it) and
+was deleted rather than converted. See `PROGRESS.md` and
+`results/h100_comparison.md`.
+
+## Update 2026-07-29: the traversal fix above was incomplete
+
+The `12 PK + 30 vec` numbers in "The traversal bug is fixed" above came from
+a **second, bigger bug** in `retrieval.py` that wasn't found until later:
+the multi-hop frontier only ever advanced past hop 0 by looking at
+`t["object"]`, which is wrong whenever the seed was matched as a triple's
+*object* — routinely true with `reverse_edges: true`, since seed entities
+are often claims/tags ("post-workout", "high protein snack") rather than
+product names. Every hop-2 attempt was discarding exactly the new,
+useful nodes (the actual products) and keeping only the seed itself
+(already visited), so `12 PK` per query understated what the local index
+could actually find by roughly 16x once fixed.
+
+Re-measured with `scripts/sweep_max_hops.py` (3 questions x 3 runs):
+
+| max_hops | PK triples (avg) | graph_traversal |
+|---|---|---|
+| 1 | 11.3 | 13.3ms |
+| **2 (new default)** | **183.7** | 13.7ms |
+| 3-5 | 183.7 (plateaus on `max_triples: 40`) | ~13.6ms |
+
+`polysorbate 20`'s 0 -> 192 in the table above was already correct (it was
+discovered as a *subject*, forward edges alone reach it); what this fix
+adds is everything discovered only through claim/tag-style, object-matched
+seeds, which forward-only and the original reverse-edges fix both missed.
+Full detail in `PROGRESS.md`'s "2026-07-29: second GB10 pass".

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import time
 from typing import Any
@@ -27,6 +28,8 @@ from openai import AsyncOpenAI
 from prompts_gi_food import GRAPHRAG_ANSWER_PROMPT, FALLBACK_ANSWER_PROMPT
 from gi_builder import EmbedClient, embed_sync, load_config
 from retrieval import CosmosBackend, retrieve
+
+log = logging.getLogger("food_dflash.gi_query")
 
 
 def build_llm_call_kwargs(llm_cfg: dict, model: str) -> dict:
@@ -91,6 +94,8 @@ class GIQueryEngine:
         self._triples_pk_field = self._gi_cfg.get("triples_partition_key_path", "/s").lstrip("/")
         self._query_cfg = cfg.get("query", {})
         self._backend = None
+        self._freshness_task: asyncio.Task | None = None
+        self._local_build_task: asyncio.Task | None = None
 
     async def _get_backend(self):
         """Retrieval backend selected by `index.mode` in the config.
@@ -98,29 +103,96 @@ class GIQueryEngine:
         `local` serves the whole Graph Index from GPU memory; `cosmos` keeps
         the original remote queries. Both satisfy the same interface, so the
         rest of the pipeline is unaffected.
+
+        If the local snapshot already exists on disk, it loads directly (a
+        few seconds) -- call this once eagerly during server startup (see
+        `api.py`'s `lifespan`) so that cost lands before the first real
+        request, not during it. If it doesn't exist yet, this does *not*
+        block on building it (`build_local_index.py`'s export took 7-10
+        minutes even co-located with Cosmos): it serves from Cosmos
+        immediately and kicks off the export + load as a background task,
+        swapping `self._backend` to the local index the moment it's ready.
+        Set `index.auto_build: false` to disable that and fail loudly
+        instead, if an unattended multi-minute Cosmos export on first use is
+        not wanted.
         """
         if self._backend is not None:
             return self._backend
         icfg = self._cfg.get("index", {})
-        if str(icfg.get("mode", "cosmos")).lower() == "local":
-            from gi_index import get_index
-            from retrieval import LocalBackend
-            index = get_index(
-                icfg.get("snapshot_path", "data/local_index"),
-                device=icfg.get("device", "cuda"),
-                enable_bm25=bool(icfg.get("enable_bm25", True)),
+        if str(icfg.get("mode", "cosmos")).lower() != "local":
+            self._backend = await self._make_cosmos_backend()
+            return self._backend
+
+        snapshot_path = icfg.get("snapshot_path", "data/local_index")
+        manifest_path = os.path.join(snapshot_path, "manifest.json")
+
+        if os.path.exists(manifest_path):
+            self._backend = self._make_local_backend(icfg)
+            if bool(icfg.get("check_freshness", True)) and self._freshness_task is None:
+                self._freshness_task = asyncio.create_task(self._log_freshness(snapshot_path))
+            return self._backend
+
+        if not bool(icfg.get("auto_build", True)):
+            raise RuntimeError(
+                f"index.mode is 'local' but no snapshot at {manifest_path} and "
+                f"index.auto_build is false. Run scripts/build_local_index.py first."
             )
-            self._backend = LocalBackend(index, reverse_edges=bool(icfg.get("reverse_edges", True)))
-        else:
-            cosmos = await self._get_cosmos()
-            db = cosmos.get_database_client(self._db_name)
-            self._backend = CosmosBackend(
-                db.get_container_client(self._gi_cfg.get("entities_container", "entities")),
-                db.get_container_client(self._gi_cfg.get("triples_container", "triples")),
-                db.get_container_client("food"),
-                self._triples_pk_field,
-            )
+
+        log.warning("No local snapshot at %s -- serving from Cosmos while building "
+                    "one in the background (this takes several minutes)", manifest_path)
+        self._backend = await self._make_cosmos_backend()
+        if self._local_build_task is None:
+            self._local_build_task = asyncio.create_task(self._build_and_swap(icfg, snapshot_path))
         return self._backend
+
+    async def _make_cosmos_backend(self) -> CosmosBackend:
+        cosmos = await self._get_cosmos()
+        db = cosmos.get_database_client(self._db_name)
+        return CosmosBackend(
+            db.get_container_client(self._gi_cfg.get("entities_container", "entities")),
+            db.get_container_client(self._gi_cfg.get("triples_container", "triples")),
+            db.get_container_client("food"),
+            self._triples_pk_field,
+        )
+
+    def _make_local_backend(self, icfg: dict):
+        from gi_index import get_index
+        from retrieval import LocalBackend
+        index = get_index(
+            icfg.get("snapshot_path", "data/local_index"),
+            device=icfg.get("device", "cuda"),
+            enable_bm25=bool(icfg.get("enable_bm25", True)),
+        )
+        return LocalBackend(index, reverse_edges=bool(icfg.get("reverse_edges", True)))
+
+    async def _log_freshness(self, snapshot_path: str):
+        """Fire-and-forget: compare the snapshot against live Cosmos and log. Never
+        blocks serving and never swaps backends on its own -- staleness here is a
+        signal for an operator, not an automatic rebuild trigger."""
+        try:
+            from snapshot_freshness import check_freshness
+            report = await check_freshness(self._cfg, snapshot_path)
+            if report["stale"]:
+                log.warning("Local snapshot at %s is STALE vs Cosmos: %s", snapshot_path, report)
+            else:
+                log.info("Local snapshot at %s is fresh (built %s)", snapshot_path, report.get("built_at"))
+        except Exception as e:
+            log.warning("Freshness check failed (%s); continuing to serve existing snapshot", e)
+
+    async def _build_and_swap(self, icfg: dict, snapshot_path: str):
+        """Background task: export Cosmos -> snapshot, load it, then swap `self._backend`."""
+        t0 = time.time()
+        try:
+            from scripts.build_local_index import build as build_snapshot
+            await build_snapshot(self._cfg["cosmos"], snapshot_path)
+            # numpy/torch/BM25 loading is blocking CPU work -- keep it off the
+            # event loop so in-flight Cosmos-backed requests aren't stalled.
+            backend = await asyncio.to_thread(self._make_local_backend, icfg)
+            self._backend = backend
+            log.info("Swapped to local Graph Index backend after %.1f min background build",
+                     (time.time() - t0) / 60)
+        except Exception as e:
+            log.warning("Background local-index build failed (%s); staying on Cosmos", e)
 
     async def _get_cosmos(self) -> CosmosClient:
         if self._cosmos is None:
