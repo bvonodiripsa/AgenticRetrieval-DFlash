@@ -116,6 +116,33 @@ single sample sitting inside that noise band, not a tight estimate. A
 defensible number for a writeup would need ~5 repeats per config for a mean
 and stddev, not one sample each.
 
+## Streaming endpoint fix, validated against live vLLM
+
+`/v1/ask/stream` (the actual web UI path) had never been migrated to
+`retrieval.py` — it carried its own ~150-line copy of hardcoded Cosmos
+queries, so `index.mode: local` had zero effect on it regardless of anything
+above. It also wasn't really streaming: `stream=True` was never passed to
+vLLM, so the SSE endpoint waited for the full completion and fake-chunked the
+already-complete string into 80-char pieces.
+
+Both fixed (commit `d7241e8`) and tested against the live H100 vLLM instance
+(same one used for everything else above):
+
+```
+{"embed": 0.062, "entity_search": 0.001, "graph_traversal": 0.002,
+ "source_fetch": 0.284, "rerank": 0.00001, "ttft": 0.482,
+ "llm": 4.041, "total": 4.518}
+```
+
+`ttft` (new field, time-to-first-token) lands at ~0.48-0.50s across two
+different questions. Under the old fake-streaming code the user would have
+waited the full `llm` time (4-5s) before seeing anything — this is roughly an
+8.5x improvement in perceived latency, and it's now the actual production
+code path, not a benchmark script. Retrieval stages match the local-index
+numbers measured everywhere else in this doc, confirming the streaming path
+now genuinely uses the local index rather than silently falling back to
+Cosmos regardless of config.
+
 ## Recommended next step
 
 Re-run the three-way comparison above with N=5+ repeats per config to get
