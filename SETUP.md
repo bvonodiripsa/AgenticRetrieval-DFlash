@@ -94,8 +94,26 @@ pip install \
   sentence-transformers==5.6.0 \
   pydantic==2.12.5 \
   pyyaml \
-  numpy
+  numpy \
+  transformers \
+  pyarrow \
+  pandas \
+  rank_bm25 \
+  ninja
+
+# python3.12-dev is required for Triton to JIT-compile its CUDA helper for
+# the in-process embedder. Without it, embedding silently falls back to CPU
+# (202ms vs ~30ms on GPU) instead of erroring.
+sudo apt-get install -y python3.12-dev
 ```
+
+`transformers`/`pyarrow`/`pandas`/`rank_bm25` are only needed for
+`index.mode: local` (building/loading the local GPU-resident Graph Index
+snapshot and its BM25 full-text index); `ninja` is required by vLLM's
+FlashInfer backend to JIT-compile its allreduce workspace kernel — without
+it vLLM fails on first start with `AssertionError: Flashinfer allreduce
+workspace must be initialized when using flashinfer` (see Troubleshooting).
+None of the four are currently pinned in `requirements-web.txt`.
 
 ### Key package versions
 
@@ -218,6 +236,22 @@ cosmos:
   tenant_id: "<your-tenant-id>"
 ```
 
+### Retrieval backend: Cosmos vs. local GPU index
+
+`index.mode` picks whether queries hit Cosmos DB directly (`"cosmos"`) or a
+GPU-resident local snapshot (`"local"`, ~2 orders of magnitude faster —
+see `PROGRESS.md`). For `"local"`, either pre-build the snapshot:
+
+```bash
+python scripts/build_local_index.py --config my.yaml --out data/local_index
+```
+
+(took ~10 min for a 1.83M-document corpus pulling from a cross-region
+Cosmos account; faster co-located), or leave `index.auto_build: true` and
+let the app serve from Cosmos while it builds the snapshot in the
+background on first start, swapping over automatically once ready — no
+restart needed either way.
+
 ## Step 9: Start vLLM with DFlash
 
 ```bash
@@ -236,6 +270,13 @@ CUDA_VISIBLE_DEVICES=0,1 vllm serve Qwen/Qwen3.5-27B \
   --enable-prefix-caching \
   --port 8000
 ```
+
+**If also running `index.mode: local`** (the local GPU-resident Graph Index)
+alongside vLLM on the same box, drop `--gpu-memory-utilization` to `0.85`
+instead of `0.92` — the local index (~3.8GB of vectors) plus the GPU
+embedder together were enough to OOM at `0.92` on a 2x H100 NVL 96GB box in
+practice (measured: `0.85` leaves ~11.5GB/GPU free). `index.mode: cosmos`
+needs no such adjustment.
 
 **First startup takes 10-15 minutes** (model loading + torch.compile + CUDA graph capture). Subsequent starts use cached compilations (~3-5 min).
 
@@ -351,7 +392,8 @@ Access the web UI at `http://<public-ip>:8080`.
 
 - **`fp8_e5m2 kv-cache is not supported with fp8 checkpoints`**: Remove `--kv-cache-dtype fp8_e5m2` from the vLLM command. This was deprecated in vLLM 0.23.0.
 - **`unrecognized arguments: --speculative-model`**: Use `--spec-model` and `--spec-tokens` instead. The argument names changed in vLLM 0.23.0.
-- **Out of memory**: Reduce `--gpu-memory-utilization` to 0.85 or decrease `--max-model-len` to 8192.
+- **Out of memory**: Reduce `--gpu-memory-utilization` to 0.85 (mandatory if `index.mode: local` and the GPU embedder are also loaded on the same GPUs) or decrease `--max-model-len` to 8192.
+- **`AssertionError: Flashinfer allreduce workspace must be initialized when using flashinfer`**: Root cause is a few layers down in the traceback — the `ninja` binary is missing, so FlashInfer's JIT compilation of its allreduce workspace/GDN prefill kernels silently fails (logged as a warning, not an error) and something downstream asserts on it later. Fix: `pip install ninja`, and make sure it's actually on `PATH` for the vLLM process — a plain `pip install ninja` without activating the venv or prepending `.venv/bin` to `PATH` will still fail the same way.
 
 ### Web app "Connection error" on DFlash/GI queries
 

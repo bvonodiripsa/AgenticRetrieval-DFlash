@@ -17,6 +17,20 @@ We combine two independent accelerations that multiply together:
 
 Neither technique degrades output quality. The graph index provides richer structured context than ad-hoc retrieval, and DFlash is mathematically lossless — it produces the exact same token distribution as standard generation.
 
+> **Update (2026-07-27 through 2026-07-29):** Cosmos DB remains the system
+> of record for the Graph Index described below, but query-time traversal
+> no longer has to hit it over the network. `index.mode: local` mirrors the
+> whole index (vectors + triples + entities) into GPU memory and host RAM
+> from a snapshot built by `scripts/build_local_index.py`, and answers
+> vector search + graph traversal + full-text search locally instead —
+> measured at ~0.003-0.03s vs. ~2s+ against Cosmos on co-located H100
+> hardware. It's also more accurate (exact search vs. Cosmos's quantized
+> DiskANN) and supports reverse-edge traversal, which Cosmos can't do
+> cheaply. See `PROGRESS.md`, `ARCHITECTURE.md`'s "Retrieval backends"
+> section, and `results/h100_comparison.md` for the full story; Parts 1-2
+> below are otherwise still accurate for how the graph is built and what it
+> contains.
+
 ## Part 1: Building the Graph Index
 
 ### What goes into the graph
@@ -242,7 +256,8 @@ DFlash output is **identical** to standard Graph-RAG generation — the speculat
 | Qwen3.5-27B | Main LLM | 27B params, FP8 (~27GB across 2 GPUs) |
 | z-lab/Qwen3.5-27B-DFlash | Draft model | ~1B params (~1GB) |
 | Qwen3-Embedding-0.6B | Embedding model | In-process on CPU, no network call |
-| Azure Cosmos DB for NoSQL | Data + graph index storage | Vector + full-text indexes, semantic reranker |
+| Azure Cosmos DB for NoSQL | Graph index system of record; query backend when `index.mode: cosmos` | Vector + full-text indexes, semantic reranker |
+| Local GPU-resident index (optional) | Query backend when `index.mode: local` | Read-only snapshot of the same data, ~3.8GB GPU memory, rebuilt from Cosmos on demand |
 
 ### Cost comparison
 

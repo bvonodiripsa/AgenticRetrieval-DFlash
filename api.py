@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field
 
 from gi_builder import load_config
 from gi_query import GIQueryEngine
+from retrieval import retrieve
 
 _ROOT = Path(__file__).parent
 log = logging.getLogger("food_dflash.api")
@@ -114,18 +115,6 @@ async def _llm_expand_keywords(question: str, engine) -> list[str]:
     except Exception as e:
         log.warning("LLM keyword expansion failed: %s", e)
         return []
-
-
-def _build_fulltext_sql(keyword: str) -> str:
-    """Build a simple FullTextContains query for a single keyword across multiple fields."""
-    return (
-        "SELECT TOP @k c.id, c.product_id, c.product_title_translated, c.brand, "
-        "c.claims_translated, c.ingredients_translated, c.allergens_translated, "
-        "c.pack_size_translated, c.product_title, c.claims, c.ingredients, c.allergens, c.pack_size "
-        "FROM c WHERE FullTextContains(c.product_title_translated, @kw) "
-        "OR FullTextContains(c.ingredients_translated, @kw) "
-        "OR FullTextContains(c.claims_translated, @kw)"
-    )
 
 
 _RERANK_URL_SUFFIX = "dbinference.azure.com:443/inference/semanticReranking"
@@ -252,7 +241,18 @@ async def _identify_missing_containers(engine) -> list[str]:
 
 
 async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
-    """DFlash path: full GI retrieval + non-streaming LLM with speculative decoding."""
+    """DFlash path: GI retrieval (local index or Cosmos, via retrieval.py) + real
+    token-by-token LLM streaming with speculative decoding.
+
+    Retrieval used to be duplicated here as hardcoded Cosmos queries, separate
+    from `_dflash_answer`'s copy. Both now call the same `retrieve()` against
+    whichever backend `index.mode` selects, so this path gets the local-index
+    speedup for free and there is exactly one place that implements the
+    five-stage pipeline. The LLM call is also switched from
+    "wait for the full completion, then fake-chunk it" to `stream=True`, so
+    time-to-first-token drops from the full generation time to roughly one
+    speculative-decoding step.
+    """
     t0 = time.perf_counter()
     timings: dict[str, float] = {}
 
@@ -262,42 +262,25 @@ async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
         t_embed = time.perf_counter()
         q_emb = await engine._embedder.embed(question)
         timings["embed"] = time.perf_counter() - t_embed
-
         yield _sse({"stage": "progress", "message": f"Embedded in {timings['embed']:.2f}s", "_ts": _elapsed(t0)})
 
-        cosmos = await engine._get_cosmos()
-        db = cosmos.get_database_client(engine._db_name)
-        entities_ctr = db.get_container_client(engine._gi_cfg.get("entities_container", "entities"))
-        triples_ctr = db.get_container_client(engine._gi_cfg.get("triples_container", "triples"))
-        food_ctr = db.get_container_client("food")
-
-        cfg = engine._query_cfg
-        seed_k = int(cfg.get("seed_entities_k", 20))
-        max_hops = int(cfg.get("max_hops", 2))
-        max_triples = int(cfg.get("max_triples", 150))
-        max_source = int(cfg.get("max_source_chunks", 30))
-        vec_k = int(cfg.get("vector_augment_k", 15))
-
-        # --- Step 1: Entity search + keyword expansion (parallel) ---
-        yield _sse({"stage": "progress", "message": "Searching entity index + expanding keywords...", "_ts": _elapsed(t0)})
-
-        async def _entity_search():
-            r = []
-            async for item in entities_ctr.query_items(
-                query=("SELECT TOP @k c.n AS name, c.t AS description, c.r AS relation_count, c.d AS source_chunks, "
-                       "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
-                parameters=[{"name": "@k", "value": seed_k}, {"name": "@emb", "value": q_emb}]):
-                r.append(item)
-            return r
-
+        # Keyword expansion is an LLM call; start it now so it overlaps retrieval.
         basic_kw = _extract_keywords(question)
-        t_es = time.perf_counter()
-        seed_entities, llm_keywords = await asyncio.gather(
-            _entity_search(), _llm_expand_keywords(question, engine)
-        )
-        timings["entity_search"] = time.perf_counter() - t_es
+        kw_task = asyncio.create_task(_llm_expand_keywords(question, engine))
+
+        yield _sse({"stage": "progress", "message": "Retrieving (entity search + graph traversal + sources)...",
+                     "_ts": _elapsed(t0)})
+
+        backend = await engine._get_backend()
+        t_retr = time.perf_counter()
+        result = await retrieve(backend, q_emb, engine._cfg)
+        timings.update(result.timings)
+        seed_entities = result.seed_entities
+        all_triples = result.triples
+        source_chunks = result.source_chunks
 
         if not seed_entities:
+            kw_task.cancel()
             yield _sse({"stage": "progress", "message": "No entities found.", "_ts": _elapsed(t0)})
             yield _sse({"stage": "token", "text": "No relevant entities found in the graph index."})
             timings["total"] = time.perf_counter() - t0
@@ -305,152 +288,28 @@ async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
             yield "data: [DONE]\n\n"
             return
 
-        entity_names = [e["name"] for e in seed_entities[:10]]
+        entity_names = [e["name"] for e in seed_entities[:8]]
         yield _sse({"stage": "progress",
-                     "message": f"Found {len(seed_entities)} entities in {timings['entity_search']:.2f}s: {', '.join(entity_names[:5])}",
+                     "message": f"Retrieved {len(seed_entities)} entities, {len(all_triples)} triples, "
+                                f"{len(source_chunks)} sources in {time.perf_counter() - t_retr:.2f}s "
+                                f"({result.stats.get('pk_triples', 0)} PK + {result.stats.get('vec_triples', 0)} vec): "
+                                f"{', '.join(entity_names[:5])}",
                      "_ts": _elapsed(t0)})
 
-        # --- Step 2: Graph traversal + vector triples + food search + keyword search (parallel) ---
-        yield _sse({"stage": "progress", "message": "Graph traversal + vector search + keyword search...", "_ts": _elapsed(t0)})
-
-        async def _graph_traversal():
-            """PK-based hop traversal."""
-            all_t = []
-            visited = set()
-            names = list(entity_names)
-            for hop in range(max_hops):
-                batch = [n for n in names if n not in visited]
-                if not batch:
-                    break
-                for n in batch[:10]:
-                    visited.add(n)
-
-                async def _fetch_pk(name):
-                    pk = name
-                    r = []
-                    async for triple in triples_ctr.query_items(
-                        query=f"SELECT c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks FROM c WHERE c.{engine._triples_pk_field} = @pk",
-                        parameters=[{"name": "@pk", "value": pk}],
-                    ):
-                        r.append(triple)
-                    return r
-
-                results = await asyncio.gather(*[_fetch_pk(n) for n in batch[:10]])
-                for r in results:
-                    all_t.extend(r)
-                if hop == 0 and len(all_t) < max_triples:
-                    names = list({t["object"] for t in all_t if t["object"] not in visited})[:5]
-            return all_t
-
-        async def _triple_vec():
-            r = []
-            async for t in triples_ctr.query_items(
-                query=("SELECT TOP @k c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks, "
-                       "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
-                parameters=[{"name": "@k", "value": 30}, {"name": "@emb", "value": q_emb}]):
-                r.append(t)
-            return r
-
-        async def _food_vec():
-            r = []
-            async for doc in food_ctr.query_items(
-                query=("SELECT TOP @k c.id, c.product_id, c.product_title_translated, c.brand, "
-                       "c.claims_translated, c.ingredients_translated, c.allergens_translated, "
-                       "c.pack_size_translated, c.product_title, c.claims, c.ingredients, c.allergens, c.pack_size, "
-                       "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
-                parameters=[{"name": "@k", "value": vec_k}, {"name": "@emb", "value": q_emb}]):
-                for k in ("_rid", "_self", "_etag", "_attachments", "_ts"):
-                    doc.pop(k, None)
-                r.append(doc)
-            return r
-
-        async def _food_fulltext(keyword: str):
-            r = []
-            try:
-                sql = _build_fulltext_sql(keyword)
-                async for doc in food_ctr.query_items(
-                    query=sql,
-                    parameters=[{"name": "@k", "value": 10}, {"name": "@kw", "value": keyword}],
-                ):
-                    for k in ("_rid", "_self", "_etag", "_attachments", "_ts", "e"):
-                        doc.pop(k, None)
-                    r.append(doc)
-            except Exception as e:
-                log.warning("Fulltext search for '%s' failed: %s", keyword, e)
-            return r
-
+        # --- Keyword-expanded full-text search, merged into source_chunks ---
+        llm_keywords = await kw_task
         all_kw = list(set(basic_kw[:5] + (llm_keywords or [])[:6]))
-        ft_tasks = [_food_fulltext(kw) for kw in all_kw]
         log.info("Keywords basic=%s llm=%s combined=%s", basic_kw[:5], llm_keywords, all_kw)
 
-        t_graph = time.perf_counter()
-        graph_results = await asyncio.gather(
-            _graph_traversal(), _triple_vec(), _food_vec(), *ft_tasks
-        )
-        pk_triples = graph_results[0]
-        vec_triples = graph_results[1]
-        vec_food = graph_results[2]
-        ft_results = graph_results[3:]
-
-        # Deduplicate triples
-        all_triples_raw = pk_triples + vec_triples
-        seen_keys: set[str] = set()
-        all_triples = []
-        for t in all_triples_raw:
-            key = f"{t.get('subject','')}|{t.get('predicate','')}|{t.get('object','')}"
-            if key not in seen_keys:
-                seen_keys.add(key)
-                all_triples.append(t)
-        all_triples = all_triples[:max_triples]
-        timings["graph_traversal"] = time.perf_counter() - t_graph
-
-        yield _sse({"stage": "progress",
-                     "message": f"Graph: {len(pk_triples)} PK + {len(vec_triples)} vec = {len(all_triples)} unique triples in {timings['graph_traversal']:.2f}s",
-                     "_ts": _elapsed(t0)})
-
-        # --- Step 3: Fetch source documents from GI references + merge with vector/keyword results ---
-        yield _sse({"stage": "progress", "message": "Fetching source documents...", "_ts": _elapsed(t0)})
-
-        t_src = time.perf_counter()
-        source_chunk_ids: set[str] = set()
-        for t in all_triples:
-            for cid in t.get("source_chunks", []):
-                source_chunk_ids.add(cid)
-        for e in seed_entities[:5]:
-            for cid in e.get("source_chunks", []):
-                source_chunk_ids.add(cid)
-
-        source_ids = list(source_chunk_ids)[:max_source]
-        source_chunks: list[dict] = []
-
-        if source_ids:
-            for batch_start in range(0, len(source_ids), 20):
-                batch = source_ids[batch_start:batch_start + 20]
-                ids_param = ", ".join(f'"{sid}"' for sid in batch)
-                async for doc in food_ctr.query_items(query=f"SELECT * FROM c WHERE c.id IN ({ids_param})"):
-                    for k in ("e", "_rid", "_self", "_etag", "_attachments", "_ts"):
-                        doc.pop(k, None)
-                    source_chunks.append(doc)
-
-        # Merge vector + keyword results
+        t_ft = time.perf_counter()
         seen_ids = {doc.get("id") for doc in source_chunks}
-        for doc in vec_food:
+        for doc in await backend.fulltext_food(all_kw, 10):
             if doc.get("id") not in seen_ids:
                 source_chunks.append(doc)
                 seen_ids.add(doc.get("id"))
-        for batch in ft_results:
-            for doc in batch:
-                if doc.get("id") not in seen_ids:
-                    source_chunks.append(doc)
-                    seen_ids.add(doc.get("id"))
+        timings["source_fetch"] += time.perf_counter() - t_ft
 
-        timings["source_fetch"] = time.perf_counter() - t_src
-
-        yield _sse({"stage": "progress",
-                     "message": f"Sources: {len(source_ids)} from GI + {len(vec_food)} vector + keyword = {len(source_chunks)} total in {timings['source_fetch']:.2f}s",
-                     "_ts": _elapsed(t0)})
-
-        # --- Step 4: Rerank ---
+        # --- Rerank ---
         t_rerank = time.perf_counter()
         source_chunks = await _semantic_rerank(engine, question, source_chunks)
         timings["rerank"] = time.perf_counter() - t_rerank
@@ -460,11 +319,11 @@ async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
             "seed_entities": len(seed_entities),
             "triples_found": len(all_triples),
             "source_chunks": len(source_chunks),
-            "entity_names": [e["name"] for e in seed_entities[:8]],
+            "entity_names": entity_names,
             "_ts": _elapsed(t0),
         })
 
-        # --- Step 5: Build prompt + non-streaming LLM call ---
+        # --- Build prompt + streaming LLM call ---
         yield _sse({"stage": "progress",
                      "message": f"Retrieval done in {time.perf_counter() - t0:.1f}s — calling LLM ({engine._llm_model})...",
                      "_ts": _elapsed(t0)})
@@ -476,7 +335,8 @@ async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
                                       .replace("{question}", question)
 
         t_llm = time.perf_counter()
-        resp = await engine._llm.chat.completions.create(
+        first_token_at: float | None = None
+        stream = await engine._llm.chat.completions.create(
             model=engine._llm_model,
             messages=[
                 {"role": "system", "content": "You are a helpful food product expert. Always recommend products."},
@@ -484,19 +344,22 @@ async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
             ],
             temperature=0.0,
             max_tokens=engine._max_tokens,
+            stream=True,
             **engine._llm_call_kwargs,
         )
-        answer = resp.choices[0].message.content if resp.choices else ""
+        async for chunk in stream:
+            if not chunk.choices:
+                continue
+            delta = chunk.choices[0].delta.content or ""
+            if not delta:
+                continue
+            if first_token_at is None:
+                first_token_at = time.perf_counter()
+                timings["ttft"] = first_token_at - t_llm
+            yield _sse({"stage": "token", "text": delta})
+
         timings["llm"] = time.perf_counter() - t_llm
         timings["total"] = time.perf_counter() - t0
-
-        yield _sse({"stage": "progress",
-                     "message": f"Answer ready in {timings['total']:.1f}s (LLM: {timings['llm']:.1f}s) — streaming...",
-                     "_ts": str(timings["total"])})
-
-        chunk_size = 80
-        for i in range(0, len(answer), chunk_size):
-            yield _sse({"stage": "token", "text": answer[i:i + chunk_size]})
 
         yield _sse({"stage": "done", "_ts": _elapsed(t0), "timings": timings})
 
@@ -512,204 +375,6 @@ async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
                     f"in your config, or (re)build the graph index."
                 )
         yield _sse({"stage": "error", "message": msg})
-
-    yield "data: [DONE]\n\n"
-
-
-async def _stream_gi_sse(question: str, engine: GIQueryEngine, backend_id: str = "gi"):
-    t0 = time.perf_counter()
-    timings: dict[str, float] = {}
-
-    try:
-        yield _sse({"stage": "progress", "message": "Embedding question...", "_ts": _elapsed(t0)})
-
-        t_embed = time.perf_counter()
-        q_emb = await engine._embedder.embed(question)
-        timings["embed"] = time.perf_counter() - t_embed
-
-        yield _sse({"stage": "progress", "message": f"Embedded in {timings['embed']:.2f}s", "_ts": _elapsed(t0)})
-        yield _sse({"stage": "progress", "message": "Searching entity index...", "_ts": _elapsed(t0)})
-
-        cosmos = await engine._get_cosmos()
-        db = cosmos.get_database_client(engine._db_name)
-
-        entities_container = db.get_container_client(
-            engine._gi_cfg.get("entities_container", "entities")
-        )
-        seed_k = int(engine._query_cfg.get("seed_entities_k", 20))
-
-        t_es = time.perf_counter()
-        sql = (
-            "SELECT TOP @k c.n AS name, c.t AS description, c.r AS relation_count, c.d AS source_chunks, "
-            "VectorDistance(c.e, @emb) AS score "
-            "FROM c ORDER BY VectorDistance(c.e, @emb)"
-        )
-        seed_entities = []
-        async for item in entities_container.query_items(
-            query=sql,
-            parameters=[{"name": "@k", "value": seed_k}, {"name": "@emb", "value": q_emb}],
-        ):
-            seed_entities.append(item)
-        timings["entity_search"] = time.perf_counter() - t_es
-
-        if not seed_entities:
-            yield _sse({"stage": "progress", "message": "No entities found.", "_ts": _elapsed(t0)})
-            yield _sse({"stage": "token", "text": "No relevant entities found in the graph index."})
-            timings["total"] = time.perf_counter() - t0
-            yield _sse({"stage": "done", "_ts": _elapsed(t0), "timings": timings})
-            yield "data: [DONE]\n\n"
-            return
-
-        entity_names = [e["name"] for e in seed_entities[:10]]
-        yield _sse({"stage": "progress", "message": f"Found {len(seed_entities)} entities in {timings['entity_search']:.2f}s", "_ts": _elapsed(t0)})
-        yield _sse({"stage": "progress", "message": "Graph traversal...", "_ts": _elapsed(t0)})
-
-        t_graph = time.perf_counter()
-        triples_container = db.get_container_client(
-            engine._gi_cfg.get("triples_container", "triples")
-        )
-        max_hops = int(engine._query_cfg.get("max_hops", 2))
-        max_triples = int(engine._query_cfg.get("max_triples", 150))
-
-        all_triples: list[dict] = []
-        visited_entities: set[str] = set()
-
-        async def _fetch_triples(name: str):
-            pk = name
-            results = []
-            async for triple in triples_container.query_items(
-                query=f"SELECT c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks FROM c WHERE c.{engine._triples_pk_field} = @pk",
-                parameters=[{"name": "@pk", "value": pk}],
-            ):
-                results.append(triple)
-            return results
-
-        for hop in range(max_hops):
-            if not entity_names:
-                break
-            batch = [n for n in entity_names if n not in visited_entities]
-            if not batch:
-                break
-            for n in batch[:10]:
-                visited_entities.add(n)
-            results = await asyncio.gather(*[_fetch_triples(n) for n in batch[:10]])
-            for r in results:
-                all_triples.extend(r)
-            if hop == 0 and len(all_triples) < max_triples:
-                entity_names = list({t["object"] for t in all_triples
-                                    if t["object"] not in visited_entities})[:5]
-
-        triple_sql = (
-            "SELECT TOP @k c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks, "
-            "VectorDistance(c.e, @emb) AS score "
-            "FROM c ORDER BY VectorDistance(c.e, @emb)"
-        )
-        async for triple in triples_container.query_items(
-            query=triple_sql,
-            parameters=[{"name": "@k", "value": 30}, {"name": "@emb", "value": q_emb}],
-        ):
-            all_triples.append(triple)
-
-        seen_keys: set[str] = set()
-        unique = []
-        for t in all_triples:
-            key = f"{t.get('subject','')}|{t.get('predicate','')}|{t.get('object','')}"
-            if key not in seen_keys:
-                seen_keys.add(key)
-                unique.append(t)
-        all_triples = unique[:max_triples]
-        timings["graph_traversal"] = time.perf_counter() - t_graph
-
-        yield _sse({"stage": "progress", "message": f"Graph: {len(all_triples)} triples in {timings['graph_traversal']:.2f}s", "_ts": _elapsed(t0)})
-        yield _sse({"stage": "progress", "message": "Fetching source documents...", "_ts": _elapsed(t0)})
-
-        t_src = time.perf_counter()
-        source_chunk_ids: set[str] = set()
-        for t in all_triples:
-            for cid in t.get("source_chunks", []):
-                source_chunk_ids.add(cid)
-        for e in seed_entities[:5]:
-            for cid in e.get("source_chunks", []):
-                source_chunk_ids.add(cid)
-
-        max_source = int(engine._query_cfg.get("max_source_chunks", 30))
-        source_ids = list(source_chunk_ids)[:max_source]
-        source_chunks: list[dict] = []
-        food_container = db.get_container_client("food")
-
-        if source_ids:
-            for batch_start in range(0, len(source_ids), 20):
-                batch = source_ids[batch_start:batch_start + 20]
-                ids_param = ", ".join(f'"{sid}"' for sid in batch)
-                async for doc in food_container.query_items(query=f"SELECT * FROM c WHERE c.id IN ({ids_param})"):
-                    for k in ("e", "_rid", "_self", "_etag", "_attachments", "_ts"):
-                        doc.pop(k, None)
-                    source_chunks.append(doc)
-
-        vec_k = int(engine._query_cfg.get("vector_augment_k", 15))
-        seen_ids = {doc.get("id") for doc in source_chunks}
-        vec_sql = (
-            "SELECT TOP @k c.id, c.product_id, c.product_title_translated, c.brand, "
-            "c.claims_translated, c.ingredients_translated, c.allergens_translated, "
-            "c.pack_size_translated, c.product_title, c.claims, c.ingredients, c.allergens, c.pack_size, "
-            "VectorDistance(c.e, @emb) AS score "
-            "FROM c ORDER BY VectorDistance(c.e, @emb)"
-        )
-        async for doc in food_container.query_items(
-            query=vec_sql,
-            parameters=[{"name": "@k", "value": vec_k}, {"name": "@emb", "value": q_emb}],
-        ):
-            if doc.get("id") not in seen_ids:
-                for k in ("_rid", "_self", "_etag", "_attachments", "_ts"):
-                    doc.pop(k, None)
-                source_chunks.append(doc)
-                seen_ids.add(doc.get("id"))
-
-        timings["source_fetch"] = time.perf_counter() - t_src
-
-        yield _sse({
-            "stage": "stats",
-            "seed_entities": len(seed_entities),
-            "triples_found": len(all_triples),
-            "source_chunks": len(source_chunks),
-            "entity_names": [e["name"] for e in seed_entities[:8]],
-            "_ts": _elapsed(t0),
-        })
-        yield _sse({"stage": "progress", "message": f"Retrieval done in {time.perf_counter() - t0:.1f}s — calling LLM...", "_ts": _elapsed(t0)})
-
-        t_llm = time.perf_counter()
-        from prompts_gi_food import GRAPHRAG_ANSWER_PROMPT
-        graph_context = engine._build_graph_context(seed_entities, all_triples)
-        source_text = engine._build_source_text(source_chunks)
-        template = DFLASH_ANSWER_PROMPT if backend_id == "dflash" else GRAPHRAG_ANSWER_PROMPT
-        prompt = template.replace("{graph_context}", graph_context) \
-                         .replace("{source_chunks}", source_text) \
-                         .replace("{question}", question)
-
-        resp = await engine._llm.chat.completions.create(
-            model=engine._llm_model,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.0,
-            max_tokens=engine._max_tokens,
-            **engine._llm_call_kwargs,
-        )
-        answer = resp.choices[0].message.content if resp.choices else ""
-        timings["llm"] = time.perf_counter() - t_llm
-        timings["total"] = time.perf_counter() - t0
-
-        yield _sse({"stage": "progress",
-                     "message": f"Answer ready in {timings['total']:.1f}s (LLM: {timings['llm']:.1f}s) — streaming...",
-                     "_ts": str(timings["total"])})
-
-        chunk_size = 80
-        for i in range(0, len(answer), chunk_size):
-            yield _sse({"stage": "token", "text": answer[i:i + chunk_size]})
-
-        yield _sse({"stage": "done", "_ts": _elapsed(t0), "timings": timings})
-
-    except Exception as e:
-        log.exception("stream error: %s", e)
-        yield _sse({"stage": "error", "message": str(e)})
 
     yield "data: [DONE]\n\n"
 
@@ -748,13 +413,22 @@ async def lifespan(app: FastAPI):
     questions = _load_questions_from_cfg(cfg)
     log.info("Backend loaded from %s: %d questions", cfg_path, len(questions))
 
-    # Warm up the embedder (loads the in-process model, or checks the HTTP
-    # embedding endpoint). Best-effort — don't fail startup if it errors.
-    log.info("Warming up embedder...")
-    try:
-        await engine._embedder.embed("warmup")
-    except Exception as e:
-        log.warning("Embedding warmup failed: %s", e)
+    # Warm up the embedder and the retrieval backend concurrently. Best-effort
+    # — don't fail startup if either errors, so an unreachable Cosmos or a
+    # missing snapshot doesn't take the whole app down; failures surface on
+    # first request instead. Warming the backend here specifically matters
+    # for index.mode: local — loading the snapshot (numpy -> GPU, BM25 build)
+    # takes a few seconds, and without this it happens inside whichever
+    # request arrives first instead of before the app starts accepting them.
+    log.info("Warming up embedder + retrieval backend...")
+    results = await asyncio.gather(
+        engine._embedder.embed("warmup"),
+        engine._get_backend(),
+        return_exceptions=True,
+    )
+    for label, result in zip(("embedder", "backend"), results):
+        if isinstance(result, Exception):
+            log.warning("%s warmup failed: %s", label, result)
 
     app.state.engine = engine
     app.state.questions = questions
@@ -810,155 +484,34 @@ async def _dflash_answer(question: str, engine: GIQueryEngine) -> dict:
     q_emb = await engine._embedder.embed(question)
     timings["embed"] = time.perf_counter() - t0
 
-    cosmos = await engine._get_cosmos()
-    db = cosmos.get_database_client(engine._db_name)
-    entities_ctr = db.get_container_client(engine._gi_cfg.get("entities_container", "entities"))
-    triples_ctr = db.get_container_client(engine._gi_cfg.get("triples_container", "triples"))
-    food_ctr = db.get_container_client("food")
-
-    cfg = engine._query_cfg
-    seed_k = int(cfg.get("seed_entities_k", 20))
-    max_hops = int(cfg.get("max_hops", 2))
-    max_triples = int(cfg.get("max_triples", 150))
-    max_source = int(cfg.get("max_source_chunks", 30))
-    vec_k = int(cfg.get("vector_augment_k", 15))
-
-    # Entity search + keyword expansion
-    async def _es():
-        r = []
-        async for item in entities_ctr.query_items(
-            query=("SELECT TOP @k c.n AS name, c.t AS description, c.r AS relation_count, c.d AS source_chunks, "
-                   "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
-            parameters=[{"name": "@k", "value": seed_k}, {"name": "@emb", "value": q_emb}]):
-            r.append(item)
-        return r
-
+    # Keyword expansion is an LLM call, so start it now and let it run
+    # alongside retrieval; its results are only needed for the full-text merge.
     basic_kw = _extract_keywords(question)
-    t_es = time.perf_counter()
-    seed_entities, llm_keywords = await asyncio.gather(
-        _es(), _llm_expand_keywords(question, engine)
-    )
-    timings["entity_search"] = time.perf_counter() - t_es
+    kw_task = asyncio.create_task(_llm_expand_keywords(question, engine))
+
+    backend = await engine._get_backend()
+    result = await retrieve(backend, q_emb, engine._cfg)
+    timings.update(result.timings)
+    seed_entities = result.seed_entities
+    all_triples = result.triples
+    source_chunks = result.source_chunks
 
     if not seed_entities:
+        kw_task.cancel()
         timings["total"] = time.perf_counter() - t0
         return {"answer": "No relevant entities found.", "timings": timings}
 
-    entity_names = [e["name"] for e in seed_entities[:10]]
-
-    # Graph traversal + vector + keyword (parallel)
-    async def _graph_traversal():
-        all_t = []
-        visited = set()
-        names = list(entity_names)
-        for hop in range(max_hops):
-            batch = [n for n in names if n not in visited]
-            if not batch:
-                break
-            for n in batch[:10]:
-                visited.add(n)
-            async def _fetch_pk(name):
-                pk = name
-                r = []
-                async for triple in triples_ctr.query_items(
-                    query=f"SELECT c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks FROM c WHERE c.{engine._triples_pk_field} = @pk",
-                    parameters=[{"name": "@pk", "value": pk}]):
-                    r.append(triple)
-                return r
-            results = await asyncio.gather(*[_fetch_pk(n) for n in batch[:10]])
-            for r in results:
-                all_t.extend(r)
-            if hop == 0 and len(all_t) < max_triples:
-                names = list({t["object"] for t in all_t if t["object"] not in visited})[:5]
-        return all_t
-
-    async def _tv():
-        r = []
-        async for t in triples_ctr.query_items(
-            query=("SELECT TOP @k c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks, "
-                   "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
-            parameters=[{"name": "@k", "value": 30}, {"name": "@emb", "value": q_emb}]):
-            r.append(t)
-        return r
-
-    async def _fv():
-        r = []
-        async for doc in food_ctr.query_items(
-            query=("SELECT TOP @k c.id, c.product_id, c.product_title_translated, c.brand, "
-                   "c.claims_translated, c.ingredients_translated, c.allergens_translated, "
-                   "c.pack_size_translated, c.product_title, c.claims, c.ingredients, c.allergens, c.pack_size, "
-                   "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)"),
-            parameters=[{"name": "@k", "value": vec_k}, {"name": "@emb", "value": q_emb}]):
-            for k in ("_rid", "_self", "_etag", "_attachments", "_ts"):
-                doc.pop(k, None)
-            r.append(doc)
-        return r
-
-    async def _ft(keyword: str):
-        r = []
-        try:
-            sql = _build_fulltext_sql(keyword)
-            async for doc in food_ctr.query_items(
-                query=sql, parameters=[{"name": "@k", "value": 10}, {"name": "@kw", "value": keyword}]):
-                for k in ("_rid", "_self", "_etag", "_attachments", "_ts", "e"):
-                    doc.pop(k, None)
-                r.append(doc)
-        except Exception:
-            pass
-        return r
-
+    llm_keywords = await kw_task
     all_kw = list(set(basic_kw[:5] + (llm_keywords or [])[:6]))
-    ft_tasks = [_ft(kw) for kw in all_kw]
+    log.info("Keywords basic=%s llm=%s combined=%s", basic_kw[:5], llm_keywords, all_kw)
 
-    t_graph = time.perf_counter()
-    graph_results = await asyncio.gather(_graph_traversal(), _tv(), _fv(), *ft_tasks)
-    pk_triples = graph_results[0]
-    vec_triples = graph_results[1]
-    vec_food = graph_results[2]
-    ft_results = graph_results[3:]
-
-    seen_keys: set[str] = set()
-    all_triples = []
-    for t in pk_triples + vec_triples:
-        key = f"{t.get('subject','')}|{t.get('predicate','')}|{t.get('object','')}"
-        if key not in seen_keys:
-            seen_keys.add(key)
-            all_triples.append(t)
-    all_triples = all_triples[:max_triples]
-    timings["graph_traversal"] = time.perf_counter() - t_graph
-
-    # Source chunk fetch + merge
-    t_src = time.perf_counter()
-    source_chunk_ids: set[str] = set()
-    for t in all_triples:
-        for cid in t.get("source_chunks", []):
-            source_chunk_ids.add(cid)
-    for e in seed_entities[:5]:
-        for cid in e.get("source_chunks", []):
-            source_chunk_ids.add(cid)
-
-    source_ids = list(source_chunk_ids)[:max_source]
-    source_chunks: list[dict] = []
-    if source_ids:
-        for batch_start in range(0, len(source_ids), 20):
-            batch = source_ids[batch_start:batch_start + 20]
-            ids_param = ", ".join(f'"{sid}"' for sid in batch)
-            async for doc in food_ctr.query_items(query=f"SELECT * FROM c WHERE c.id IN ({ids_param})"):
-                for k in ("e", "_rid", "_self", "_etag", "_attachments", "_ts"):
-                    doc.pop(k, None)
-                source_chunks.append(doc)
-
+    t_ft = time.perf_counter()
     seen_ids = {doc.get("id") for doc in source_chunks}
-    for doc in vec_food:
+    for doc in await backend.fulltext_food(all_kw, 10):
         if doc.get("id") not in seen_ids:
             source_chunks.append(doc)
             seen_ids.add(doc.get("id"))
-    for batch in ft_results:
-        for doc in batch:
-            if doc.get("id") not in seen_ids:
-                source_chunks.append(doc)
-                seen_ids.add(doc.get("id"))
-    timings["source_fetch"] = time.perf_counter() - t_src
+    timings["source_fetch"] += time.perf_counter() - t_ft
 
     source_chunks = await _semantic_rerank(engine, question, source_chunks)
 

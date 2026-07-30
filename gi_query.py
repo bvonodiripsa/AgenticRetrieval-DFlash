@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import time
 from typing import Any
@@ -26,6 +27,9 @@ from openai import AsyncOpenAI
 
 from prompts_gi_food import GRAPHRAG_ANSWER_PROMPT, FALLBACK_ANSWER_PROMPT
 from gi_builder import EmbedClient, embed_sync, load_config
+from retrieval import CosmosBackend, retrieve
+
+log = logging.getLogger("food_dflash.gi_query")
 
 
 def build_llm_call_kwargs(llm_cfg: dict, model: str) -> dict:
@@ -89,6 +93,106 @@ class GIQueryEngine:
         self._gi_cfg = cfg.get("kg", {})
         self._triples_pk_field = self._gi_cfg.get("triples_partition_key_path", "/s").lstrip("/")
         self._query_cfg = cfg.get("query", {})
+        self._backend = None
+        self._freshness_task: asyncio.Task | None = None
+        self._local_build_task: asyncio.Task | None = None
+
+    async def _get_backend(self):
+        """Retrieval backend selected by `index.mode` in the config.
+
+        `local` serves the whole Graph Index from GPU memory; `cosmos` keeps
+        the original remote queries. Both satisfy the same interface, so the
+        rest of the pipeline is unaffected.
+
+        If the local snapshot already exists on disk, it loads directly (a
+        few seconds) -- call this once eagerly during server startup (see
+        `api.py`'s `lifespan`) so that cost lands before the first real
+        request, not during it. If it doesn't exist yet, this does *not*
+        block on building it (`build_local_index.py`'s export took 7-10
+        minutes even co-located with Cosmos): it serves from Cosmos
+        immediately and kicks off the export + load as a background task,
+        swapping `self._backend` to the local index the moment it's ready.
+        Set `index.auto_build: false` to disable that and fail loudly
+        instead, if an unattended multi-minute Cosmos export on first use is
+        not wanted.
+        """
+        if self._backend is not None:
+            return self._backend
+        icfg = self._cfg.get("index", {})
+        if str(icfg.get("mode", "cosmos")).lower() != "local":
+            self._backend = await self._make_cosmos_backend()
+            return self._backend
+
+        snapshot_path = icfg.get("snapshot_path", "data/local_index")
+        manifest_path = os.path.join(snapshot_path, "manifest.json")
+
+        if os.path.exists(manifest_path):
+            self._backend = self._make_local_backend(icfg)
+            if bool(icfg.get("check_freshness", True)) and self._freshness_task is None:
+                self._freshness_task = asyncio.create_task(self._log_freshness(snapshot_path))
+            return self._backend
+
+        if not bool(icfg.get("auto_build", True)):
+            raise RuntimeError(
+                f"index.mode is 'local' but no snapshot at {manifest_path} and "
+                f"index.auto_build is false. Run scripts/build_local_index.py first."
+            )
+
+        log.warning("No local snapshot at %s -- serving from Cosmos while building "
+                    "one in the background (this takes several minutes)", manifest_path)
+        self._backend = await self._make_cosmos_backend()
+        if self._local_build_task is None:
+            self._local_build_task = asyncio.create_task(self._build_and_swap(icfg, snapshot_path))
+        return self._backend
+
+    async def _make_cosmos_backend(self) -> CosmosBackend:
+        cosmos = await self._get_cosmos()
+        db = cosmos.get_database_client(self._db_name)
+        return CosmosBackend(
+            db.get_container_client(self._gi_cfg.get("entities_container", "entities")),
+            db.get_container_client(self._gi_cfg.get("triples_container", "triples")),
+            db.get_container_client("food"),
+            self._triples_pk_field,
+        )
+
+    def _make_local_backend(self, icfg: dict):
+        from gi_index import get_index
+        from retrieval import LocalBackend
+        index = get_index(
+            icfg.get("snapshot_path", "data/local_index"),
+            device=icfg.get("device", "cuda"),
+            enable_bm25=bool(icfg.get("enable_bm25", True)),
+        )
+        return LocalBackend(index, reverse_edges=bool(icfg.get("reverse_edges", True)))
+
+    async def _log_freshness(self, snapshot_path: str):
+        """Fire-and-forget: compare the snapshot against live Cosmos and log. Never
+        blocks serving and never swaps backends on its own -- staleness here is a
+        signal for an operator, not an automatic rebuild trigger."""
+        try:
+            from snapshot_freshness import check_freshness
+            report = await check_freshness(self._cfg, snapshot_path)
+            if report["stale"]:
+                log.warning("Local snapshot at %s is STALE vs Cosmos: %s", snapshot_path, report)
+            else:
+                log.info("Local snapshot at %s is fresh (built %s)", snapshot_path, report.get("built_at"))
+        except Exception as e:
+            log.warning("Freshness check failed (%s); continuing to serve existing snapshot", e)
+
+    async def _build_and_swap(self, icfg: dict, snapshot_path: str):
+        """Background task: export Cosmos -> snapshot, load it, then swap `self._backend`."""
+        t0 = time.time()
+        try:
+            from scripts.build_local_index import build as build_snapshot
+            await build_snapshot(self._cfg["cosmos"], snapshot_path)
+            # numpy/torch/BM25 loading is blocking CPU work -- keep it off the
+            # event loop so in-flight Cosmos-backed requests aren't stalled.
+            backend = await asyncio.to_thread(self._make_local_backend, icfg)
+            self._backend = backend
+            log.info("Swapped to local Graph Index backend after %.1f min background build",
+                     (time.time() - t0) / 60)
+        except Exception as e:
+            log.warning("Background local-index build failed (%s); staying on Cosmos", e)
 
     async def _get_cosmos(self) -> CosmosClient:
         if self._cosmos is None:
@@ -114,36 +218,18 @@ class GIQueryEngine:
         timings: dict[str, float] = {}
         t_total = time.time()
 
-        cosmos = await self._get_cosmos()
-        db = cosmos.get_database_client(self._db_name)
-
         # Step 1: Embed question
         t0 = time.time()
         q_emb = await self._embedder.embed(question)
         timings["embed"] = time.time() - t0
 
-        # Step 2: Find seed entities via vector search
-        t0 = time.time()
-        entities_container = db.get_container_client(
-            self._gi_cfg.get("entities_container", "entities")
-        )
-        seed_k = int(self._query_cfg.get("seed_entities_k", 20))
-
-        sql = (
-            "SELECT TOP @k c.n AS name, c.t AS description, c.r AS relation_count, c.d AS source_chunks, "
-            "VectorDistance(c.e, @emb) AS score "
-            "FROM c ORDER BY VectorDistance(c.e, @emb)"
-        )
-        seed_entities = []
-        async for item in entities_container.query_items(
-            query=sql,
-            parameters=[
-                {"name": "@k", "value": seed_k},
-                {"name": "@emb", "value": q_emb},
-            ],
-        ):
-            seed_entities.append(item)
-        timings["entity_search"] = time.time() - t0
+        # Steps 2-4: entity search, graph traversal and source fetch, against
+        # whichever backend index.mode selects.
+        result = await retrieve(await self._get_backend(), q_emb, self._cfg)
+        timings.update(result.timings)
+        seed_entities = result.seed_entities
+        all_triples = result.triples
+        source_chunks = result.source_chunks
 
         if not seed_entities:
             timings["total"] = time.time() - t_total
@@ -153,135 +239,6 @@ class GIQueryEngine:
                 "triples": [],
                 "timings": timings,
             }
-
-        # Step 3: Graph traversal — fetch triples for seed entities (parallelized)
-        t0 = time.time()
-        triples_container = db.get_container_client(
-            self._gi_cfg.get("triples_container", "triples")
-        )
-        max_hops = int(self._query_cfg.get("max_hops", 2))
-        max_triples = int(self._query_cfg.get("max_triples", 150))
-
-        entity_names = [e["name"] for e in seed_entities[:10]]
-        all_triples = []
-        visited_entities: set[str] = set()
-
-        async def _fetch_triples_for_entity(name: str):
-            pk = name
-            query = f"SELECT c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks FROM c WHERE c.{self._triples_pk_field} = @pk"
-            results = []
-            async for triple in triples_container.query_items(
-                query=query,
-                parameters=[{"name": "@pk", "value": pk}],
-            ):
-                results.append(triple)
-            return results
-
-        for hop in range(max_hops):
-            if not entity_names:
-                break
-            batch_names = [n for n in entity_names if n not in visited_entities]
-            if not batch_names:
-                break
-
-            for name in batch_names[:10]:
-                visited_entities.add(name)
-
-            tasks = [_fetch_triples_for_entity(n) for n in batch_names[:10]]
-            results = await asyncio.gather(*tasks)
-            for r in results:
-                all_triples.extend(r)
-
-            if hop == 0 and len(all_triples) < max_triples:
-                entity_names = list({t["object"] for t in all_triples
-                                    if t["object"] not in visited_entities})[:5]
-
-        # Also do a vector search on triples for broader coverage
-        triple_sql = (
-            "SELECT TOP @k c.s AS subject, c.p AS predicate, c.o AS object, c.f AS confidence, c.d AS source_chunks, "
-            "VectorDistance(c.e, @emb) AS score "
-            "FROM c ORDER BY VectorDistance(c.e, @emb)"
-        )
-        async for triple in triples_container.query_items(
-            query=triple_sql,
-            parameters=[
-                {"name": "@k", "value": 30},
-                {"name": "@emb", "value": q_emb},
-            ],
-        ):
-            all_triples.append(triple)
-
-        # Deduplicate triples
-        seen_keys: set[str] = set()
-        unique_triples = []
-        for t in all_triples:
-            key = f"{t.get('subject','')}|{t.get('predicate','')}|{t.get('object','')}"
-            if key not in seen_keys:
-                seen_keys.add(key)
-                unique_triples.append(t)
-        all_triples = unique_triples[:max_triples]
-        timings["graph_traversal"] = time.time() - t0
-
-        # Step 4: Fetch source documents for provenance
-        t0 = time.time()
-        source_chunk_ids: set[str] = set()
-        for t in all_triples:
-            for cid in t.get("source_chunks", []):
-                source_chunk_ids.add(cid)
-        for e in seed_entities[:5]:
-            for cid in e.get("source_chunks", []):
-                source_chunk_ids.add(cid)
-
-        max_source = int(self._query_cfg.get("max_source_chunks", 30))
-        source_ids = list(source_chunk_ids)[:max_source]
-
-        source_chunks = []
-        food_container = db.get_container_client("food")
-
-        # 4a: Fetch docs linked from KG triples/entities
-        if source_ids:
-            for batch_start in range(0, len(source_ids), 20):
-                batch = source_ids[batch_start:batch_start + 20]
-                ids_param = ", ".join(f'"{sid}"' for sid in batch)
-                query = f"SELECT * FROM c WHERE c.id IN ({ids_param})"
-                async for doc in food_container.query_items(
-                    query=query,
-                ):
-                    doc.pop("e", None)
-                    doc.pop("_rid", None)
-                    doc.pop("_self", None)
-                    doc.pop("_etag", None)
-                    doc.pop("_attachments", None)
-                    doc.pop("_ts", None)
-                    source_chunks.append(doc)
-
-        # 4b: Vector search augmentation — find additional relevant products directly
-        vec_k = int(self._query_cfg.get("vector_augment_k", 15))
-        seen_ids = {doc.get("id") for doc in source_chunks}
-        vec_sql = (
-            "SELECT TOP @k c.id, c.product_id, c.product_title_translated, c.brand, "
-            "c.claims_translated, c.ingredients_translated, c.allergens_translated, "
-            "c.pack_size_translated, c.product_title, c.claims, c.ingredients, c.allergens, c.pack_size, "
-            "VectorDistance(c.e, @emb) AS score "
-            "FROM c ORDER BY VectorDistance(c.e, @emb)"
-        )
-        async for doc in food_container.query_items(
-            query=vec_sql,
-            parameters=[
-                {"name": "@k", "value": vec_k},
-                {"name": "@emb", "value": q_emb},
-            ],
-        ):
-            if doc.get("id") not in seen_ids:
-                doc.pop("_rid", None)
-                doc.pop("_self", None)
-                doc.pop("_etag", None)
-                doc.pop("_attachments", None)
-                doc.pop("_ts", None)
-                source_chunks.append(doc)
-                seen_ids.add(doc.get("id"))
-
-        timings["source_fetch"] = time.time() - t0
 
         # Step 5: Build prompt and call LLM
         t0 = time.time()

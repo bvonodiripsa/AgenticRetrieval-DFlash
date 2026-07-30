@@ -16,34 +16,70 @@ the tests — not by this app.
 
 ## GI-RAG + LLM pipeline
 
-**Routing**: `api.py` → `_stream_dflash_sse()` (streaming) / `_dflash_answer()` (non-streaming)
+**Routing**: `api.py` → `_stream_dflash_sse()` (streaming, `/v1/ask/stream`) /
+`_dflash_answer()` (non-streaming, `/v1/ask`)
 
 **Code flow** (`api.py`):
 1. `engine._embedder.embed()` — Qwen3-Embedding-0.6B (in-process, mean-pool + L2)
-2. **Entity search + LLM keyword expansion** — parallel via `asyncio.gather`
-   - Entity vector search on `entities`
+2. **Retrieval + LLM keyword expansion** — parallel via `asyncio.gather`:
+   - `retrieval.retrieve(backend, q_emb, cfg)` — entity search, graph
+     traversal, triple/food vector search and source fetch, all against
+     whichever backend `index.mode` selected (see below)
    - `_llm_expand_keywords()` — lightweight LLM call to extract food search terms
-3. **Parallel retrieval** via `asyncio.gather`:
-   - `_graph_traversal()` — PK-based hop traversal
-   - `_triple_vec()` — vector triple search
-   - `_food_vec()` — vector food search
-   - `_food_fulltext()` × N — per-keyword `FullTextContains` queries
-4. Deduplicate triples (PK + vector)
-5. **Source chunk fetch** — collect IDs from triples/entities, fetch by ID
-6. **Merge** — GI sources + vector + keyword results, deduplicate
-7. `_semantic_rerank()` — Cosmos DB semantic reranker (falls back to vector order)
-8. Build prompt using `DFLASH_ANSWER_PROMPT` (defined in `api.py`)
-9. **Single LLM call** via the configured OpenAI-compatible endpoint; reasoning /
-   thinking suppression is chosen per model family by `gi_query.build_llm_call_kwargs()`
-   (Qwen `enable_thinking=false`; reasoning models get `reasoning_effort` when set)
-10. Stream/replay the answer in 80-char chunks via SSE
+3. **Keyword full-text merge** — `backend.fulltext_food(keywords)`, deduped
+   into `retrieve()`'s source chunks
+4. `_semantic_rerank()` — Cosmos DB semantic reranker (falls back to vector order)
+5. Build prompt using `DFLASH_ANSWER_PROMPT` (defined in `api.py`)
+6. **Single LLM call** via the configured OpenAI-compatible endpoint, with
+   `stream=True` on the streaming path (real per-token SSE, not
+   buffer-then-chunk); reasoning/thinking suppression is chosen per model
+   family by `gi_query.build_llm_call_kwargs()` (Qwen `enable_thinking=false`;
+   reasoning models get `reasoning_effort` when set)
 
 **Key files**:
 - `api.py` — `_stream_dflash_sse()`, `_dflash_answer()`, `_llm_expand_keywords()`, `_extract_keywords()`, `_semantic_rerank()`
-- `gi_query.py` — `GIQueryEngine`, `build_llm_call_kwargs()`, `_build_graph_context()`, `_build_source_text()`
+- `retrieval.py` — `retrieve()`, the single retrieval implementation shared by both backends and both endpoints (streaming and non-streaming; also reused by `gi_query.py`'s CLI/benchmark path)
+- `gi_query.py` — `GIQueryEngine`, `_get_backend()` (backend selection/hot-swap), `build_llm_call_kwargs()`, `_build_graph_context()`, `_build_source_text()`
+- `gi_index.py` — `LocalGraphIndex`, the GPU-resident backend (see below)
 - `prompts_gi_food.py` — prompt templates
 
 **Config**: a single YAML (default `my.yaml`, from `config.yaml.example`; override with `--config`).
+
+---
+
+## Retrieval backends: Cosmos vs. local GPU index
+
+`retrieval.py::retrieve()` is written once against a small backend
+interface (`entity_search`, `triples_for`, `triples_vec`, `food_vec`,
+`fetch_by_ids`, `fulltext_food`) and works unchanged against either
+implementation. `index.mode` in the config picks which one:
+
+| | `index.mode: cosmos` (`CosmosBackend`, `gi_query.py`) | `index.mode: local` (`LocalBackend` / `LocalGraphIndex`, `gi_index.py`) |
+|---|---|---|
+| Where data lives | Azure Cosmos DB (network) | GPU memory (vectors) + host RAM (strings, CSR graph) |
+| Vector search | Cosmos DiskANN (quantized, approximate) | Exact brute-force `torch.topk` (unquantized, more accurate at this corpus size) |
+| Graph traversal | Per-hop Cosmos query, partition-key (`subject`) lookup only | CSR adjacency array; `reverse_edges: true` also traverses `object -> subject` for free, which Cosmos cannot do cheaply since `object` isn't the partition key |
+| Full-text search | `FullTextContains` (Cosmos) | Local BM25 (`rank_bm25`) over the food container |
+| Measured cost (co-located H100, warm) | ~2.06-2.26s | ~0.003-0.03s |
+
+Cosmos remains the **system of record**; the local index is a read-only
+snapshot exported by `scripts/build_local_index.py` and must be rebuilt
+whenever the Graph Index changes upstream. It needs ~3.8 GB of GPU memory
+for the full corpus (fits alongside vLLM's KV cache).
+
+**Backend selection and hot-swap** (`gi_query.py::GIQueryEngine._get_backend()`):
+- `mode: "local"` + snapshot exists at `index.snapshot_path` → loads
+  `LocalGraphIndex` (numpy → GPU, BM25 build) once, eagerly, at API startup
+  (`api.py`'s `lifespan()`), not on the first request.
+- `mode: "local"` + no snapshot yet + `auto_build: true` → serves
+  `CosmosBackend` immediately (cheap, no blocking network call) and kicks
+  off `scripts/build_local_index.py`'s exporter as a background
+  `asyncio.Task`; once it finishes, swaps `self._backend` to
+  `LocalGraphIndex` without downtime or a restart.
+- `check_freshness: true` fires a non-blocking background comparison of the
+  snapshot's manifest against live Cosmos counts/timestamps
+  (`snapshot_freshness.py`) on every backend load, logging a warning if
+  stale. This is a signal for an operator, not an automatic rebuild trigger.
 
 ---
 
@@ -60,8 +96,9 @@ This produces **identical output** to standard generation (mathematically lossle
 
 ## Shared Infrastructure
 
-- **Cosmos DB**: account + `food` database from config — containers: `food` (products), `entities`, `triples`
+- **Cosmos DB**: account + `food` database from config — containers: `food` (products), `entities`, `triples`; system of record regardless of `index.mode`
+- **Local Graph Index** (optional, `index.mode: local`): GPU-resident snapshot of the same data — see "Retrieval backends" above and `PROGRESS.md`
 - **LLM endpoint**: configurable OpenAI-compatible (local vLLM with DFlash, or a hosted gateway such as GLM-5.2)
-- **Embedding**: Qwen3-Embedding-0.6B, loaded in-process (mean-pool + L2)
+- **Embedding**: Qwen3-Embedding-0.6B, loaded in-process (mean-pool + L2, GPU if available)
 - **Web UI**: `static/index.html`, FastAPI on port 8080
 - **Vendored upstream**: `external/agenticretrieval` (git-ignored) via `scripts/sync_upstream.*`

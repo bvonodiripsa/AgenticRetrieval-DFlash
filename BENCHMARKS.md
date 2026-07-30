@@ -5,6 +5,15 @@
 **Database**: Cosmos DB NoSQL (Sweden Central, co-located with VM) — 58K food products, 1.6M Graph Index triples, 180K entities
 **Models**: Qwen3.5-27B (FP8) + DFlash speculative decoding
 
+> **This entire file predates the local GPU-resident Graph Index
+> (`index.mode: local`, landed 2026-07-27 through 2026-07-29) and only
+> reflects `index.mode: cosmos` numbers.** Retrieval on the local index
+> measures ~0.003-0.03s vs. the ~0.3-1.4s "Entity Search"/"Graph Traversal"
+> rows below on Cosmos. For current numbers see `PROGRESS.md` and
+> `results/baseline_gb10.md` / `results/optimization_gb10.md` /
+> `results/h100_comparison.md`. Kept below as the historical Cosmos-only
+> record and the "Evolution" table's starting point.
+
 ## Q1: High-calorie protein snack for running
 
 **Question**: "I am searching for a high-calorie protein snack for long-distance running that fits in a running belt"
