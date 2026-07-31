@@ -472,6 +472,28 @@ retrieval bug, and not something more retrieval budget can fully solve.
 defaults (20/20) since they showed no downside across all 10 questions.
 Full detail in `EMBEDDING_FIX.md`'s "Second case" section.
 
+**Checked questions 3-10 the same way — no further bugs found.** Ran all
+eight against both DFlash and the baseline, diffed cited `product_id`s, and
+spot-checked a sample of items baseline cited that DFlash didn't. Pattern is
+different from questions 1-2: these are open-ended "recommend N products"
+questions with dozens of equally valid answers (BBQ meats, breakfast ideas),
+not a single specific correct product, so low ID overlap between two
+independently-retrieving pipelines is expected and not itself evidence of a
+bug. Rank-checked five sample "missing" items directly:
+
+| Item | Question | Food-vector rank | Verdict |
+|---|---|---|---|
+| Pork/merguez skewer assortment | BBQ meat | #79/58,233 | Good rank, but DFlash's own 8 picks (pulled pork, ribs, beef skewers, chicken drumsticks) are just as strong — category competition, not a miss |
+| Similar BBQ platter | BBQ meat | #109/58,233 | Same |
+| Strawberry-filled cake | Breakfast w/ eggs | #14,595/58,233 | DFlash correctly deprioritized a weak match baseline's broader multi-round search pulled in |
+| Onion tortilla | Breakfast w/ eggs | #186/58,233 | Plausible but not clearly a miss |
+| Canned whole tomatoes | £10 pasta dinner | #30,864/58,233 | Baseline likely found this via decomposed sub-question reasoning ("what sauce for pasta"), a strategy difference, not a DFlash retrieval bug |
+
+Question 3 (gluten-free cinema snack) is the cleanest signal: 7 of DFlash's 8
+cited items also appear in baseline's (longer) 18-item list — DFlash just
+gave a shorter answer, not a narrower-quality one. Question 10: zero items
+missing. No code changes made from this pass.
+
 ---
 
 ## H100 runbook
