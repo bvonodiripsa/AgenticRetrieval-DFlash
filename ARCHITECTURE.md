@@ -83,6 +83,55 @@ for the full corpus (fits alongside vLLM's KV cache).
 
 ---
 
+## Measured: DFlash vs. the baseline, side by side
+
+![Question 1 timing comparison: DFlash 4.08s vs. baseline 46.95s](results/q1_timing_comparison.png)
+
+Same question, same H100 box, back-to-back, live `/v1/ask` calls (2026-07-30,
+single sample per app — not averaged, so treat this as illustrative rather
+than a tight benchmark):
+
+| | Total | Where the time goes |
+|---|---|---|
+| **DFlash** (`index.mode: local`) | **4.08s** | One retrieval pass against the GPU-resident index (embed + entity/graph search + keyword expansion + source fetch, ~0.51s combined) + one local vLLM call with DFlash speculative decoding (3.57s) |
+| **Baseline** (`AzureCosmosDB/AgenticRetrieval`, decomposed RAG) | **46.95s** | 7 retrieval calls across 2 rounds (21.7s cumulative) + 6 LLM calls — draft answer, gap analysis, sub-question generation, follow-up retrieval, synthesis (31.4s cumulative, some overlap) |
+
+**~11.5x on this sample.** The gap isn't one big optimization, it's three
+independent, multiplicative ones:
+
+1. **Retrieval moved from network to GPU memory.** Cosmos DB queries become
+   `torch.topk` and a CSR array slice — see "Retrieval backends" above.
+   Measured on this box: ~2.06s → ~0.003s for the retrieval stages alone.
+2. **One retrieval + one LLM call, not 3-4+ decomposition rounds.** The
+   baseline's iterative "draft → find gaps → sub-question → re-retrieve →
+   synthesize" loop pays a full network round-trip (Cosmos + Azure OpenAI)
+   at every step; DFlash's single pass runs retrieval and keyword expansion
+   concurrently (`asyncio.gather`) and makes exactly one answer-generation
+   call.
+3. **The one LLM call is itself cheaper.** Local vLLM (no Azure OpenAI
+   network hop) with DFlash speculative decoding: a small draft model
+   proposes candidate tokens, the 27B target model verifies them in one
+   forward pass — ~2-3x fewer expensive forward passes for output that is
+   mathematically identical to standard decoding (see "How speculative
+   decoding works" below).
+
+Why answer quality holds up despite doing so much less work: both apps read
+from the same Cosmos DB Graph Index (the local index is a read-only GPU
+snapshot of it — see "Retrieval backends" above), the local vector search is
+*exact* rather than Cosmos's quantized DiskANN, and empirically the baseline's
+extra decomposition rounds mostly added volume rather than uniquely-correct
+items (see `PROGRESS.md`'s questions-3-10 comparison). The one caveat that
+hasn't been stress-tested: a question whose evidence genuinely isn't
+reachable in a single retrieval pass (chains not modeled as a direct graph
+edge, or needing more hops than `max_hops` allows) could still favor the
+baseline's iterative re-querying — see `PROGRESS.md` for the details of that
+open question.
+
+Full methodology and more question-by-question numbers: `PROGRESS.md`,
+`results/h100_comparison.md`, `BENCHMARKS.md`.
+
+---
+
 ## How speculative decoding works
 
 The application code makes a standard OpenAI-compatible API call — the speculative decoding is handled entirely by vLLM:
