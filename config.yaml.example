@@ -199,8 +199,16 @@ query:
   # actual products carrying them. See scripts/sweep_max_hops.py.
   max_hops: 2
   max_triples: 40
-  max_source_chunks: 15
-  vector_augment_k: 12
+  # Raised from 15/12 (2026-07-30) after the embedding pooling fix
+  # (EMBEDDING_FIX.md) made the food vector search trustworthy enough that a
+  # wider net finds more real matches instead of more noise. A genuinely
+  # relevant product ranked #20/58233 by direct food-vector similarity -- a
+  # reasonable rank, just outside the old k=12 cutoff -- and widening to 20
+  # pulled it into the candidate pool (confirmed via retrieval, not just
+  # config). Whether the LLM's summarization step actually surfaces it in the
+  # final answer is now a prompt/selection question, not a retrieval one.
+  max_source_chunks: 20
+  vector_augment_k: 20
   max_answer_tokens: 4096
 
 paths:

@@ -454,6 +454,24 @@ only the local snapshot was. Rebuilding `data/local_index` from Cosmos as-is
 `EMBEDDING_FIX.md`'s "What's still stale" section for the two ways to close
 that gap.
 
+**Second case, found immediately after, worth distinguishing from the bug
+above:** question 2 ("low-alcohol premium drink that still feels luxurious")
+was also missing an expected product (`22082518`, a 4.5%-ABV cocktail
+sorbet). Checked the same way — direct food-vector rank was **#20 of
+58,233**, a genuinely good rank, just outside the old `vector_augment_k: 12`
+cutoff. Not a repeat of the pooling bug: this is a real embedding correctly
+placing a real match just past a fixed budget line. Widened
+`vector_augment_k`/`max_source_chunks` (12/15 → 20/20), confirmed via direct
+retrieval inspection that the product now reaches the LLM's candidate pool,
+and re-ran all 10 questions again with no regressions. It still didn't make
+the final 8-item answer — the LLM picked eight other legitimate candidates
+instead, and this one was the 40th of 40 candidates passed in. That's now a
+prompt/selection-layer question (how the LLM picks 8 from N), not a
+retrieval bug, and not something more retrieval budget can fully solve.
+`config.yaml.example` and H100's `my.yaml` both updated to the wider
+defaults (20/20) since they showed no downside across all 10 questions.
+Full detail in `EMBEDDING_FIX.md`'s "Second case" section.
+
 ---
 
 ## H100 runbook

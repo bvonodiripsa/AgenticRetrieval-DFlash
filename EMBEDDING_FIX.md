@@ -89,6 +89,42 @@ Re-embedding throughput on the H100 box (GPU 1, shared with vLLM + both web
 apps on GPU 0): ~1,575-1,645 docs/s. Total corpus took ~19 minutes
 (entities: 110s, triples: ~17min, food: ~2min, run separately).
 
+## Second case: a near-miss vs. a real bug
+
+After the fix shipped, testing the next predefined question ("low-alcohol
+premium drink that still feels luxurious") turned up product `22082518`
+missing from DFlash's answer, same as `22219407` had been. This is a
+**different, smaller problem**, and it's worth distinguishing from the
+pooling bug above:
+
+- Direct food-vector rank for `22082518`: **#20 of 58,233** (score 0.539).
+  That's a *good* rank — nothing like `22219407`'s #800. The product
+  (a 4.5%-ABV prosecco-and-bitters cocktail sorbet, genuinely a strong match
+  for "low-alcohol premium drink") was just outside the pipeline's old
+  `vector_augment_k: 12` cutoff.
+- Widened `vector_augment_k`/`max_source_chunks` (12→20, 15→20) and confirmed
+  via the retrieval pipeline directly: the product is now in the candidate
+  pool the LLM sees. It still didn't make the final answer's top-8 list —
+  the LLM chose eight *other* legitimate candidates (mostly explicitly
+  "0% alcohol" drinks) instead, and it was the fortieth of forty candidates
+  passed in, which likely didn't help.
+- Re-ran all 10 predefined questions again with the widened budget: no
+  regressions, same error-free/on-time results as the narrower budget.
+
+**Takeaway:** the embedding fix above turned "budget bumps make things
+worse" (Question 1, broken embeddings, more budget = more noise
+outranking the right answer) into "budget bumps are safe and sometimes
+helpful" (Question 2, correct embeddings, more budget = more real
+candidates, no observed noise regression). But a k-truncated retrieval +
+LLM-summarization pipeline will never guarantee that every legitimately
+relevant item makes a fixed-length final answer — that's a
+selection/prompt-behavior question downstream of retrieval, not a retrieval
+bug, and pushing `vector_augment_k`/`max_source_chunks` arbitrarily higher
+trades this for slower calls and more chances for the LLM to have to
+editorially discard borderline noise (it did so correctly, unprompted, when
+tested — see `PROGRESS.md`'s 2026-07-30 section for the exact case — but
+that's not something to rely on).
+
 ## What's still stale
 
 **Cosmos DB itself was not re-embedded.** `scripts/build_local_index.py`
