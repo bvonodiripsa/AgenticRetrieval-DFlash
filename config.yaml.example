@@ -10,8 +10,9 @@
 # by the vendored decomposed pipeline (external/agenticretrieval, via the
 # samples/QA_CLI demo) — harmless for the GI-RAG app.
 #
-# NOTE: the GI query path embeds in-process (Qwen3-Embedding-0.6B, mean-pool +
-# L2). A configured embedding.embed_endpoint is used only by the upload tool.
+# NOTE: the GI query path embeds in-process (Qwen3-Embedding-0.6B, last-token
+# pool + L2, query instruction prefix). A configured embedding.embed_endpoint
+# is used only by the upload tool.
 # =============================================================================
 
 cosmos:

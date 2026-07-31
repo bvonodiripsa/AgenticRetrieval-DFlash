@@ -20,7 +20,7 @@ the tests — not by this app.
 `_dflash_answer()` (non-streaming, `/v1/ask`)
 
 **Code flow** (`api.py`):
-1. `engine._embedder.embed()` — Qwen3-Embedding-0.6B (in-process, mean-pool + L2)
+1. `engine._embedder.embed(question, is_query=True)` — Qwen3-Embedding-0.6B (in-process, last-token pool + L2, query instruction prefix)
 2. **Retrieval + LLM keyword expansion** — parallel via `asyncio.gather`:
    - `retrieval.retrieve(backend, q_emb, cfg)` — entity search, graph
      traversal, triple/food vector search and source fetch, all against
@@ -99,6 +99,6 @@ This produces **identical output** to standard generation (mathematically lossle
 - **Cosmos DB**: account + `food` database from config — containers: `food` (products), `entities`, `triples`; system of record regardless of `index.mode`
 - **Local Graph Index** (optional, `index.mode: local`): GPU-resident snapshot of the same data — see "Retrieval backends" above and `PROGRESS.md`
 - **LLM endpoint**: configurable OpenAI-compatible (local vLLM with DFlash, or a hosted gateway such as GLM-5.2)
-- **Embedding**: Qwen3-Embedding-0.6B, loaded in-process (mean-pool + L2, GPU if available)
+- **Embedding**: Qwen3-Embedding-0.6B, loaded in-process (last-token pool + L2, query instruction prefix, GPU if available; see `EMBEDDING_FIX.md`)
 - **Web UI**: `static/index.html`, FastAPI on port 8080
 - **Vendored upstream**: `external/agenticretrieval` (git-ignored) via `scripts/sync_upstream.*`

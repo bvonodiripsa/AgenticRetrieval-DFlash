@@ -264,8 +264,9 @@ See `config.yaml.example` for full inline documentation of each setting, and
 | `vector_augment_k` | 12 | Extra vector-search products |
 | `max_answer_tokens` | 4096 | Answer budget (covers reasoning tokens) |
 
-Embeddings are computed in-process (Qwen3-Embedding-0.6B, mean-pool + L2, GPU
-if available). The Cosmos DB semantic reranker reorders sources before the
+Embeddings are computed in-process (Qwen3-Embedding-0.6B, last-token pool + L2
+with a query instruction prefix, GPU if available — see `EMBEDDING_FIX.md`).
+The Cosmos DB semantic reranker reorders sources before the
 LLM call; if it is unavailable the pipeline falls back to vector-search
 ordering. Keyword search is LLM-expanded, then run against local BM25 or
 Cosmos `FullTextContains` depending on `index.mode`.
