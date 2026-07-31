@@ -39,7 +39,7 @@ async def _embed_all(cfg, device):
         if next(model.parameters()).device.type != "cuda":
             model.to("cuda")
     await embedder.embed("warmup")
-    return [await embedder.embed(q) for q in QUESTIONS]
+    return [await embedder.embed(q, is_query=True) for q in QUESTIONS]
 
 
 async def main():

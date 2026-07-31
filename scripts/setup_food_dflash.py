@@ -167,7 +167,7 @@ async def copy_question_relevant_docs(
         q_id = q.get("question_id", f"q{qi}")
         print(f"\n  [{q_id}] {q_text[:70]}...")
 
-        q_emb = await embedder.embed(q_text)
+        q_emb = await embedder.embed(q_text, is_query=True)
         sql = ("SELECT TOP @k c, VectorDistance(c.e, @emb) AS score "
                "FROM c ORDER BY VectorDistance(c.e, @emb)")
         docs = []

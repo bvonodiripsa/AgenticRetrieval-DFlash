@@ -14,22 +14,30 @@ EMBED_DIM = 1024
 UPLOAD_BATCH = 20
 
 print(f"Loading {MODEL_ID} on GPU...", flush=True)
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True)
+# Left padding is required for last-token pooling: it makes "last token =
+# index -1" true for every row in a batch regardless of that row's own
+# length. See EMBEDDING_FIX.md -- mean pooling (the old approach here)
+# throws away most of Qwen3-Embedding's contrastive fine-tuning, which reads
+# the embedding off the *last* token's hidden state.
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True, padding_side="left")
 model = AutoModel.from_pretrained(MODEL_ID, trust_remote_code=True, torch_dtype=torch.float32)
 model = model.cuda(0)  # Use GPU 1 (GPU 0 is used more by vLLM)
 model.eval()
 print("Model loaded on GPU.", flush=True)
 
 def embed_batch(texts: list[str]) -> list[list[float]]:
-    """Embed a batch of texts using mean pooling + L2 normalize on GPU."""
+    """Embed a batch of texts using last-token pooling + L2 normalize on GPU.
+
+    Document/description text only -- no query instruction prefix here, to
+    match how queries are embedded at retrieval time (see gi_builder.py's
+    `is_query` parameter and `_QUERY_INSTRUCTION`).
+    """
     inputs = tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=512)
     inputs = {k: v.cuda(0) for k, v in inputs.items()}
     with torch.inference_mode():
         outputs = model(**inputs)
-        attention_mask = inputs["attention_mask"].unsqueeze(-1).float()
-        token_embs = outputs.last_hidden_state.float() * attention_mask
-        emb = token_embs.sum(dim=1) / attention_mask.sum(dim=1).clamp(min=1e-9)
-        emb = torch.nn.functional.normalize(emb, p=2, dim=1)
+        emb = outputs.last_hidden_state[:, -1]  # left-padded -> true last token
+        emb = torch.nn.functional.normalize(emb.float(), p=2, dim=1)
     vecs = emb.cpu().tolist()
     return [v[:EMBED_DIM] for v in vecs]
 

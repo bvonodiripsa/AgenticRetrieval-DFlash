@@ -220,7 +220,7 @@ class GIQueryEngine:
 
         # Step 1: Embed question
         t0 = time.time()
-        q_emb = await self._embedder.embed(question)
+        q_emb = await self._embedder.embed(question, is_query=True)
         timings["embed"] = time.time() - t0
 
         # Steps 2-4: entity search, graph traversal and source fetch, against
