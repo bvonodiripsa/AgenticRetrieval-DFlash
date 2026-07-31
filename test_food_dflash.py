@@ -142,7 +142,7 @@ async def run_tests(args):
     test_q = "high protein snack for running"
     e_hits = []
     try:
-        q_emb = await embedder.embed(test_q)
+        q_emb = await embedder.embed(test_q, is_query=True)
         sql = ("SELECT TOP 5 c.id, c.product_title_translated, c.product_title, "
                "VectorDistance(c.e, @emb) AS score FROM c ORDER BY VectorDistance(c.e, @emb)")
         hits = []

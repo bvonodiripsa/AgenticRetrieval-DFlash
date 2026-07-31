@@ -260,7 +260,7 @@ async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
         yield _sse({"stage": "progress", "message": "Embedding question...", "_ts": _elapsed(t0)})
 
         t_embed = time.perf_counter()
-        q_emb = await engine._embedder.embed(question)
+        q_emb = await engine._embedder.embed(question, is_query=True)
         timings["embed"] = time.perf_counter() - t_embed
         yield _sse({"stage": "progress", "message": f"Embedded in {timings['embed']:.2f}s", "_ts": _elapsed(t0)})
 
@@ -481,7 +481,7 @@ async def _dflash_answer(question: str, engine: GIQueryEngine) -> dict:
     t0 = time.perf_counter()
     timings: dict[str, float] = {}
 
-    q_emb = await engine._embedder.embed(question)
+    q_emb = await engine._embedder.embed(question, is_query=True)
     timings["embed"] = time.perf_counter() - t0
 
     # Keyword expansion is an LLM call, so start it now and let it run

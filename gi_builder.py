@@ -45,8 +45,25 @@ from prompts_gi_food import (
 )
 
 # =============================================================================
-# In-process embedding (Qwen3-Embedding-0.6B on CPU)
+# In-process embedding (Qwen3-Embedding-0.6B)
 # =============================================================================
+#
+# Qwen3-Embedding is a decoder-only model contrastively fine-tuned to read its
+# embedding off the *last* token's hidden state (with an instruction prefix on
+# the query side) -- not off a mean-pooled average of all tokens. An earlier
+# version of this file mean-pooled instead, which every decoder model will
+# happily do without erroring, but it throws away most of the contrastive
+# fine-tuning: causal attention means early tokens never see later context, so
+# averaging them back in dilutes the one token (the last one) that actually
+# saw the whole input. Measured effect on this corpus: cosine similarity
+# between an unrelated food doc and a query landed within ~0.08-0.15 of the
+# actually-relevant doc's score (mean pooling) vs. ~0.18-0.23 (last-token +
+# instruction prefix) -- enough to let irrelevant matches outrank the right
+# answer. See docs/EMBEDDING_FIX.md.
+_QUERY_INSTRUCTION = (
+    "Instruct: Given a search query, retrieve relevant food product passages "
+    "that answer the query\nQuery:{text}"
+)
 
 _embed_model = None
 _embed_tokenizer = None
@@ -66,7 +83,11 @@ def _get_embed_model():
         import torch
         from transformers import AutoModel, AutoTokenizer
         model_id = "Qwen/Qwen3-Embedding-0.6B"
-        _embed_tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+        # Left padding is what makes "last token = index -1" true for every
+        # row in a batch regardless of that row's own length.
+        _embed_tokenizer = AutoTokenizer.from_pretrained(
+            model_id, trust_remote_code=True, padding_side="left"
+        )
         _embed_model = AutoModel.from_pretrained(
             model_id, trust_remote_code=True,
             torch_dtype=torch.float16, low_cpu_mem_usage=True
@@ -79,28 +100,37 @@ def _get_embed_model():
         return _embed_model, _embed_tokenizer
 
 
-def embed_sync(text: str, dimensions: int = 1024) -> list[float]:
-    """Embed text in-process using mean pooling + L2 normalize."""
+def embed_sync(text: str, dimensions: int = 1024, is_query: bool = False) -> list[float]:
+    """Embed text in-process: last-token pooling + L2 normalize.
+
+    `is_query` adds Qwen3-Embedding's recommended instruction prefix. Only set
+    it for user questions -- document/description text (food docs, entity and
+    triple descriptions) is embedded plain, matching how it was indexed.
+    """
     import torch
     model, tokenizer = _get_embed_model()
     device = next(model.parameters()).device
+    if is_query:
+        text = _QUERY_INSTRUCTION.format(text=text)
     inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
     inputs = {k: v.to(device) for k, v in inputs.items()}
     with torch.inference_mode():
         outputs = model(**inputs)
-        attention_mask = inputs["attention_mask"].unsqueeze(-1).float()
-        token_embs = outputs.last_hidden_state.float() * attention_mask
-        emb = token_embs.sum(dim=1) / attention_mask.sum(dim=1).clamp(min=1e-9)
-        emb = torch.nn.functional.normalize(emb, p=2, dim=1)
+        emb = outputs.last_hidden_state[:, -1]  # left-padded -> true last token
+        emb = torch.nn.functional.normalize(emb.float(), p=2, dim=1)
     vec = emb[0].cpu().tolist()
     return vec[:dimensions]
 
 
-def embed_batch_sync(texts: list[str], dimensions: int = 1024, batch_size: int = 32) -> list[list[float]]:
-    """Batch embed texts in-process."""
+def embed_batch_sync(
+    texts: list[str], dimensions: int = 1024, batch_size: int = 32, is_query: bool = False
+) -> list[list[float]]:
+    """Batch embed texts in-process. See `embed_sync` for `is_query`."""
     import torch
     model, tokenizer = _get_embed_model()
     device = next(model.parameters()).device
+    if is_query:
+        texts = [_QUERY_INSTRUCTION.format(text=t) for t in texts]
     all_vecs = []
     for i in range(0, len(texts), batch_size):
         batch = texts[i:i + batch_size]
@@ -108,10 +138,8 @@ def embed_batch_sync(texts: list[str], dimensions: int = 1024, batch_size: int =
         inputs = {k: v.to(device) for k, v in inputs.items()}
         with torch.inference_mode():
             outputs = model(**inputs)
-            attention_mask = inputs["attention_mask"].unsqueeze(-1).float()
-            token_embs = outputs.last_hidden_state.float() * attention_mask
-            emb = token_embs.sum(dim=1) / attention_mask.sum(dim=1).clamp(min=1e-9)
-            emb = torch.nn.functional.normalize(emb, p=2, dim=1)
+            emb = outputs.last_hidden_state[:, -1]
+            emb = torch.nn.functional.normalize(emb.float(), p=2, dim=1)
         for j in range(emb.shape[0]):
             vec = emb[j].cpu().tolist()
             all_vecs.append(vec[:dimensions])
@@ -200,10 +228,12 @@ class EmbedClient:
             return vals + [0.0] * (d - len(vals))
         return vals
 
-    async def _embed_http(self, text: str) -> list[float]:
+    async def _embed_http(self, text: str, is_query: bool = False) -> list[float]:
         import httpx
         if self._http is None:
             self._http = httpx.AsyncClient(timeout=60)
+        if is_query:
+            text = _QUERY_INSTRUCTION.format(text=text)
         resp = await self._http.post(
             self._endpoint,
             json={"model": self._model, "prompt": text},
@@ -215,21 +245,24 @@ class EmbedClient:
             raise ValueError(f"Invalid embedding response from {self._endpoint}")
         return self._normalize(emb)
 
-    async def embed(self, text: str) -> list[float]:
+    async def embed(self, text: str, is_query: bool = False) -> list[float]:
+        """`is_query=True` for user questions; leave False for document/description text."""
         if self._use_http:
-            return await self._embed_http(text)
-        return await asyncio.to_thread(embed_sync, text, self._dimensions)
+            return await self._embed_http(text, is_query)
+        return await asyncio.to_thread(embed_sync, text, self._dimensions, is_query)
 
-    async def embed_batch(self, texts: list[str], batch_size: int = 32) -> list[list[float]]:
+    async def embed_batch(
+        self, texts: list[str], batch_size: int = 32, is_query: bool = False
+    ) -> list[list[float]]:
         if self._use_http:
             sem = asyncio.Semaphore(8)
 
             async def _one(t: str):
                 async with sem:
-                    return await self._embed_http(t)
+                    return await self._embed_http(t, is_query)
 
             return await asyncio.gather(*[_one(t) for t in texts])
-        return await asyncio.to_thread(embed_batch_sync, texts, self._dimensions, batch_size)
+        return await asyncio.to_thread(embed_batch_sync, texts, self._dimensions, batch_size, is_query)
 
     async def close(self):
         if self._http is not None:
@@ -323,7 +356,7 @@ async def read_question_relevant_chunks(
         q_id = q.get("question_id", f"q{qi}")
         print(f"\n  Question {q_id}: {q_text[:60]}...")
 
-        q_emb = await embedder.embed(q_text)
+        q_emb = await embedder.embed(q_text, is_query=True)
 
         for source in sources:
             container_name = source.get("container_name", "")

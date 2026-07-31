@@ -5,9 +5,21 @@ box; updated 2026-07-28 with a full day of real H100 validation (see
 `results/h100_comparison.md`); updated again 2026-07-29 with a second GB10
 pass (see "2026-07-29: second GB10 pass") and then **with the web UI put in
 front of real users on H100** (see "2026-07-29: H100 web app + UI
-duplicate-submission fix").
+duplicate-submission fix"); updated again 2026-07-30 with an embedding-pooling
+bug fix found via a baseline-vs-DFlash quality comparison (see "2026-07-30:
+embedding pooling fix").
 
-## Where things actually stand (end of 2026-07-29)
+## Where things actually stand (end of 2026-07-30)
+
+- **Fixed a retrieval-quality bug that was silently degrading every vector
+  search in the local index.** The in-process embedder mean-pooled
+  `Qwen3-Embedding-0.6B`'s hidden states instead of using the last-token
+  pooling the model is actually trained for, which let semantically unrelated
+  documents (chicken donuts, a hair-gel product) score higher than the
+  genuinely relevant match for a running-snack query. Fixed the pooling,
+  re-embedded all 1.83M local-index vectors, and validated against all 10
+  predefined questions plus a direct baseline comparison. Full writeup:
+  `EMBEDDING_FIX.md`.
 
 - **The web app is live on H100 and one real-usage bug got found and fixed:
   duplicate form submissions from the UI, not backend slowness.** A user
@@ -380,6 +392,67 @@ fine for one request at a time but will need `asyncio.to_thread` (already
 used for the local index's initial load) or a thread/process pool around the
 blocking numpy/BM25 calls to actually parallelize multiple in-flight
 requests, not just avoid one UI bug.
+
+---
+
+## 2026-07-30: embedding pooling fix
+
+Found while comparing DFlash against the `AgenticRetrieval` baseline
+side-by-side (same UI, same question, two apps behind one nginx proxy on
+H100 — see "2026-07-29" section below for how that was set up). Baseline
+answer for "high-calorie protein snack for long-distance running that fits
+in a running belt" included product `22219407`; DFlash's did not, and
+DFlash's list included an obviously wrong item (a hair-gel product, which
+the LLM itself flagged as likely mislabeled before including it anyway).
+
+**Root cause: the in-process embedder pooled wrong.** `gi_builder.py`'s
+`embed_sync`/`embed_batch_sync` mean-pooled `Qwen3-Embedding-0.6B`'s hidden
+states. That model is decoder-only and contrastively fine-tuned to be read
+off the *last* token's hidden state (with an instruction prefix on the query
+side) — mean-pooling throws most of that fine-tuning away, because causal
+attention means early tokens never see later context, so averaging them back
+in dilutes the one token that saw the whole input. Confirmed directly: raw
+cosine similarity ranked `22219407` **#800 of 58,233** food docs (score
+0.42) against the query, behind things like "chicken donuts" and "scallop,
+girolle and paris mushroom bites" (score 0.67-0.69) — a narrow, uniformly-high
+similarity band across unrelated documents, the textbook signature of
+degenerate mean-pooled sentence embeddings.
+
+Bumping the retrieval budget first (`seed_entities_k` 10→20, `max_triples`
+40→80, `max_source_chunks` 15→25, `vector_augment_k` 12→20) was tried and
+ruled out: it didn't surface `22219407`, and in one run made the answer
+*worse* (the hair-gel item got included with no self-correction that time).
+This is what pointed at a ranking/embedding problem rather than a
+budget/recall problem.
+
+**Fix:** last-token pooling (`last_hidden_state[:, -1]` with left-padding) +
+Qwen3-Embedding's recommended query instruction prefix, applied only to
+question-side embeddings (`EmbedClient.embed(..., is_query=True)`; document
+text stays plain). Re-embedded the full local snapshot (58,233 food docs,
+179,560 entities, 1,593,678 triples — 1,831,471 vectors total) on the H100's
+second GPU, ~19 minutes end to end at ~1,575-1,645 docs/s. Full technical
+writeup, exact text templates per container, and the still-open Cosmos
+staleness gap: `EMBEDDING_FIX.md`.
+
+**Validated three ways:**
+1. Isolated proof-of-concept on 5 known docs: mean pooling put irrelevant
+   docs within 0.08-0.15 of the relevant doc's score; last-token pooling
+   widened that to 0.18-0.23.
+2. The specific reported case: `22219407` went from **rank #800 (0.42) to
+   rank #2 (0.55)** in raw food-vector search, and from absent to **item #1
+   and the "Top Pick"** in the live app's actual answer. No more hair-gel or
+   off-topic items in the top-15.
+3. All 10 questions in `data/food.json` re-run against the live, fixed app:
+   all succeeded, no errors, answers stayed on-topic and grounded in real
+   product IDs (gluten-free popcorn for a cinema snack, pulled pork for a BBQ,
+   minced beef for the air-fryer recipe, etc.). Timing unaffected — still
+   3.5-6.2s wall time per question, same range as before the fix.
+
+**Not done / follow-up:** Cosmos DB's own `/e` fields were not re-embedded —
+only the local snapshot was. Rebuilding `data/local_index` from Cosmos as-is
+(`scripts/build_local_index.py`) would silently reintroduce the bug. See
+`EMBEDDING_FIX.md`'s "What's still stale" section for the two ways to close
+that gap.
 
 ---
 

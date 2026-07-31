@@ -43,7 +43,7 @@ async def _embed(cfg, question, device):
             model.to("cuda")
     await embedder.embed("warmup")
     t = time.perf_counter()
-    emb = await embedder.embed(question)
+    emb = await embedder.embed(question, is_query=True)
     return emb, time.perf_counter() - t
 
 

@@ -52,7 +52,7 @@ async def benchmark():
 
     # ── Stage 1: Embed ──
     t0 = time.perf_counter()
-    q_emb = await embedder.embed(QUESTION)
+    q_emb = await embedder.embed(QUESTION, is_query=True)
     timings["Embed"] = time.perf_counter() - t0
     print(f"\n  1. Embed:           {timings['Embed']:.2f}s")
 
