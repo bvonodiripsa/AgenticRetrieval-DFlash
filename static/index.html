@@ -352,6 +352,33 @@ function addProgress(text, cls, serverTs) {
   logEl.scrollTop = logEl.scrollHeight;
 }
 
+function addRecommendations(error, serverTs) {
+  for (const recommendation of error.recommendations || []) {
+    addProgress('Try: ' + recommendation, 'error', serverTs);
+  }
+}
+
+function showRequestError(error, serverTs) {
+  addProgress('Error: ' + (error.message || error.detail || 'The request failed.'), 'error', serverTs);
+  addRecommendations(error, serverTs);
+}
+
+async function readHttpError(resp) {
+  const raw = await resp.text();
+  let data;
+  try { data = JSON.parse(raw); }
+  catch (error) {
+    if (!(error instanceof SyntaxError)) throw error;
+    data = {};
+  }
+  if (!data || typeof data !== 'object') data = {};
+  return {
+    ...data,
+    message: data.message || (typeof data.detail === 'string' ? data.detail : 'Request failed (HTTP ' + resp.status + ').'),
+    recommendations: data.recommendations || ['Check the API terminal for errors; restart the app with .\\run.ps1 if necessary.'],
+  };
+}
+
 function showStats(ev) {
   statsBar.innerHTML = '';
   const chip = (label, val) => {
@@ -380,6 +407,7 @@ function cosmosSum(t) {
 
 async function doStream(question) {
   let answer = '';
+  let finished = false;
   try {
     const resp = await fetch('/v1/ask/stream', {
       method: 'POST',
@@ -387,7 +415,7 @@ async function doStream(question) {
       body: JSON.stringify({ question, backend: currentBackend }),
       signal: abortCtrl.signal,
     });
-    if (!resp.ok) { addProgress('Error: ' + await resp.text(), 'error'); return; }
+    if (!resp.ok) { showRequestError(await readHttpError(resp)); return; }
 
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
@@ -403,8 +431,16 @@ async function doStream(question) {
         if (!line.startsWith('data: ')) continue;
         const payload = line.slice(6);
         if (payload === '[DONE]') continue;
-        try {
-          const ev = JSON.parse(payload);
+        let ev;
+        try { ev = JSON.parse(payload); }
+        catch (parseErr) {
+          if (!(parseErr instanceof SyntaxError)) throw parseErr;
+          showRequestError({
+            message: 'The API returned an invalid progress event.',
+            recommendations: ['Check the API terminal and any proxy between your browser and the server, then retry.'],
+          });
+          return;
+        }
           if (ev.stage === 'progress') {
             addProgress(ev.message || '', null, ev._ts);
           } else if (ev.stage === 'stats') {
@@ -415,6 +451,7 @@ async function doStream(question) {
             answerEl.innerHTML = renderMarkdown(answer);
             answerModelBadge.classList.remove('hidden');
           } else if (ev.stage === 'done') {
+            finished = true;
             const tm = ev.timings || {};
             const pipelineTotal = tm.total != null ? Number(tm.total) : (performance.now() - startTime) / 1000;
             timingBar.innerHTML = '';
@@ -434,13 +471,22 @@ async function doStream(question) {
             timingCard.classList.remove('hidden');
             addProgress('Pipeline: ' + pipelineTotal.toFixed(1) + 's total (LLM: ' + (tm.llm ? Number(tm.llm).toFixed(1) : '?') + 's)', 'done', pipelineTotal.toFixed(1));
           } else if (ev.stage === 'error') {
-            addProgress('Error: ' + (ev.message || ''), 'error');
+            finished = true;
+            showRequestError(ev, ev._ts);
           }
-        } catch (parseErr) {}
       }
     }
+    if (!finished) {
+      showRequestError({
+        message: 'The API connection closed before the answer finished.',
+        recommendations: ['Check the API terminal for a crash or restart and retry the question.'],
+      });
+    }
   } catch (e) {
-    if (e.name !== 'AbortError') addProgress('Connection error: ' + e.message, 'error');
+    if (e.name !== 'AbortError') showRequestError({
+      message: 'Browser-to-API request failed: ' + e.message,
+      recommendations: ['Ensure the Python API is running at localhost:8080; launch it with .\\run.ps1, then reload this page.'],
+    });
   }
 }
 
@@ -507,7 +553,11 @@ async function runAllQuestions() {
       }
       const t = (data && data.timings) || {};
       rows.push({ idx:i+1, qid, total:t.total, wall:data&&data.http_wall_s, embed:t.embed, cosmos:cosmosSum(t), llm:t.llm, err:errMsg });
-      if (errMsg) addProgress('  \u2717 ' + qid + ': ' + errMsg, 'error');
+      if (errMsg) {
+        addProgress('  \u2717 ' + qid + ': ' + errMsg, 'error');
+        if (data) addRecommendations(data);
+        else addRecommendations({ recommendations: ['Check that the Python API is running at localhost:8080, then retry.'] });
+      }
       else addProgress('  \u2713 ' + qid + ': ' + (t.total!=null?t.total.toFixed(2):'?') + 's', 'done');
     }
   } finally {

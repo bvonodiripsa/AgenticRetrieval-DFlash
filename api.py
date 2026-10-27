@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field
 from gi_builder import load_config
 from gi_query import GIQueryEngine
 from retrieval import retrieve
+from request_errors import describe_failure, request_stage
 
 _ROOT = Path(__file__).parent
 log = logging.getLogger("food_dflash.api")
@@ -220,26 +221,6 @@ async def _semantic_rerank(engine, question: str, docs: list[dict]) -> list[dict
     return docs
 
 
-async def _identify_missing_containers(engine) -> list[str]:
-    """Return configured GI/food containers that don't exist (queried from Cosmos)."""
-    missing: list[str] = []
-    try:
-        cosmos = await engine._get_cosmos()
-        db = cosmos.get_database_client(engine._db_name)
-        gi = engine._gi_cfg
-        for n in (gi.get("entities_container", "entities"),
-                  gi.get("triples_container", "triples"),
-                  "food"):
-            try:
-                await db.get_container_client(n).read()
-            except Exception as e:
-                if "NotFound" in str(e) or "404" in str(e):
-                    missing.append(n)
-    except Exception:
-        pass
-    return missing
-
-
 async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
     """DFlash path: GI retrieval (local index or Cosmos, via retrieval.py) + real
     token-by-token LLM streaming with speculative decoding.
@@ -255,12 +236,14 @@ async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
     """
     t0 = time.perf_counter()
     timings: dict[str, float] = {}
+    kw_task = None
 
     try:
         yield _sse({"stage": "progress", "message": "Embedding question...", "_ts": _elapsed(t0)})
 
         t_embed = time.perf_counter()
-        q_emb = await engine._embedder.embed(question, is_query=True)
+        with request_stage("embedding", engine._cfg):
+            q_emb = await engine._embedder.embed(question, is_query=True)
         timings["embed"] = time.perf_counter() - t_embed
         yield _sse({"stage": "progress", "message": f"Embedded in {timings['embed']:.2f}s", "_ts": _elapsed(t0)})
 
@@ -271,9 +254,10 @@ async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
         yield _sse({"stage": "progress", "message": "Retrieving (entity search + graph traversal + sources)...",
                      "_ts": _elapsed(t0)})
 
-        backend = await engine._get_backend()
         t_retr = time.perf_counter()
-        result = await retrieve(backend, q_emb, engine._cfg)
+        with request_stage("retrieval", engine._cfg):
+            backend = await engine._get_backend()
+            result = await retrieve(backend, q_emb, engine._cfg)
         timings.update(result.timings)
         seed_entities = result.seed_entities
         all_triples = result.triples
@@ -303,7 +287,9 @@ async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
 
         t_ft = time.perf_counter()
         seen_ids = {doc.get("id") for doc in source_chunks}
-        for doc in await backend.fulltext_food(all_kw, 10):
+        with request_stage("keyword search", engine._cfg):
+            keyword_docs = await backend.fulltext_food(all_kw, 10)
+        for doc in keyword_docs:
             if doc.get("id") not in seen_ids:
                 source_chunks.append(doc)
                 seen_ids.add(doc.get("id"))
@@ -336,27 +322,28 @@ async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
 
         t_llm = time.perf_counter()
         first_token_at: float | None = None
-        stream = await engine._llm.chat.completions.create(
-            model=engine._llm_model,
-            messages=[
-                {"role": "system", "content": "You are a helpful food product expert. Always recommend products."},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.0,
-            max_tokens=engine._max_tokens,
-            stream=True,
-            **engine._llm_call_kwargs,
-        )
-        async for chunk in stream:
-            if not chunk.choices:
-                continue
-            delta = chunk.choices[0].delta.content or ""
-            if not delta:
-                continue
-            if first_token_at is None:
-                first_token_at = time.perf_counter()
-                timings["ttft"] = first_token_at - t_llm
-            yield _sse({"stage": "token", "text": delta})
+        with request_stage("answer generation", engine._cfg):
+            stream = await engine._llm.chat.completions.create(
+                model=engine._llm_model,
+                messages=[
+                    {"role": "system", "content": "You are a helpful food product expert. Always recommend products."},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.0,
+                max_tokens=engine._max_tokens,
+                stream=True,
+                **engine._llm_call_kwargs,
+            )
+            async for chunk in stream:
+                if not chunk.choices:
+                    continue
+                delta = chunk.choices[0].delta.content or ""
+                if not delta:
+                    continue
+                if first_token_at is None:
+                    first_token_at = time.perf_counter()
+                    timings["ttft"] = first_token_at - t_llm
+                yield _sse({"stage": "token", "text": delta})
 
         timings["llm"] = time.perf_counter() - t_llm
         timings["total"] = time.perf_counter() - t0
@@ -365,16 +352,13 @@ async def _stream_dflash_sse(question: str, engine: GIQueryEngine):
 
     except Exception as e:
         log.exception("dflash stream error: %s", e)
-        msg = str(e)
-        if "NotFound" in msg or "404" in msg:
-            missing = await _identify_missing_containers(engine)
-            if missing:
-                msg = (
-                    f"Cosmos DB container(s) not found in database '{engine._db_name}': "
-                    f"{', '.join(missing)}. Check gi.triples_container / gi.entities_container "
-                    f"in your config, or (re)build the graph index."
-                )
-        yield _sse({"stage": "error", "message": msg})
+        failure = describe_failure(e, "answer preparation", engine._cfg)
+        yield _sse({"stage": "error", **failure.details, "_ts": _elapsed(t0)})
+    finally:
+        if kw_task is not None:
+            if not kw_task.done():
+                kw_task.cancel()
+            await asyncio.gather(kw_task, return_exceptions=True)
 
     yield "data: [DONE]\n\n"
 
@@ -481,16 +465,20 @@ async def _dflash_answer(question: str, engine: GIQueryEngine) -> dict:
     t0 = time.perf_counter()
     timings: dict[str, float] = {}
 
-    q_emb = await engine._embedder.embed(question, is_query=True)
+    with request_stage("embedding", engine._cfg):
+        q_emb = await engine._embedder.embed(question, is_query=True)
     timings["embed"] = time.perf_counter() - t0
 
-    # Keyword expansion is an LLM call, so start it now and let it run
-    # alongside retrieval; its results are only needed for the full-text merge.
     basic_kw = _extract_keywords(question)
     kw_task = asyncio.create_task(_llm_expand_keywords(question, engine))
-
-    backend = await engine._get_backend()
-    result = await retrieve(backend, q_emb, engine._cfg)
+    try:
+        with request_stage("retrieval", engine._cfg):
+            backend = await engine._get_backend()
+            result = await retrieve(backend, q_emb, engine._cfg)
+    except BaseException:
+        kw_task.cancel()
+        await asyncio.gather(kw_task, return_exceptions=True)
+        raise
     timings.update(result.timings)
     seed_entities = result.seed_entities
     all_triples = result.triples
@@ -498,6 +486,7 @@ async def _dflash_answer(question: str, engine: GIQueryEngine) -> dict:
 
     if not seed_entities:
         kw_task.cancel()
+        await asyncio.gather(kw_task, return_exceptions=True)
         timings["total"] = time.perf_counter() - t0
         return {"answer": "No relevant entities found.", "timings": timings}
 
@@ -507,7 +496,9 @@ async def _dflash_answer(question: str, engine: GIQueryEngine) -> dict:
 
     t_ft = time.perf_counter()
     seen_ids = {doc.get("id") for doc in source_chunks}
-    for doc in await backend.fulltext_food(all_kw, 10):
+    with request_stage("keyword search", engine._cfg):
+        keyword_docs = await backend.fulltext_food(all_kw, 10)
+    for doc in keyword_docs:
         if doc.get("id") not in seen_ids:
             source_chunks.append(doc)
             seen_ids.add(doc.get("id"))
@@ -522,16 +513,17 @@ async def _dflash_answer(question: str, engine: GIQueryEngine) -> dict:
                                   .replace("{question}", question)
 
     t_llm = time.perf_counter()
-    resp = await engine._llm.chat.completions.create(
-        model=engine._llm_model,
-        messages=[
-            {"role": "system", "content": "You are a helpful food product expert. Always recommend products."},
-            {"role": "user", "content": prompt},
-        ],
-        temperature=0.0,
-        max_tokens=engine._max_tokens,
-        **engine._llm_call_kwargs,
-    )
+    with request_stage("answer generation", engine._cfg):
+        resp = await engine._llm.chat.completions.create(
+            model=engine._llm_model,
+            messages=[
+                {"role": "system", "content": "You are a helpful food product expert. Always recommend products."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.0,
+            max_tokens=engine._max_tokens,
+            **engine._llm_call_kwargs,
+        )
     timings["llm"] = time.perf_counter() - t_llm
     timings["total"] = time.perf_counter() - t0
 
@@ -542,7 +534,15 @@ async def _dflash_answer(question: str, engine: GIQueryEngine) -> dict:
 @app.post("/v1/ask")
 async def ask(body: AskRequest):
     t0 = time.perf_counter()
-    result = await _dflash_answer(body.question, app.state.engine)
+    try:
+        result = await _dflash_answer(body.question, app.state.engine)
+    except Exception as exc:
+        log.exception("Question request failed")
+        failure = describe_failure(exc, "answer preparation", app.state.engine._cfg)
+        return JSONResponse(
+            status_code=failure.status_code,
+            content={"detail": str(failure), **failure.details},
+        )
     result["http_wall_s"] = round(time.perf_counter() - t0, 4)
     return JSONResponse(content=result)
 

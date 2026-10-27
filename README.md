@@ -354,6 +354,12 @@ Co-locating Cosmos DB and the VM in the same Azure region reduced retrieval late
 
 ### Start the web app
 
+On Windows, run `.\run.ps1` in PowerShell. It prepares the virtual environment,
+installs dependencies from `requirements.txt`, starts the API with `my.yaml`,
+and opens `http://localhost:8080` in your default browser once the server is
+ready. Keep the terminal open; press Ctrl+C to stop the server. Azure login
+and the configured LLM endpoint must already be available.
+
 ```bash
 pip install -r requirements-web.txt
 
@@ -371,6 +377,20 @@ GI_CONFIG=my.yaml \
 ```
 
 ### API endpoints
+
+Question failures identify the pipeline operation, service, configured endpoint
+and model (when applicable), plus suggested fixes in the web progress log.
+For example, an embedding connection failure on port 11434 recommends starting
+Ollama and retrying; a missing model recommends `ollama list` / `ollama pull`.
+Other diagnostics cover timeouts, authentication/RBAC, missing Cosmos resources,
+rate limits and LLM failures. Optional keyword expansion and reranking retain
+their existing logged fallbacks.
+
+Streaming failures emit an SSE `stage: "error"` event with `message`, `operation`,
+`service`, `endpoint`, `model`, `code`, `upstream_status`, `exception_type` and
+`recommendations`. Non-streaming failures return the same fields, a string
+`detail` for compatibility, and a non-2xx HTTP status. Endpoint credentials and
+query strings are not included; full tracebacks remain in the API terminal.
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
